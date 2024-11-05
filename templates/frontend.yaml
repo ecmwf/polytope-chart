@@ -1,0 +1,94 @@
+##
+## Copyright 2022 European Centre for Medium-Range Weather Forecasts (ECMWF)
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+## In applying this licence, ECMWF does not waive the privileges and immunities
+## granted to it by virtue of its status as an intergovernmental organisation nor
+## does it submit to any jurisdiction.
+##
+
+
+{{ if .Values.frontend }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.deployment.frontend.replicas }}
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ .Values | toYaml | sha256sum }}
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend-pod
+        {{ if .Values.deployment.fqn_images }}
+        image: {{ .Values.deployment.fqn_images.polytope_common }}
+        {{ else if .Values.deployment.tag }}
+        image: {{ .Values.deployment.registry }}/polytope-common:{{ .Values.deployment.tag }}
+        {{ else }}
+        image: {{ .Values.deployment.registry }}/polytope-common:{{ .Release.Namespace }}-latest
+        {{ end }}
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: config-volume
+            mountPath: /etc/polytope
+        env:
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: POLYTOPE_PROXY
+          value: {{ .Values.deployment.polytope_proxy }}
+        command: ["python"]
+        args: ["-m", "polytope_server.frontend"]
+        readinessProbe:
+          httpGet:
+            path: /api/v1/test
+            port: {{ .Values.frontend.port }}
+          initialDelaySeconds: 1
+          periodSeconds: 5
+      volumes:
+        - name: config-volume
+          configMap:
+            name: polytope-config
+      imagePullSecrets:
+        - name: polytope-registry-cred
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.frontend.host }}
+  namespace: {{ .Values.global.namespace }}
+spec:
+  selector:
+    app: frontend
+  type: NodePort
+  ports:
+  - protocol: TCP
+    {{ if .Values.deployment.nodeport }}
+    nodePort: {{ .Values.deployment.nodeport  }}
+    {{ end }}
+    targetPort: {{ .Values.frontend.port }}
+    port: {{ .Values.frontend.port }}
+
+{{ end }}

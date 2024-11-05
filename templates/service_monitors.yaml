@@ -1,0 +1,90 @@
+# service monitor for master
+{{ if .Values.seaweedfs.enabled}}
+{{ if .Values.seaweedfs.master.enabled }}
+{{ if .Values.seaweedfs.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: seaweedfs-master-monitor
+  namespace: {{ .Values.global.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: master
+      app.kubernetes.io/name: seaweedfs
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.global.namespace }}
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+---
+{{ end }}
+{{ end }}
+# service monitor for filer
+{{ if .Values.seaweedfs.filer.enabled }}
+{{ if .Values.seaweedfs.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: seaweedfs-filer-monitor
+  namespace: {{ .Values.global.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: filer
+      app.kubernetes.io/name: seaweedfs
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.global.namespace }}
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+---
+# service monitor for filer client
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: seaweedfs-filer-client-monitor
+  namespace: {{ .Values.global.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: filer-client
+      app.kubernetes.io/name: seaweedfs
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.global.namespace }}
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+---
+{{ end }}
+{{ end }}
+# service monitor for volume
+{{ if .Values.seaweedfs.volume.enabled }}
+{{ if .Values.seaweedfs.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: seaweedfs-volume-monitor
+  namespace: {{ .Values.global.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: volume
+      app.kubernetes.io/name: seaweedfs
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.global.namespace }}
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+{{ end }}
+{{ end }}
+{{ end }}
+

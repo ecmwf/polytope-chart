@@ -1,0 +1,7 @@
+apiVersion: v2
+name: minio
+description: Minimal minio chart for polytope
+# latest free and compatible version of minio
+type: application
+version: 0.1.0
+appVersion: "RELEASE.2020-02-27T00-23-05Z"

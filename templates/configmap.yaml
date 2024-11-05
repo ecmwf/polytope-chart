@@ -1,0 +1,53 @@
+##
+## Copyright 2022 European Centre for Medium-Range Weather Forecasts (ECMWF)
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+## In applying this licence, ECMWF does not waive the privileges and immunities
+## granted to it by virtue of its status as an intergovernmental organisation nor
+## does it submit to any jurisdiction.
+##
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: polytope-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  config.yaml: |-
+{{- $config := .Values | deepCopy }}
+{{- if .Values.seaweedfs.enabled }}
+  {{- if hasKey .Values.staging "s3_boto3" }}
+    {{- $_ := set $config.staging.s3_boto3 "host" "http://seaweedfs-s3" }}
+    {{- $_ := set $config.staging.s3_boto3 "should_set_policy" false }}
+  {{- end }}
+{{- else }}
+  {{- if hasKey .Values.staging "s3_boto3" }}
+    {{- $_ := set $config.staging.s3_boto3 "should_set_policy" true }}
+  {{- end }}
+{{- end }}
+
+{{- if .Values.seaweedfs.enabled }}
+  {{- if hasKey .Values.staging "s3" }}
+    {{- $_ := set $config.staging.s3 "host" "http://seaweedfs-s3" }}
+    {{- $_ := set $config.staging.s3 "should_set_policy" false }}
+  {{- end }}
+{{- else }}
+  {{- if hasKey .Values.staging "s3" }}
+    {{- $_ := set $config.staging.s3 "should_set_policy" true }}
+  {{- end }}
+{{- end }}
+
+{{- $_ := set $config.staging.s3_boto3 "url" (printf "download-%s.%s" .Values.deployment.ingress.deployment_name .Values.deployment.ingress.common_domain) }}
+
+{{ $config | toYaml | indent 6 }}

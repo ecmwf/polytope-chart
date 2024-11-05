@@ -1,0 +1,149 @@
+
+{{ if .Values.deployment.mongodb }}
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+  namespace: {{ .Values.global.namespace }}
+spec:
+  serviceName: mongodb
+  replicas: {{ .Values.deployment.mongodb.replicas }}
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:3.6
+        command: ["mongod"]
+        args: ["--replSet", "rs0", "--bind_ip", "0.0.0.0", "--smallfiles", "--noprealloc"]
+        ports:
+        - containerPort: 27017
+          name: mongo
+        volumeMounts:
+        - name: mongo-persistent-storage
+          mountPath: /data/db
+      - name: mongo-sidecar
+        image: cvallance/mongo-k8s-sidecar
+        env:
+          - name: MONGO_SIDECAR_POD_LABELS
+            value: "app=mongodb"
+          - name: KUBE_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: KUBERNETES_MONGO_SERVICE_NAME 
+            value: "mongodb"
+  volumeClaimTemplates:
+  - metadata:
+      name: mongo-persistent-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    name: mongodb
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+  clusterIP: None
+  selector:
+    app: mongodb
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-lister
+  namespace: {{ .Values.global.namespace }}
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pod-lister-binding
+  namespace: {{ .Values.global.namespace }}
+subjects:
+- kind: ServiceAccount
+  name: default
+roleRef:
+  kind: Role
+  name: pod-lister
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: mongodb
+# spec:
+#   replicas: {{ .Values.deployment.mongodb.replicas }}
+#   selector:
+#     matchLabels:
+#       app: mongodb
+#   template:
+#     metadata:
+#       labels:
+#         app: mongodb
+#     spec:
+#       containers:
+#       - name: mongodb-pod
+#         image: mongo:3.6
+#         volumeMounts:
+#         - name: pvc
+#           mountPath: /data/db
+#       volumes:
+#        - name: pvc
+#          persistentVolumeClaim:
+#            claimName: mongodb-pv-claim
+
+# --- 
+
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#  name: mongodb-pv-claim
+# spec:
+#  accessModes:
+#   - ReadWriteOnce
+#  resources:
+#   requests:
+#    storage: 1Gi
+
+---
+
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: {{ .Values.deployment.mongodb.host }}
+# spec:
+#   selector:
+#     app: mongodb
+#   ports:
+#   - protocol: TCP
+#     port: {{ .Values.deployment.mongodb.port }}
+#     targetPort: {{ .Values.deployment.mongodb.port }}
+
+
+
+{{ end }}

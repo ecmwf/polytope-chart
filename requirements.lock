@@ -1,0 +1,12 @@
+dependencies:
+- name: mysql
+  repository: https://charts.bitnami.com/bitnami
+  version: 10.2.2
+- name: seaweedfs
+  repository: https://seaweedfs.github.io/seaweedfs/helm
+  version: 3.67.0
+- name: minio
+  repository: ""
+  version: 0.1.0
+digest: sha256:7b2b1f695ac372b9bec7d17176db5e1ae9e3539c7801f7781ac4ddc7b3da75d3
+generated: "2024-11-05T19:33:31.097931Z"

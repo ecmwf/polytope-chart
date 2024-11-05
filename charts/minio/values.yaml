@@ -1,0 +1,6 @@
+host: staging
+port: 9000
+size: 1Ti
+replicas: 1
+s3_access_key: minio
+s3_secret_key: minio123

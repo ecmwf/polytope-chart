@@ -1,0 +1,100 @@
+##
+## Copyright 2022 European Centre for Medium-Range Weather Forecasts (ECMWF)
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+## In applying this licence, ECMWF does not waive the privileges and immunities
+## granted to it by virtue of its status as an intergovernmental organisation nor
+## does it submit to any jurisdiction.
+##
+{{ if .Values.deployment.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: polytope-ingress
+  namespace: {{ .Values.global.namespace }}
+  annotations:
+    {{- with .Values.deployment.ingress.extra_ingress_annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    cert-manager.io/cluster-issuer: {{ .Values.deployment.ingress.cert_issuer }}
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+    nginx.ingress.kubernetes.io/limit-req-status-code: "429"
+    nginx.org/proxy-buffering: "False"
+    nginx.org/proxy-max-temp-file-size: "1024000m"
+    {{ if .Values.deployment.ingress.https_rewrite }}
+    nginx.org/redirect-to-https: "True"
+    ingress.kubernetes.io/ssl-redirect: "True"
+    {{ else }}
+    nginx.org/redirect-to-https: "False"
+    ingress.kubernetes.io/ssl-redirect: "False"
+    {{ end }}
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "{{ .Values.deployment.ingress.deployment_name }}.{{ .Values.deployment.ingress.common_domain }}"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Values.deployment.ingress.host }}
+            port:
+              number: {{ .Values.deployment.ingress.port }}
+  defaultBackend:
+    service:
+      name: {{ .Values.deployment.ingress.host }}
+      port:
+        number: {{ .Values.deployment.ingress.port }}
+  tls:
+  - hosts:
+    - "{{ .Values.deployment.ingress.deployment_name }}.{{ .Values.deployment.ingress.common_domain }}"
+    secretName: {{ .Values.deployment.ingress.frontend_tls_secret }}
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: {{ .Values.global.namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: ov-issuer
+    dns.operators.ecmwf.int/on-transport-server: vs-transport-https
+    nginx.ingress.kubernetes.io/limit-req-status-code: "429"
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+    nginx.org/proxy-buffering: "False"
+    nginx.org/proxy-max-temp-file-size: 1024000m
+    nginx.org/redirect-to-https: "True"
+  name: polytope-ingress-downloads
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "download-{{ .Values.deployment.ingress.deployment_name }}.{{ .Values.deployment.ingress.common_domain }}"
+    http:
+      paths:
+      - backend:
+          service:
+            name: "{{- if .Values.seaweedfs.enabled }}seaweedfs-s3{{- else }}{{ .Values.download_host }}{{- end }}"
+            port:
+              number: {{ .Values.deployment.ingress.downloads.port }}
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - "download-{{ .Values.deployment.ingress.deployment_name }}.{{ .Values.deployment.ingress.common_domain }}"
+    secretName: {{ .Values.deployment.ingress.downloads.downloads_tls_secret }}
+
+{{ end }} # end of ingress enabled check defined in the beginning

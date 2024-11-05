@@ -1,0 +1,98 @@
+##
+## Copyright 2022 European Centre for Medium-Range Weather Forecasts (ECMWF)
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+## In applying this licence, ECMWF does not waive the privileges and immunities
+## granted to it by virtue of its status as an intergovernmental organisation nor
+## does it submit to any jurisdiction.
+##
+
+global:
+  namespace: my-namespace
+
+seaweedfs:
+  enabled: false
+
+mysql:
+  enabled: false
+
+minio:
+  enabled: false
+
+deployment:
+  polytope_proxy:
+  public_endpoint_dns_name: none
+  worker_node: 
+  frontend_tls_secret: polytope-frontend-tls
+  downloads_tls_secret: polytope-downloads-tls
+
+  # Leave blank to let Kubernetes choose a free port for you
+  # use ./whereis.sh to see the assigned port
+  nodeport:
+
+  # Host/port will be taken from the main polytope config
+  frontend:
+    replicas: 10
+  telemetry:
+    replicas: 1
+    nodeport:
+  worker:
+    replicas: 20
+  broker:
+    replicas: 1
+  testrunner:
+    replicas: 0
+
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    replicas: 1
+
+  mongodb:
+    host: mongodb
+    port: 27017
+    replicas: 1
+
+  minio:
+    host: staging
+    port: 9000
+    replicas: 1
+
+  redis:
+    host: redis
+    port: 6379
+    replicas: 0
+
+
+  garbage-collector:
+    host: garbage-collector
+    port: 9000
+    replicas: 1
+
+  ingress:
+    https_rewrite: true
+
+staging:
+    s3_boto3:
+      access_key: 
+      buffer_size: 40000000
+      host: 
+      max_threads: 10
+      port: 
+      secret_key: 
+      use_ssl: true
+
+testrunner:
+    host: testrunner
+    port: 5000

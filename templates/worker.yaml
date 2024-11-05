@@ -1,0 +1,341 @@
+##
+## Copyright 2022 European Centre for Medium-Range Weather Forecasts (ECMWF)
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+## In applying this licence, ECMWF does not waive the privileges and immunities
+## granted to it by virtue of its status as an intergovernmental organisation nor
+## does it submit to any jurisdiction.
+##
+
+
+{{ if .Values.worker }}
+
+{{ if eq .Values.deployment.worker.type "deployment" }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.deployment.worker.replicas }}
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ .Values | toYaml | sha256sum }}
+      labels:
+        app: worker
+    spec:
+      containers:
+      - name: worker-pod
+        {{ if .Values.deployment.fqn_images }}
+        image: {{ .Values.deployment.fqn_images.worker }}
+        {{ else if .Values.deployment.tag }}
+        image: {{ .Values.deployment.registry }}/worker:{{ .Values.deployment.tag }}
+        {{ else }}
+        image: {{ .Values.deployment.registry }}/worker:{{ .Release.Namespace }}-latest
+        {{ end }}
+        imagePullPolicy: Always
+        env:
+          - name: K8S_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: K8S_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: K8S_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: POLYTOPE_PROXY
+            value: {{ .Values.deployment.polytope_proxy }}
+          - name: MIR_CACHE_PATH
+            value: /home/polytope/data/mir_cache
+          - name: MARS_READANY_BUFFER_SIZE
+            value: "1073741824"
+          - name: MIR_GRIB_INPUT_BUFFER_SIZE
+            value: "1073741824"
+          - name: METKIT_RAW_PARAM
+            value: "1"
+        volumeMounts:
+          - name: config-volume
+            mountPath: /etc/polytope
+          - name: ppdir
+            mountPath: /var/tmp/ppdir
+          - name: statistics
+            mountPath: /logs/mars/statistics
+          - name: tmp
+            mountPath: /tmp
+          {{ if .Values.deployment.mars_c.enabled }}
+          - name: mars-ssh-key
+            mountPath: /home/polytope/.ssh/id_rsa.pub
+            subPath: "id_rsa.pub"
+            readOnly: true
+          - name: mars-ssh-key
+            mountPath: /home/polytope/.ssh/id_rsa
+            subPath: "id_rsa"
+            readOnly: true
+          {{ end }}
+        command: ["python"]
+        args: ["-m", "polytope_server.worker"]
+      volumes:
+        - name: config-volume
+          configMap:
+            name: polytope-config
+        - name: ppdir
+          emptyDir: {}
+        - name: statistics
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        {{ if .Values.deployment.mars_c.enabled }}
+        - name: mars-ssh-key
+          secret:
+            secretName: mars-ssh-secret
+            defaultMode: 0600
+        {{ end }}
+      securityContext:
+        fsGroup: 1500
+      imagePullSecrets:
+        - name: polytope-registry-cred
+  {{ if .Values.deployment.worker_node }}
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - {{ .Values.deployment.worker_node }}
+  {{ end }}
+
+{{ else }}
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: worker
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.deployment.worker.replicas }}
+  selector:
+    matchLabels:
+      app: worker
+  serviceName: worker
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ .Values | toYaml | sha256sum }}
+        date: {{ date "20060102150405" .Release.Time | quote }}
+      labels:
+        app: worker
+    spec:
+      containers:
+      - name: worker-pod
+        {{ if .Values.deployment.fqn_images }}
+        image: {{ .Values.deployment.fqn_images.worker }}
+        {{ else if .Values.deployment.tag }}
+        image: {{ .Values.deployment.registry }}/worker:{{ .Values.deployment.tag }}
+        {{ else }}
+        image: {{ .Values.deployment.registry }}/worker:{{ .Release.Namespace }}-latest
+        {{ end }}
+        imagePullPolicy: Always
+        env:
+          - name: K8S_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: K8S_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: K8S_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: POLYTOPE_PROXY
+            value: {{ .Values.deployment.polytope_proxy }}
+          - name: MIR_CACHE_PATH
+            value: /home/polytope/data/mir_cache
+          - name: MARS_READANY_BUFFER_SIZE
+            value: "1073741824"
+          - name: MIR_GRIB_INPUT_BUFFER_SIZE
+            value: "1073741824"
+          - name: METKIT_RAW_PARAM
+            value: "1"
+        volumeMounts:
+          - name: config-volume
+            mountPath: /etc/polytope
+          - name: ppdir
+            mountPath: /var/tmp/ppdir
+          - name: statistics
+            mountPath: /logs/mars/statistics
+          - name: tmp
+            mountPath: /tmp
+          # - name: fdb
+          #   mountPath: /data
+          - name: worker-persistent
+            mountPath: /persistent
+          {{ if .Values.deployment.mars_c.enabled }}
+          - name: mars-ssh-key
+            mountPath: /home/polytope/.ssh/id_rsa.pub
+            subPath: "id_rsa.pub"
+            readOnly: true
+          - name: mars-ssh-key
+            mountPath: /home/polytope/.ssh/id_rsa
+            subPath: "id_rsa"
+            readOnly: true
+          {{ end }}
+        command: ["python"]
+        args: ["-m", "polytope_server.worker"]
+      volumes:
+        - name: config-volume
+          configMap:
+            name: polytope-config
+        - name: ppdir
+          emptyDir: {}
+        - name: statistics
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        {{ if .Values.deployment.mars_c.enabled }}
+        - name: mars-ssh-key
+          secret:
+            secretName: mars-ssh-secret
+            defaultMode: 0600
+        {{ end }}
+        # - name: fdb
+        #   persistentVolumeClaim:
+        #     claimName: worker-pv-claim
+      securityContext:
+        fsGroup: 1500
+      imagePullSecrets:
+        - name: polytope-registry-cred
+
+      {{ if .Values.deployment.worker_node }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - {{ .Values.deployment.worker_node }}
+      {{ end }}
+
+  volumeClaimTemplates:
+  - metadata:
+      name: worker-persistent
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Mi
+
+---
+
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#  name: worker-pv-claim
+# spec:
+#  accessModes:
+#   - ReadWriteOnce
+#  resources:
+#   requests:
+#    storage: 50Gi
+
+{{ $values := .Values }}
+{{ range $i := until (.Values.deployment.worker.replicas | int) }}
+---
+
+# We expose each worker (worker-0, worker-1, etc.) as a separate service with a separate port
+# See https://itnext.io/exposing-statefulsets-in-kubernetes-698730fb92a1
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker-{{ $i }}
+  namespace: {{ $.Values.global.namespace }}
+spec:
+  externalTrafficPolicy: Local # Only visible when accessing host node
+  selector:
+    statefulset.kubernetes.io/pod-name: worker-{{ $i }}
+  type: NodePort
+  ports:
+  - protocol: TCP
+    targetPort: 5000
+    port: 5000
+    name: tcp5000
+  - protocol: TCP
+    targetPort: 5001
+    port: 5001
+    name: tcp5001
+  - protocol: TCP
+    targetPort: 5002
+    port: 5002
+    name: tcp5002
+  - protocol: TCP
+    targetPort: 5003
+    port: 5003
+    name: tcp5003
+  - protocol: TCP
+    targetPort: 5004
+    port: 5004
+    name: tcp5004
+
+{{ end }} # range loop
+
+{{ end }} # stateful/deployment switch
+
+---
+
+# Service account rules give the mars-wrapper the ability to do "get" on the "services" endpoint,
+# allowing it to query the assigned nodeport
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: mars-client
+  namespace: {{ .Values.global.namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mars-client
+  namespace: {{ .Values.global.namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: default
+roleRef:
+  kind: Role
+  name: mars-client
+  apiGroup: rbac.authorization.k8s.io
+
+
+
+
+{{ end }}
