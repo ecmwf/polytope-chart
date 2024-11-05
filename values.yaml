@@ -21,78 +21,476 @@
 global:
   namespace: my-namespace
 
-seaweedfs:
-  enabled: false
+developer:
+  disable_schema_check: true
+
+logging:
+  level: DEBUG
+  mode: console
+#################################################################################################
+#                                        C O M M O N
+#################################################################################################
+# These are values which need to match across multiple fields
+# They are defined here to avoid duplication
+
+# Only relevant to Seaweedfs/mysql
+mysql_service_name: &mysql_svc_name
+filer_database: &filer_database 
+secretName: &s3_secret_name
+
+# Only relevant to Seaweedfs/mysql and MinIO
+s3_access_key: &s3_access_key
+s3_secret_key: &s3_secret_key
+
+# Relevant to all staging
+# while minio will respect the host value, seaweedfs will always use the value "seaweedfs-s3"
+# we suggest to keep the value staging here especially if you are using minio
+# its value for seaweedfs will be auto calculated in the configmap
+download_host: &download_host "staging"
+download_port: &download_port 9000
+
+#################################################################################################
+#                                        H E L M   D E P E N D E N C I E S
+#################################################################################################
 
 mysql:
-  enabled: false
-
+  enabled: false # activate together with seaweedfs
+  fullnameOverride: *mysql_svc_name
+  startdbScripts:
+    init.sql: |
+      CREATE TABLE IF NOT EXISTS `filemeta` (
+        `dirhash`   BIGINT NOT NULL       COMMENT 'first 64 bits of MD5 hash value of directory field',
+        `name`      VARCHAR(766) NOT NULL COMMENT 'directory or file name',
+        `directory` TEXT NOT NULL         COMMENT 'full path to parent directory',
+        `meta`      LONGBLOB,
+        PRIMARY KEY (`dirhash`, `name`)
+      ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+  primary:
+    service:
+      type: ClusterIP
+    persistence:
+      enabled: true
+      size: "200Gi"
+    resources:
+      requests:
+        memory: "4Gi"
+        cpu: "3000m"
+      limits:
+        memory: "16Gi"
+        cpu: "8000m"
+  auth:
+    rootPassword: 
+    database: *filer_database
+    username: 
+    password: 
+seaweedfs:
+  enabled: false # activate together with mysql
+  serviceMonitor:
+    enabled: true
+  createS3Secret:
+    enabled: true
+    secretName: *s3_secret_name
+  global:
+    createClusterRole: false
+    enableReplication: false
+  master:
+    enabled: true
+    replicas: 1
+    volumePreallocate: true
+    volumeSizeLimitMB: 30000
+    logs:
+      type: "emptyDir"
+  volume:
+    enabled: true
+    replicas: 1
+    minFreeSpacePercent: 7
+    index: leveldbLarge
+    dataDirs:
+    - name: data
+      type: "persistentVolumeClaim"
+      size: 1Ti
+      maxVolumes: 0
+  filer:
+    enabled: true
+    replicas: 1
+    enablePVC: true
+    storage: 50Gi
+    maxMB: 1000
+    logs:
+      type: "emptyDir"
+    data:
+      type: "persistentVolumeClaim"
+      size: "50Gi"
+    s3:
+      enabled: true
+      port: *download_port
+      allowEmptyFolder: true
+      enableAuth: true
+      existingConfigSecret: *s3_secret_name
+      createBuckets:
+      - name: default
+        anonymousRead: true
+      credentials:
+        anvAdmin:
+          accessKey: *s3_access_key
+          secretKey: *s3_secret_key
+    extraEnvironmentVars:
+      WEED_LEVELDB2_ENABLED: "false"
+      WEED_MYSQL_ENABLED: "true"
+      WEED_MYSQL_DATABASE: *filer_database
+      WEED_MYSQL_HOSTNAME: *mysql_svc_name
 minio:
   enabled: false
+  host: *download_host
+  port: *download_port
+  size: 1Ti
+  replicas: 1
+  s3_access_key: *s3_access_key
+  s3_secret_key: *s3_secret_key
+
+#################################################################################################
+#                   D E P L O Y M E N T
+#################################################################################################
 
 deployment:
-  polytope_proxy:
-  public_endpoint_dns_name: none
-  worker_node: 
-  frontend_tls_secret: polytope-frontend-tls
-  downloads_tls_secret: polytope-downloads-tls
+  registry:
+  tag:
+  mars_c: # in certain environments you may need to use the mars c client
+    enabled: false
+    # the mars c client requires configuration which is currently accessed at runtime via git, so you need to provide an ssh key
+    # sshPrivateKey: |
+      # -----BEGIN OPENSSH PRIVATE KEY-----
+      # -----END OPENSSH PRIVATE KEY-----
+    # sshPublicKey:
 
-  # Leave blank to let Kubernetes choose a free port for you
-  # use ./whereis.sh to see the assigned port
-  nodeport:
-
-  # Host/port will be taken from the main polytope config
-  frontend:
-    replicas: 10
-  telemetry:
-    replicas: 1
-    nodeport:
+  imageCredentials:
+    registry: 
+    username: 
+    password: 
+  ingress:
+    enabled: true
+    https_rewrite: true
+    host: frontend
+    port: 32002
+    public_endpoint_dns_name: # deployment specific, e.g. ecmwf.int
+    deployment_name: # deployment specific, e.g. polytope
+    frontend_tls_secret:  # deployment specific
+    downloads:
+      host: *download_host
+      port: *download_port
+      downloads_tls_secret: # deployment specific
+    extra_ingress_annotations:
+      dns.operators.ecmwf.int/on-transport-server: vs-transport-https
   worker:
-    replicas: 20
-  broker:
     replicas: 1
-  testrunner:
-    replicas: 0
+    type: deployment
 
+  frontend:
+    replicas: 1
+
+  polytope_proxy: ""
+#################################################################################################
+#                                        S E R V I C E S
+#################################################################################################
+frontend:
+  handler: flask
+  server: gunicorn
+  host: frontend
+  port: 32002
+  bind_to: 0.0.0.0
+  #bind_to: frontend
+
+telemetry:
+  handler: flask
+  server: gunicorn
+  host: telemetry
+  port: 32012
+  bind_to: 0.0.0.0
+
+metric_store:
+  mongodb:
+    uri: mongodb://mongodb:27017
+    collection: metrics
+
+request_store:
+  mongodb:
+    uri: mongodb://mongodb:27017
+    collection: requests
+
+caching:
+  mongodb:
+    uri: mongodb://mongodb:27017
+    collection: cache
+
+queue:
   rabbitmq:
     host: rabbitmq
     port: 5672
-    replicas: 1
+    name: default
 
-  mongodb:
-    host: mongodb
-    port: 27017
-    replicas: 1
+worker:
+  host: worker
+  port: 5000
+  tmp_dir: /tmp
 
-  minio:
-    host: staging
-    port: 9000
-    replicas: 1
-
-  redis:
-    host: redis
-    port: 6379
-    replicas: 0
-
-
-  garbage-collector:
-    host: garbage-collector
-    port: 9000
-    replicas: 1
-
-  ingress:
-    https_rewrite: true
-
-staging:
-    s3_boto3:
-      access_key: 
-      buffer_size: 40000000
-      host: 
-      max_threads: 10
-      port: 
-      secret_key: 
-      use_ssl: true
+broker:
+  host: broker
+  port: 5000
+  interval: 1
 
 testrunner:
-    host: testrunner
-    port: 5000
+  host: testrunner
+  port: 5000
+
+staging:
+  s3_boto3:
+    access_key: *s3_access_key
+    buffer_size: 10971520
+    host: *download_host
+    max_threads: 10
+    port: *download_port
+    secret_key: *s3_secret_key
+    use_ssl: true
+
+garbage-collector:
+  interval: 10s
+  threshold: 1T
+  age: 3d
+
+# The last two sections are very deployment specific, so we're only leaving some examples here
+#################################################################################################
+#             A U T H E N T I C A T I O N   &   A U T H O R I Z A T I O N
+#################################################################################################
+
+# authentication:
+#   ####################################
+#   #       E C M W F   R E A L M
+#   ####################################
+
+#   ecmwf: # realm name
+#     authenticators:
+#       ecmwfapi:
+#         type: ecmwfapi
+#         url: 
+#         status_url:
+
+#     authorizers:
+#       plain:
+#         type: plain
+#         roles:
+#           polytope-admin:
+#           - 
+
+#       ldap:
+#         type: ldap
+#         url: 
+#         filter: 
+#         search_base: 
+#         ldap_user: 
+#         ldap_password: 
+
+#   ####################################
+#   #  DestinE Service Platform Realm
+#   ####################################
+
+#   desp:
+#     authenticators:
+#       keycloak:
+#         type: jwt
+#         cert_url: 
+#         client_id: 
+#       openid_offline_access:
+#         type: openid_offline_access
+#         cert_url: 
+#         public_client_id: 
+#         private_client_id: 
+#         private_client_secret:
+#         iam_url: 
+#         iam_realm: 
+
+# admin:
+#   roles:
+#     ecmwf: [ polytope-admin ]
+
+# api-keys:
+#   generator:
+#     type: mongodb
+#     uri: mongodb://mongodb:27017
+#     allowed_realms: [ ecmwf, desp ]
+#   authenticator:
+#     type: mongoapikey
+#     uri: mongodb://mongodb:27017
+
+#################################################################################################
+#                   D A T A S O U R C E S   &   C O L L E C T I O N S
+#################################################################################################
+
+# datasources:
+#   mars_c:
+#     type: mars
+#     #command: /usr/local/bin/mars 
+#     command: mars-wrapper.py # this is for using mars-c client
+#     tmp_dir: /data
+#     match:
+#     patch:
+
+#   mars_cpp:
+#     type: mars
+#     command: /opt/ecmwf/mars-client-cpp/bin/mars-client
+#     # command: mars-wrapper.py
+#     tmp_dir: /home/polytope/data
+#     match:
+#     patch:
+#     protocol: remote
+#     binary: /opt/ecmwf/mars-client-cpp/bin/mars-client
+#     config:
+#     - name: databridge
+#       class: fdb5base
+#       visit: true
+#     fdb_config:
+#     - type: remote
+#       host: 
+#       port: 10000
+#       engine: remote
+#       store: remote
+
+#   webmars:
+#     type: webmars
+#     url: 
+#     override_email:
+#     override_apikey:
+#     tmp_dir: /data
+
+#   fdb:
+#     type: fdb
+#     config:
+#       type: local
+#       engine: toc
+#       schema:
+#         git: # path to a git repository containing the fdb schema
+#           remote: 
+#           branch: 
+#           path: 
+#       spaces:
+#       - handler: Default
+#         roots:
+#         - path: /data/fdb
+
+#   ionbeam:
+#     type: ionbeam
+#     api_endpoint: 
+
+#   polytope:
+#     type: polytope
+#     gribjump_config:
+#       type: remote
+#       uri: fdbtest:9123
+#     datacube:
+#       type: gribjump
+#     options:
+#       axis_config:
+#       - axis_name: date
+#         transformations:
+#         - name: merge
+#           other_axis: time
+#           linkers:
+#               - T
+#               - "00"
+#       - axis_name: values
+#         transformations:
+#         - name: mapper
+#           type: octahedral
+#           resolution: 1280
+#           axes:
+#           - latitude
+#           - longitude
+#           local:
+#       - axis_name: latitude
+#         transformations:
+#         - name: reverse
+#           is_reverse: true
+#       - axis_name: longitude
+#         transformations:
+#         - name: cyclic
+#           range:
+#           - 0
+#           - 360
+#       - axis_name: step
+#         transformations:
+#         - name: type_change
+#           type: int
+#       - axis_name: number
+#         transformations:
+#         - name: type_change
+#           type: int
+#       - axis_name: levelist
+#         transformations:
+#         - name: type_change
+#           type: int
+#       compressed_axes_config:
+#       - longitude
+#       - latitude
+#       - levtype
+#       - step
+#       - date
+#       - domain
+#       - expver
+#       - param
+#       - class
+#       - stream
+#       - type
+#       - number
+#       - levelist
+#       req_single_keys:
+#       - class
+#       - stream
+#       - type
+#       - levtype
+#       - expver
+#       alternative_axes: []
+#     coverageconfig:
+#       param_db: ecmwf
+
+#   echo:
+#     type: echo
+
+#   raise:
+#     type: raise
+
+#   dummy:
+#     type: dummy
+
+# collections:
+#   ecmwf-mars:
+#     roles: # per realm
+#       ecmwf: [  ]
+#     limits:
+#       total: 15
+#       per-user: 6
+#     datasources:
+#     - name: polytope
+#       match:
+#         class: [ od ]
+#         stream: [ enfo, oper ]
+#         type: [ fc, pf, cf ]
+#         levtype: [ sfc, pl ]
+#         expver: [ "0079" ]
+#     - name: mars
+#       match:
+#         expver: [ hs3g, ht3e, hsvs ]
+#     - name: mars
+#       match:
+#         class: [ ea ]
+#         stream: [ dacl ]
+
+#   dummy:
+#     roles:
+#       ecmwf: [ polytope-admin ]
+#     datasources:
+#     - name: dummy
+
+#   fdb-test:
+#     roles:
+#       ecmwf: [ polytope-admin ]
+#     datasources:
+#     - name: fdb
