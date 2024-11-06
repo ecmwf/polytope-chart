@@ -202,6 +202,7 @@ deployment:
     host: mongodb
     port: 27017
     replicas: 1
+    storage: 10Gi
 
   rabbitmq:
     host: rabbitmq
