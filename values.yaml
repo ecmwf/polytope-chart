@@ -181,12 +181,42 @@ deployment:
       downloads_tls_secret: # deployment specific
     extra_ingress_annotations:
       dns.operators.ecmwf.int/on-transport-server: vs-transport-https
-  worker:
+      
+  broker:
     replicas: 1
-    type: deployment
 
   frontend:
     replicas: 1
+
+  garbage-collector:
+    host: garbage-collector
+    port: 9000
+    replicas: 1
+
+  minio:
+    host: staging
+    port: 9000
+    replicas: 1
+
+  mongodb:
+    host: mongodb
+    port: 27017
+    replicas: 1
+
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    replicas: 1
+
+  telemetry:
+    replicas: 1
+
+  testrunner:
+    replicas: 0
+
+  worker:
+    replicas: 1
+    type: deployment
 
   polytope_proxy: ""
 #################################################################################################
