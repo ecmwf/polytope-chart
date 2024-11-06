@@ -1,7 +1,6 @@
 # Kubernetes Chart
 
-Kubernetes can be used to deploy the full polytope stack. The supported method of deployment is via Helm, and this Helm Chart.
-
+Kubernetes can be used to deploy the full polytope stack. The main supported method of deployment is via Helm, and this Helm Chart.
 
 
 ## Prerequisites
