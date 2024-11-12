@@ -106,6 +106,8 @@ mysql:
     database: *filer_database
     username: 
     password: 
+  networkPolicy:
+    enabled: false
 seaweedfs:
   enabled: false # activate together with mysql
   serviceMonitor:
