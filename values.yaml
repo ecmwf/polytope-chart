@@ -26,7 +26,6 @@ developer:
 
 logging:
   level: DEBUG
-  mode: console
 #################################################################################################
 #                                        C O M M O N
 #################################################################################################
@@ -52,6 +51,30 @@ download_port: &download_port 9000
 #################################################################################################
 #                                        H E L M   D E P E N D E N C I E S
 #################################################################################################
+
+mongodb:
+  enabled: true
+  architecture: replicaset
+  auth:
+    enabled: false
+  systemLogVerbosity: 0 #default value 0
+  replicaCount: 2 #default value 2
+  resourcesPreset: xlarge
+  service:
+    nameOverride: mongodb
+  networkPolicy:
+    enabled: false #default value true but we dont need it
+  persistence:
+    enabled: true
+    size: 20Gi #default value 8Gi
+  metrics:
+    enabled: true
+    collector:
+      all: true #export all metrics, default false
+    resourcePreset: medium
+    serviceMonitor:
+      enabled: true #this is for prometheus to scrape metrics
+
 
 mysql:
   enabled: false # activate together with seaweedfs
@@ -83,6 +106,8 @@ mysql:
     database: *filer_database
     username: 
     password: 
+  networkPolicy:
+    enabled: false
 seaweedfs:
   enabled: false # activate together with mysql
   serviceMonitor:
@@ -197,12 +222,6 @@ deployment:
     host: staging
     port: 9000
     replicas: 1
-
-  mongodb:
-    host: mongodb
-    port: 27017
-    replicas: 1
-    storage: 10Gi
 
   rabbitmq:
     host: rabbitmq
