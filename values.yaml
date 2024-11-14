@@ -52,6 +52,29 @@ download_port: &download_port 9000
 #                                        H E L M   D E P E N D E N C I E S
 #################################################################################################
 
+rabbitmq:
+  enabled: true
+  replicaCount: 1
+  resurcesPreset: xlarge
+  fullnameOverride: rabbitmq #required for polytope to find the rabbitmq service
+  auth: #polytope assumes default rabbitmq user and password are set to guest
+    username: guest
+    password: guest
+  persistence:
+    enabled: false
+  networkPolicy:
+    enabled: false
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      default:
+        enabled: true
+      detailed:
+        enabled: true
+      perObject:
+        enabled: true
+
 mongodb:
   enabled: true
   architecture: replicaset
@@ -61,7 +84,7 @@ mongodb:
   replicaCount: 2 #default value 2
   resourcesPreset: xlarge
   service:
-    nameOverride: mongodb
+    nameOverride: mongodb #required for polytope to find the mongodb service
   networkPolicy:
     enabled: false #default value true but we dont need it
   persistence:
@@ -74,7 +97,6 @@ mongodb:
     resourcePreset: medium
     serviceMonitor:
       enabled: true #this is for prometheus to scrape metrics
-
 
 mysql:
   enabled: false # activate together with seaweedfs
@@ -221,11 +243,6 @@ deployment:
   minio:
     host: staging
     port: 9000
-    replicas: 1
-
-  rabbitmq:
-    host: rabbitmq
-    port: 5672
     replicas: 1
 
   telemetry:
