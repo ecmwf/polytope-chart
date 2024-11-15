@@ -73,6 +73,8 @@ spec:
             value: "1073741824"
           - name: METKIT_RAW_PARAM
             value: "1"
+          - name: SCHEDULE_ENABLED
+            value: {{ .Values.deployment.worker.schedule.enabled | quote }}
         volumeMounts:
           - name: config-volume
             mountPath: /etc/polytope
@@ -92,6 +94,10 @@ spec:
             subPath: "id_rsa"
             readOnly: true
           {{ end }}
+          {{ if .Values.deployment.worker.schedule.enabled }}
+          - name: schedule-config
+            mountPath: /etc/polytope_schedule
+          {{ end }}
         command: ["python"]
         args: ["-m", "polytope_server.worker"]
       volumes:
@@ -109,6 +115,11 @@ spec:
           secret:
             secretName: mars-ssh-secret
             defaultMode: 0600
+        {{ end }}
+        {{ if .Values.deployment.worker.schedule.enabled }}
+        - name: schedule-config
+          configMap:
+            name: {{ .Release.Name }}-configmap
         {{ end }}
       securityContext:
         fsGroup: 1500
@@ -180,6 +191,8 @@ spec:
             value: "1073741824"
           - name: METKIT_RAW_PARAM
             value: "1"
+          - name: SCHEDULE_ENABLED
+            value: {{ .Values.deployment.worker.schedule.enabled | quote }}
         volumeMounts:
           - name: config-volume
             mountPath: /etc/polytope
@@ -203,6 +216,10 @@ spec:
             subPath: "id_rsa"
             readOnly: true
           {{ end }}
+          {{ if .Values.deployment.worker.schedule.enabled }}
+          - name: schedule-config
+            mountPath: /etc/polytope_schedule
+          {{ end }}
         command: ["python"]
         args: ["-m", "polytope_server.worker"]
       volumes:
@@ -220,6 +237,11 @@ spec:
           secret:
             secretName: mars-ssh-secret
             defaultMode: 0600
+        {{ end }}
+        {{ if .Values.deployment.worker.schedule.enabled }}
+        - name: schedule-config
+          configMap:
+            name: {{ .Release.Name }}-configmap
         {{ end }}
         # - name: fdb
         #   persistentVolumeClaim:

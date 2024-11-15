@@ -1,0 +1,9 @@
+{{ if .Values.deployment.worker.schedule.enabled}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  schedule.xml: |
+{{ .Values.deployment.worker.schedule.XML | indent 4 }}
+{{ end }}
