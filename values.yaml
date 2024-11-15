@@ -254,6 +254,10 @@ deployment:
   worker:
     replicas: 1
     type: deployment
+    schedule:
+      enabled: false
+      folder: /etc/polytope_schedule/
+      XML: ""
 
   polytope_proxy: ""
 #################################################################################################
