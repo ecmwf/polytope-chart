@@ -54,7 +54,7 @@ download_port: &download_port 9000
 
 rabbitmq:
   enabled: true
-  replicaCount: 1
+  replicaCount: 2
   resurcesPreset: xlarge
   fullnameOverride: rabbitmq #required for polytope to find the rabbitmq service
   auth: #polytope assumes default rabbitmq user and password are set to guest
@@ -74,6 +74,9 @@ rabbitmq:
         enabled: true
       perObject:
         enabled: true
+  pdb:
+    enabled: true
+    minAvailable: 1
 
 mongodb:
   enabled: true
@@ -97,6 +100,9 @@ mongodb:
     resourcePreset: medium
     serviceMonitor:
       enabled: true #this is for prometheus to scrape metrics
+  pdb:
+    enabled: true
+    minAvailable: 1
 
 mysql:
   enabled: false # activate together with seaweedfs
@@ -272,8 +278,8 @@ frontend:
   #bind_to: frontend
 
 telemetry:
-  handler: flask
-  server: gunicorn
+  handler: fastapi
+  server: uvicorn
   host: telemetry
   port: 32012
   bind_to: 0.0.0.0
