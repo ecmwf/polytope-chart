@@ -18,7 +18,7 @@
 ## does it submit to any jurisdiction.
 ##
 
-apiVersion: v1
+apiVersion: v2
 name: polytope
 version: 0.0.2
 
@@ -42,3 +42,4 @@ dependencies:
   - name: minio
     version: 0.1.0
     condition: minio.enabled
+icon: https://github.com/ecmwf/polytope/blob/develop/docs/images/polytope_logo_new_animated_AdobeExpress_3.gif
