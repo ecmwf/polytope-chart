@@ -35,7 +35,7 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ .Values | toYaml | sha256sum }}
-        date: {{ date "20060102150405" .Release.Time | quote }}
+        date: {{ date "20060102150405" (now) | quote }}
       labels:
         app: polytope-staging
     spec:
