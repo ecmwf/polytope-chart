@@ -19,7 +19,7 @@
 ##
 
 
-{{ if .Values.telemetry }}
+{{- if .Values.telemetry }}
 
 apiVersion: apps/v1
 kind: Deployment
@@ -35,19 +35,19 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ .Values | toYaml | sha256sum }}
-        date: {{ date "20060102150405" .Release.Time | quote }}
+        date: {{ date "20060102150405" (now) | quote }}
       labels:
         app: telemetry
     spec:
       containers:
       - name: telemetry-pod
-        {{ if .Values.deployment.fqn_images }}
+        {{- if .Values.deployment.fqn_images }}
         image: {{ .Values.deployment.fqn_images.polytope_common }}
-        {{ else if .Values.deployment.tag }}
+        {{- else if .Values.deployment.tag }}
         image: {{ .Values.deployment.registry }}/polytope-common:{{ .Values.deployment.tag }}
-        {{ else }}
+        {{- else }}
         image: {{ .Values.deployment.registry }}/polytope-common:{{ .Release.Namespace }}-latest
-        {{ end }}
+        {{- end }}
         imagePullPolicy: Always
         volumeMounts:
           - name: config-volume
@@ -59,14 +59,27 @@ spec:
               fieldPath: status.hostIP
         - name: POLYTOPE_PROXY
           value: {{ .Values.deployment.polytope_proxy }}
-        command: ["python"]
-        args: ["-m", "polytope_server.telemetry"]
+        - name: TELEMETRY_PORT
+          value: "{{ .Values.telemetry.port }}"
+        command: ["uvicorn"]
+        args:
+          - "polytope_server.telemetry.main:app"
+          - "--host"
+          - "0.0.0.0"
+          - "--port"
+          - "{{ .Values.telemetry.port }}"
+          - "--workers"
+          - "{{ .Values.deployment.telemetry.workers | default 1 }}"
+          {{- if .Values.telemetry.debug }}
+          - "--log-level"
+          - "debug"
+          {{- end }}
         readinessProbe:
           httpGet:
             path: /telemetry/v1/test
             port: {{ .Values.telemetry.port }}
           initialDelaySeconds: 1
-          periodSeconds: 5
+          periodSeconds: 60
       volumes:
         - name: config-volume
           configMap:
@@ -86,10 +99,10 @@ spec:
   type: NodePort
   ports:
   - protocol: TCP
-    {{ if .Values.deployment.telemetry.nodeport }}
-    nodePort: {{ .Values.deployment.telemetry.nodeport  }}
-    {{ end }}
+    {{- if .Values.deployment.telemetry.nodeport }}
+    nodePort: {{ .Values.deployment.telemetry.nodeport }}
+    {{- end }}
     targetPort: {{ .Values.telemetry.port }}
     port: {{ .Values.telemetry.port }}
 
-{{ end }}
+{{- end }}
