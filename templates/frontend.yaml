@@ -48,6 +48,13 @@ spec:
         image: {{ .Values.deployment.registry }}/polytope-common:{{ .Release.Namespace }}-latest
         {{ end }}
         imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "0.1"
+          limits:
+            memory: "2Gi"
+            cpu: "2"
         volumeMounts:
           - name: config-volume
             mountPath: /etc/polytope

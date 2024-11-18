@@ -50,6 +50,13 @@ spec:
         image: {{ .Values.deployment.registry }}/worker:{{ .Release.Namespace }}-latest
         {{ end }}
         imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "8Gi"
+            cpu: "2"
         env:
           - name: K8S_POD_NAME
             valueFrom:
@@ -168,6 +175,13 @@ spec:
         image: {{ .Values.deployment.registry }}/worker:{{ .Release.Namespace }}-latest
         {{ end }}
         imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "8Gi"
+            cpu: "2"
         env:
           - name: K8S_POD_NAME
             valueFrom:
