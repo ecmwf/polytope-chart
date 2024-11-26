@@ -54,7 +54,7 @@ download_port: &download_port 9000
 
 rabbitmq:
   enabled: true
-  replicaCount: 2
+  replicaCount: 1
   resurcesPreset: xlarge
   fullnameOverride: rabbitmq #required for polytope to find the rabbitmq service
   auth: #polytope assumes default rabbitmq user and password are set to guest
@@ -75,7 +75,7 @@ rabbitmq:
       perObject:
         enabled: true
   pdb:
-    enabled: true
+    enabled: false
     minAvailable: 1
 
 mongodb:
