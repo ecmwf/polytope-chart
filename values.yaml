@@ -97,7 +97,7 @@ mongodb:
     enabled: true
     collector:
       all: true #export all metrics, default false
-    resourcePreset: medium
+    resourcesPreset: small
     serviceMonitor:
       enabled: true #this is for prometheus to scrape metrics
   pdb:
