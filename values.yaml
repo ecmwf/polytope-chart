@@ -283,6 +283,16 @@ telemetry:
   host: telemetry
   port: 32012
   bind_to: 0.0.0.0
+  obfuscate_apikeys: True # obfuscate api keys in the endpoints
+  usage:
+    enabled: True
+    cache_expiry_seconds: 30 # set a value similar to prometheus scrape interval, default is 30 seconds
+    timeframes: # in s/h/d format, it controls the timeframes for which the usage is calculated in /usage endpoint
+      - 12h
+      - 1d
+      - 3d
+      - 7d
+      - 30d
 
 metric_store:
   mongodb:
@@ -333,6 +343,7 @@ garbage-collector:
   interval: 10s
   threshold: 1T
   age: 3d
+  metric_age: 30d # we keep processed metrics for long time for /usage endpoint
 
 # The last two sections are very deployment specific, so we're only leaving some examples here
 #################################################################################################
