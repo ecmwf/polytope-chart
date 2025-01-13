@@ -79,7 +79,7 @@ spec:
             path: /telemetry/v1/health
             port: {{ .Values.telemetry.port }}
           initialDelaySeconds: 1
-          periodSeconds: 60
+          periodSeconds: 10
       volumes:
         - name: config-volume
           configMap:
