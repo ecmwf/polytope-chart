@@ -76,7 +76,7 @@ spec:
           {{- end }}
         readinessProbe:
           httpGet:
-            path: /telemetry/v1/test
+            path: /telemetry/v1/health
             port: {{ .Values.telemetry.port }}
           initialDelaySeconds: 1
           periodSeconds: 60
