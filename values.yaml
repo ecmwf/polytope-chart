@@ -293,6 +293,17 @@ telemetry:
       - 3d
       - 7d
       - 30d
+  ingress:
+    enabled: false 
+    telemetry_tls_secret: # deployment specific
+  basic_auth:
+    enabled: false 
+    log_suppression_ttl: 3600 # in seconds
+    users:
+      - attributes: {}
+        password: # deployment specific
+        uid: # deployment specific
+    
 
 metric_store:
   mongodb:
