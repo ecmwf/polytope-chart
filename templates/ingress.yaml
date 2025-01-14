@@ -98,3 +98,33 @@ spec:
     secretName: {{ .Values.deployment.ingress.downloads.downloads_tls_secret }}
 
 {{ end }} # end of ingress enabled check defined in the beginning
+
+{{ if .Values.telemetry.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: {{ .Values.global.namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: ov-issuer
+    dns.operators.ecmwf.int/on-transport-server: vs-transport-https
+    nginx.org/redirect-to-https: "True"
+  name: polytope-ingress-telemetry
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "telemetry-{{ .Values.deployment.ingress.deployment_name }}.{{ .Values.deployment.ingress.common_domain }}"
+    http:
+      paths:
+      - backend:
+          service:
+            name: {{ .Values.telemetry.host }}
+            port:
+              number: {{ .Values.telemetry.port }}
+        path: /telemetry/v1/metrics
+        pathType: Prefix
+  tls:
+  - hosts:
+    - "telemetry-{{ .Values.deployment.ingress.deployment_name }}.{{ .Values.deployment.ingress.common_domain }}"
+    secretName: {{ .Values.telemetry.ingress.telemetry_tls_secret}}
+{{ end}}
