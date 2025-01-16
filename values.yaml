@@ -354,7 +354,7 @@ garbage-collector:
   interval: 10s
   threshold: 1T
   age: 3d
-  metric_age: 30d # we keep processed metrics for long time for /usage endpoint
+  metric_age: 365d # we keep processed metrics for long time for /metrics endpoint
 
 # The last two sections are very deployment specific, so we're only leaving some examples here
 #################################################################################################
