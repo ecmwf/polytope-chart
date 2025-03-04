@@ -540,7 +540,7 @@ garbage-collector:
 #       - type
 #       - number
 #       - levelist
-#       req_single_keys:
+#       pre_path:
 #       - class
 #       - stream
 #       - type
