@@ -83,9 +83,9 @@ spec:
           - name: SCHEDULE_ENABLED
             value: {{ .Values.deployment.worker.schedule.enabled | quote }}
           - name: MARS_DEBUG
-            value: {{ .Values.logging.mars_debug | quote }}
+            value: {{ .Values.logging.mars_debug | quote | default "0" }}
           - name: FDB_DEBUG
-            value: {{ .Values.logging.fdb_debug | quote }}
+            value: {{ .Values.logging.fdb_debug | quote | default "0" }}
         volumeMounts:
           - name: config-volume
             mountPath: /etc/polytope
@@ -211,14 +211,10 @@ spec:
             value: "1"
           - name: SCHEDULE_ENABLED
             value: {{ .Values.deployment.worker.schedule.enabled | quote }}
-          {{ if eq .Values.logging.mars_debug }}
           - name: MARS_DEBUG
-            value: "1"
-          {{ end }}
-          {{ if eq .Values.logging.fdb_debug }}
+            value: {{ .Values.logging.mars_debug | quote | default "0" }}
           - name: FDB_DEBUG
-            value: "1"
-          {{ end }}
+            value: {{ .Values.logging.fdb_debug | quote | default "0" }}
         volumeMounts:
           - name: config-volume
             mountPath: /etc/polytope
