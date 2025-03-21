@@ -49,7 +49,7 @@ spec:
         {{ else }}
         image: {{ .Values.deployment.registry }}/worker:{{ .Release.Namespace }}-latest
         {{ end }}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             memory: "4Gi"
@@ -109,8 +109,8 @@ spec:
           - name: schedule-config
             mountPath: /etc/polytope_schedule
           {{ end }}
-        command: ["python"]
-        args: ["-m", "polytope_server.worker"]
+        command: ["sh", "-c"]
+        args: ["while python -m polytope_server.worker; do if [ $? -ne 0 ]; then exit $?; fi; echo 'Worker finished with exit code $?'; sleep 1; done"]
       volumes:
         - name: config-volume
           configMap:
@@ -178,72 +178,72 @@ spec:
         {{ else }}
         image: {{ .Values.deployment.registry }}/worker:{{ .Release.Namespace }}-latest
         {{ end }}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
-            memory: "4Gi"
-            cpu: "2"
+        memory: "4Gi"
+        cpu: "2"
           limits:
-            memory: "4Gi"
-            cpu: "2"
+        memory: "4Gi"
+        cpu: "2"
         env:
           - name: K8S_POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
           - name: K8S_NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
           - name: K8S_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
           - name: POLYTOPE_PROXY
-            value: {{ .Values.deployment.polytope_proxy }}
+        value: {{ .Values.deployment.polytope_proxy }}
           - name: MIR_CACHE_PATH
-            value: /home/polytope/data/mir_cache
+        value: /home/polytope/data/mir_cache
           - name: MARS_READANY_BUFFER_SIZE
-            value: "1073741824"
+        value: "1073741824"
           - name: MIR_GRIB_INPUT_BUFFER_SIZE
-            value: "1073741824"
+        value: "1073741824"
           - name: METKIT_RAW_PARAM
-            value: "1"
+        value: "1"
           - name: SCHEDULE_ENABLED
-            value: {{ .Values.deployment.worker.schedule.enabled | quote }}
+        value: {{ .Values.deployment.worker.schedule.enabled | quote }}
           - name: MARS_DEBUG
-            value: {{ .Values.logging.mars_debug | quote | default "0" }}
+        value: {{ .Values.logging.mars_debug | quote | default "0" }}
           - name: FDB_DEBUG
-            value: {{ .Values.logging.fdb_debug | quote | default "0" }}
+        value: {{ .Values.logging.fdb_debug | quote | default "0" }}
         volumeMounts:
           - name: config-volume
-            mountPath: /etc/polytope
+        mountPath: /etc/polytope
           - name: ppdir
-            mountPath: /var/tmp/ppdir
+        mountPath: /var/tmp/ppdir
           - name: statistics
-            mountPath: /logs/mars/statistics
+        mountPath: /logs/mars/statistics
           - name: tmp
-            mountPath: /tmp
+        mountPath: /tmp
           # - name: fdb
           #   mountPath: /data
           - name: worker-persistent
-            mountPath: /persistent
+        mountPath: /persistent
           {{ if .Values.deployment.mars_c.enabled }}
           - name: mars-ssh-key
-            mountPath: /home/polytope/.ssh/id_rsa.pub
-            subPath: "id_rsa.pub"
-            readOnly: true
+        mountPath: /home/polytope/.ssh/id_rsa.pub
+        subPath: "id_rsa.pub"
+        readOnly: true
           - name: mars-ssh-key
-            mountPath: /home/polytope/.ssh/id_rsa
-            subPath: "id_rsa"
-            readOnly: true
+        mountPath: /home/polytope/.ssh/id_rsa
+        subPath: "id_rsa"
+        readOnly: true
           {{ end }}
           {{ if .Values.deployment.worker.schedule.enabled }}
           - name: schedule-config
-            mountPath: /etc/polytope_schedule
+        mountPath: /etc/polytope_schedule
           {{ end }}
-        command: ["python"]
-        args: ["-m", "polytope_server.worker"]
+        command: ["sh", "-c"]
+        args: ["while python -m polytope_server.worker; do if [ $? -ne 0 ]; then exit $?; fi; echo 'Worker finished with exit code $?'; sleep 1; done"]
       volumes:
         - name: config-volume
           configMap:
