@@ -181,11 +181,11 @@ spec:
         imagePullPolicy: IfNotPresent
         resources:
           requests:
-        memory: "4Gi"
-        cpu: "2"
+            memory: "4Gi"
+            cpu: "2"
           limits:
-        memory: "4Gi"
-        cpu: "2"
+            memory: "4Gi"
+            cpu: "2"
         env:
           - name: K8S_POD_NAME
             valueFrom:
