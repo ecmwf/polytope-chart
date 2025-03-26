@@ -318,6 +318,8 @@ telemetry:
       - 7d
       - 30d
   ingress:
+    annotations:
+      nginx.org/redirect-to-https: "True"
     enabled: false 
     telemetry_tls_secret: # deployment specific
   basic_auth:
