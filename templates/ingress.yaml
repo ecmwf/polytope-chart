@@ -24,22 +24,9 @@ metadata:
   name: polytope-ingress
   namespace: {{ .Values.global.namespace }}
   annotations:
-    {{- with .Values.deployment.ingress.extra_ingress_annotations }}
+    {{- with .Values.deployment.ingress.frontend_annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-    cert-manager.io/cluster-issuer: {{ .Values.deployment.ingress.cert_issuer }}
-    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
-    nginx.ingress.kubernetes.io/limit-rps: "50"
-    nginx.ingress.kubernetes.io/limit-req-status-code: "429"
-    nginx.org/proxy-buffering: "False"
-    nginx.org/proxy-max-temp-file-size: "1024000m"
-    {{ if .Values.deployment.ingress.https_rewrite }}
-    nginx.org/redirect-to-https: "True"
-    ingress.kubernetes.io/ssl-redirect: "True"
-    {{ else }}
-    nginx.org/redirect-to-https: "False"
-    ingress.kubernetes.io/ssl-redirect: "False"
-    {{ end }}
 spec:
   ingressClassName: nginx
   rules:
@@ -69,15 +56,10 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   namespace: {{ .Values.global.namespace }}
-  annotations:
-    cert-manager.io/cluster-issuer: ov-issuer
-    dns.operators.ecmwf.int/on-transport-server: vs-transport-https
-    nginx.ingress.kubernetes.io/limit-req-status-code: "429"
-    nginx.ingress.kubernetes.io/limit-rps: "50"
-    nginx.ingress.kubernetes.io/proxy-body-size: 100m
-    nginx.org/proxy-buffering: "False"
-    nginx.org/proxy-max-temp-file-size: 1024000m
-    nginx.org/redirect-to-https: "True"
+  annotations: 
+    {{- with .Values.deployment.ingress.download_annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   name: polytope-ingress-downloads
 spec:
   ingressClassName: nginx
