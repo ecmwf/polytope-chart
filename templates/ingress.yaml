@@ -88,9 +88,9 @@ kind: Ingress
 metadata:
   namespace: {{ .Values.global.namespace }}
   annotations:
-    cert-manager.io/cluster-issuer: ov-issuer
-    dns.operators.ecmwf.int/on-transport-server: vs-transport-https
-    nginx.org/redirect-to-https: "True"
+    {{- with .Values.telemetry.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   name: polytope-ingress-telemetry
 spec:
   ingressClassName: nginx
