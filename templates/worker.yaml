@@ -51,12 +51,9 @@ spec:
         {{ end }}
         imagePullPolicy: IfNotPresent
         resources:
-          requests:
-            memory: "4Gi"
-            cpu: "2"
-          limits:
-            memory: "4Gi"
-            cpu: "2"
+          {{ with .Values.deployment.worker.resources }}
+          {{ toYaml . | nindent 10 }}
+          {{ end }}
         env:
           - name: K8S_POD_NAME
             valueFrom:
@@ -180,12 +177,9 @@ spec:
         {{ end }}
         imagePullPolicy: IfNotPresent
         resources:
-          requests:
-            memory: "4Gi"
-            cpu: "2"
-          limits:
-            memory: "4Gi"
-            cpu: "2"
+          {{ with .Values.deployment.worker.resources }}
+          {{ toYaml . | nindent 10 }}
+          {{ end }}
         env:
           - name: K8S_POD_NAME
             valueFrom:

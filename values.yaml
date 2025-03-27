@@ -261,6 +261,13 @@ deployment:
 
   worker:
     replicas: 1
+    resources:
+      requests:
+        memory: "4Gi"
+        cpu: "2"
+      limits:
+        memory: "4Gi"
+        cpu: "2"
     type: deployment
     schedule:
       enabled: false
