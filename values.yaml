@@ -235,22 +235,9 @@ deployment:
       port: *download_port
       downloads_tls_secret: # deployment specific
     frontend_annotations: 
-      dns.operators.ecmwf.int/on-transport-server: vs-transport-https
-      nginx.ingress.kubernetes.io/limit-req-status-code: "429"
-      nginx.ingress.kubernetes.io/limit-rps: "50"
-      nginx.ingress.kubernetes.io/proxy-body-size: 100m
-      nginx.org/proxy-buffering: "False"
-      nginx.org/proxy-max-temp-file-size: 1024000m
-      ingress.kubernetes.io/ssl-redirect: "True"
-    download_annotations:
-      # cert-manager.io/cluster-issuer: 
-      dns.operators.ecmwf.int/on-transport-server: vs-transport-https
-      nginx.ingress.kubernetes.io/limit-req-status-code: "429"
-      nginx.ingress.kubernetes.io/limit-rps: "50"
-      nginx.ingress.kubernetes.io/proxy-body-size: 100m
-      nginx.org/proxy-buffering: "False"
-      nginx.org/proxy-max-temp-file-size: 1024000m
-      ingress.kubernetes.io/ssl-redirect: "True"
+      # list all frontend ingress annotations
+    download_annotations: 
+      # list all download ingress annotations
       
   broker:
     replicas: 1
@@ -319,7 +306,7 @@ telemetry:
       - 30d
   ingress:
     annotations:
-      nginx.org/redirect-to-https: "True"
+      # list all telemetry ingress annotations
     enabled: false 
     telemetry_tls_secret: # deployment specific
   basic_auth:
