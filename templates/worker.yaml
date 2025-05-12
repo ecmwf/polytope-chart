@@ -49,7 +49,7 @@ spec:
         {{ else }}
         image: {{ .Values.deployment.registry }}/worker:{{ .Release.Namespace }}-latest
         {{ end }}
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         resources:
           {{ with .Values.deployment.worker.resources }}
           {{ toYaml . | nindent 10 }}
@@ -107,7 +107,7 @@ spec:
             mountPath: /etc/polytope_schedule
           {{ end }}
         command: ["sh", "-c"]
-        args: ["while python -m polytope_server.worker; do if [ $? -ne 0 ]; then exit $?; fi; echo 'Worker finished with exit code $?'; sleep 1; done"]
+        args: ["while python -m polytope_server.worker; do if [ $? -ne 0 ]; then exit $?; fi; echo 'Worker finished with exit code' $?; sleep 1; done"]
       volumes:
         - name: config-volume
           configMap:
