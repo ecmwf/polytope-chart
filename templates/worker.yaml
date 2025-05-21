@@ -175,7 +175,7 @@ spec:
         {{ else }}
         image: {{ .Values.deployment.registry }}/worker:{{ .Release.Namespace }}-latest
         {{ end }}
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         resources:
           {{ with .Values.deployment.worker.resources }}
           {{ toYaml . | nindent 10 }}
