@@ -4,7 +4,7 @@ dependencies:
   version: 10.2.2
 - name: mongodb
   repository: https://charts.bitnami.com/bitnami
-  version: 16.2.1
+  version: 16.4.0
 - name: rabbitmq
   repository: https://charts.bitnami.com/bitnami
   version: 15.0.6
@@ -14,5 +14,5 @@ dependencies:
 - name: minio
   repository: ""
   version: 0.1.0
-digest: sha256:3db4a5894ccc013f8aa813409cb2804e1cf88a0e1d3ec34ab1ced260b6d8d6ba
-generated: "2024-11-14T13:26:03.035018549Z"
+digest: sha256:a8d3803c2890fd3cd826c4a2e82f9370486457aa484326c4a9ba059b2a457787
+generated: "2025-05-28T12:56:22.781353374Z"
