@@ -50,7 +50,7 @@ spec:
         imagePullPolicy: Always
         resources:
           limits:
-            memory: "1Gi"
+            memory: "2Gi"
             cpu: "0.5"
         volumeMounts:
           - name: config-volume
