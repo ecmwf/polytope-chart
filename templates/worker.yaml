@@ -237,7 +237,7 @@ spec:
             mountPath: /etc/polytope_schedule
           {{ end }}
         command: ["sh", "-c"]
-        args: ["while python -m polytope_server.worker; do if [ $? -ne 0 ]; then exit $?; fi; echo 'Worker finished with exit code $?'; sleep 1; done"]
+        args: ["while python -m polytope_server.worker; do if [ $? -ne 0 ]; then exit $?; fi; echo 'Worker finished with exit code' $?; sleep 1; done"]
       volumes:
         - name: config-volume
           configMap:
