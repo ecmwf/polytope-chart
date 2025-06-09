@@ -57,8 +57,11 @@ download_port: &download_port 9000
 rabbitmq:
   enabled: true
   replicaCount: 1
-  resurcesPreset: xlarge
   fullnameOverride: rabbitmq #required for polytope to find the rabbitmq service
+  advancedConfiguration: |-
+    [{rabbit, [
+      {consumer_timeout, undefined}
+    ]}].
   auth: #polytope assumes default rabbitmq user and password are set to guest
     username: guest
     password: guest
