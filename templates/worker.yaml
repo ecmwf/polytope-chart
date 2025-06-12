@@ -362,6 +362,7 @@ spec:
 # Service account rules give the mars-wrapper the ability to do "get" on the "services" endpoint,
 # allowing it to query the assigned nodeport
 
+{{ if .Values.deployment.mars_c.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -385,7 +386,7 @@ roleRef:
   kind: Role
   name: mars-client
   apiGroup: rbac.authorization.k8s.io
-
+{{ end }}
 
 
 {{ end }}
