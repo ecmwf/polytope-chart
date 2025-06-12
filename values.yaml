@@ -221,6 +221,13 @@ deployment:
       # -----END OPENSSH PRIVATE KEY-----
     # sshPublicKey:
 
+  default:
+    extraEnvironmentVars:
+      # STRING_VAR_NAME: value
+      # MAP_VAR_NAME:
+      #   secretKeyRef:
+      #     name: secret-name
+      #     key: secret-key
   imageCredentials:
     registry: 
     username: 
