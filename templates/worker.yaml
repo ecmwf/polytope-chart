@@ -83,6 +83,17 @@ spec:
             value: {{ .Values.logging.mars_debug | quote | default "0" }}
           - name: FDB_DEBUG
             value: {{ .Values.logging.fdb_debug | quote | default "0" }}
+          {{- if .Values.deployment.default.extraEnvironmentVars }}
+          {{- range $key, $value := .Values.deployment.default.extraEnvironmentVars }}
+          - name: {{ $key }}
+          {{- if kindIs "string" $value }}
+            value: {{ $value | quote }}
+          {{- else }}
+            valueFrom:
+              {{ toYaml $value | nindent 14 | trim }}
+          {{- end -}}
+          {{- end }}
+          {{- end }}
         volumeMounts:
           - name: config-volume
             mountPath: /etc/polytope
