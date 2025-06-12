@@ -131,8 +131,10 @@ spec:
         {{ end }}
       securityContext:
         fsGroup: 1500
+      {{ if .Values.deployment.imageCredentials }}
       imagePullSecrets:
         - name: polytope-registry-cred
+      {{ end }}
   {{ if .Values.deployment.worker_node }}
   affinity:
     nodeAffinity:
@@ -372,7 +374,6 @@ roleRef:
   kind: Role
   name: mars-client
   apiGroup: rbac.authorization.k8s.io
-
 
 
 
