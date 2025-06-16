@@ -223,7 +223,8 @@ deployment:
 
   default:
     extraEnvironmentVars:
-      # STRING_VAR_NAME: value
+      # you can add additional environment variables either as strings or secrets for first party polytope services to be used in config substitution
+      # STRING_VAR_NAME: "value"
       # MAP_VAR_NAME:
       #   secretKeyRef:
       #     name: secret-name
