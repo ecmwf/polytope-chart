@@ -48,6 +48,8 @@ data:
   {{- end }}
 {{- end }}
 
-{{- $_ := set $config.staging.s3_boto3 "url" (printf "download-%s.%s" .Values.deployment.ingress.deployment_name .Values.deployment.ingress.common_domain) }}
+{{- if and .Values.deployment.ingress.downloads.enabled .Values.staging.s3_boto3 }}
+    {{- $_ := set $config.staging.s3_boto3 "url" (printf "download-%s.%s" .Values.deployment.ingress.deployment_name .Values.deployment.ingress.common_domain) }}
+{{- end }}
 
 {{ $config | toYaml | indent 6 }}

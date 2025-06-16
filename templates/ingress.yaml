@@ -60,7 +60,7 @@ kind: Ingress
 metadata:
   namespace: {{ .Values.global.namespace }}
   annotations: 
-    {{- with .Values.deployment.ingress.download.annotations }}
+    {{- with .Values.deployment.ingress.downloads.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: polytope-ingress-downloads
@@ -80,7 +80,7 @@ spec:
   tls:
   - hosts:
     - "download-{{ .Values.deployment.ingress.deployment_name }}.{{ .Values.deployment.ingress.common_domain }}"
-    secretName: {{ .Values.deployment.ingress.downloads.downloads.tls_secret }}
+    secretName: {{ .Values.deployment.ingress.downloads.tls_secret }}
 
 {{ end }} # end of ingress download enabled check
 
