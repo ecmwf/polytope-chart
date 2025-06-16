@@ -37,14 +37,14 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: {{ .Values.deployment.ingress.frontend.host }}
+            name: {{ .Values.frontend.host }}
             port:
-              number: {{ .Values.deployment.ingress.frontend.port }}
+              number: {{ .Values.frontend.port }}
   defaultBackend:
     service:
-      name: {{ .Values.deployment.ingress.frontend.host }}
+      name: {{ .Values.frontend.host }}
       port:
-        number: {{ .Values.deployment.ingress.frontend.port }}
+        number: {{ .Values.frontend.port }}
   tls:
   - hosts:
     - "{{ .Values.deployment.ingress.deployment_name }}.{{ .Values.deployment.ingress.common_domain }}"
@@ -52,7 +52,7 @@ spec:
 
 {{ end }} # end of ingress frontend enabled check
 
-{{ if .Values.ingress.downloads.enabled }}
+{{ if .Values.deployment.ingress.downloads.enabled }}
 ---
 
 apiVersion: networking.k8s.io/v1
@@ -72,7 +72,7 @@ spec:
       paths:
       - backend:
           service:
-            name: "{{- if .Values.seaweedfs.enabled }}seaweedfs-s3{{- else }}{{ .Values.download_host }}{{- end }}"
+            name: "{{- if .Values.seaweedfs.enabled }}seaweedfs-s3{{- else }}{{ .Values.deployment.ingress.downloads.host }}{{- end }}"
             port:
               number: {{ .Values.deployment.ingress.downloads.port }}
         path: /
@@ -84,14 +84,14 @@ spec:
 
 {{ end }} # end of ingress download enabled check
 
-{{ if .Values.telemetry.ingress.enabled }}
+{{ if .Values.deployment.ingress.telemetry.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   namespace: {{ .Values.global.namespace }}
   annotations:
-    {{- with .Values.telemetry.ingress.annotations }}
+    {{- with .Values.deployment.ingress.telemetry.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: polytope-ingress-telemetry
@@ -111,5 +111,5 @@ spec:
   tls:
   - hosts:
     - "telemetry-{{ .Values.deployment.ingress.deployment_name }}.{{ .Values.deployment.ingress.common_domain }}"
-    secretName: {{ .Values.telemetry.ingress.telemetry_tls_secret}}
+    secretName: {{ .Values.deployment.ingress.telemetry.tls_secret}}
 {{ end}}
