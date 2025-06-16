@@ -61,6 +61,17 @@ spec:
           value: {{ .Values.deployment.polytope_proxy }}
         - name: TELEMETRY_PORT
           value: "{{ .Values.telemetry.port }}"
+        {{- if .Values.deployment.default.extraEnvironmentVars }}
+        {{- range $key, $value := .Values.deployment.default.extraEnvironmentVars }}
+        - name: {{ $key }}
+        {{- if kindIs "string" $value }}
+          value: {{ $value | quote }}
+        {{- else }}
+          valueFrom:
+            {{ toYaml $value | nindent 12 | trim }}
+        {{- end -}}
+        {{- end }}
+        {{- end }}
         command: ["uvicorn"]
         args:
           - "polytope_server.telemetry.main:app"
@@ -84,8 +95,10 @@ spec:
         - name: config-volume
           configMap:
             name: polytope-config
+      {{ if .Values.deployment.imageCredentials }}
       imagePullSecrets:
         - name: polytope-registry-cred
+      {{ end }}
 ---
 
 apiVersion: v1

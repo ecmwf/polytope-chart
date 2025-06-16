@@ -55,6 +55,18 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "0.5"
+        {{- if .Values.deployment.default.extraEnvironmentVars }}
+        env:
+        {{- range $key, $value := .Values.deployment.default.extraEnvironmentVars }}
+        - name: {{ $key }}
+        {{- if kindIs "string" $value }}
+          value: {{ $value | quote }}
+        {{- else }}
+          valueFrom:
+            {{ toYaml $value | nindent 12 | trim }}
+        {{- end -}}
+        {{- end }}
+        {{- end }}
         volumeMounts:
           - name: config-volume
             mountPath: /etc/polytope
@@ -64,7 +76,9 @@ spec:
         - name: config-volume
           configMap:
             name: polytope-config
+      {{ if .Values.deployment.imageCredentials }}
       imagePullSecrets:
         - name: polytope-registry-cred
+      {{ end }}
 
 {{ end }}
