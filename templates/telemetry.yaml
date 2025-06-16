@@ -84,8 +84,10 @@ spec:
         - name: config-volume
           configMap:
             name: polytope-config
+      {{ if .Values.deployment.imageCredentials }}
       imagePullSecrets:
         - name: polytope-registry-cred
+      {{ end }}
 ---
 
 apiVersion: v1
