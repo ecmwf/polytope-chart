@@ -234,21 +234,25 @@ deployment:
     username: 
     password: 
   ingress:
-    enabled: true
-    https_rewrite: true
-    host: frontend
-    port: 32002
-    public_endpoint_dns_name: # deployment specific, e.g. ecmwf.int
+    common_domain: # deployment specific, e.g. ecmwf.int
     deployment_name: # deployment specific, e.g. polytope
-    frontend_tls_secret:  # deployment specific
     downloads:
+      enabled: true
       host: *download_host
       port: *download_port
-      downloads_tls_secret: # deployment specific
-    frontend_annotations: 
-      # list all frontend ingress annotations
-    download_annotations: 
-      # list all download ingress annotations
+      tls_secret: # deployment specific
+      annotations:
+        # list all download ingress annotations
+    frontend:
+      enabled: true
+      tls_secret:  # deployment specific
+      annotations:
+        # list all frontend ingress annotations
+    telemetry:
+      enabled: false
+      tls_secret: # deployment specific
+      annotations:
+        # list all telemetry ingress annotations
       
   broker:
     replicas: 1
@@ -315,11 +319,6 @@ telemetry:
       - 3d
       - 7d
       - 30d
-  ingress:
-    annotations:
-      # list all telemetry ingress annotations
-    enabled: false 
-    telemetry_tls_secret: # deployment specific
   basic_auth:
     enabled: false 
     log_suppression_ttl: 3600 # in seconds

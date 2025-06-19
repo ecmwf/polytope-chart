@@ -17,14 +17,14 @@
 ## granted to it by virtue of its status as an intergovernmental organisation nor
 ## does it submit to any jurisdiction.
 ##
-{{ if .Values.deployment.ingress.enabled }}
+{{ if .Values.deployment.ingress.frontend.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: polytope-ingress
   namespace: {{ .Values.global.namespace }}
   annotations:
-    {{- with .Values.deployment.ingress.frontend_annotations }}
+    {{- with .Values.deployment.ingress.frontend.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
@@ -37,19 +37,22 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: {{ .Values.deployment.ingress.host }}
+            name: {{ .Values.frontend.host }}
             port:
-              number: {{ .Values.deployment.ingress.port }}
+              number: {{ .Values.frontend.port }}
   defaultBackend:
     service:
-      name: {{ .Values.deployment.ingress.host }}
+      name: {{ .Values.frontend.host }}
       port:
-        number: {{ .Values.deployment.ingress.port }}
+        number: {{ .Values.frontend.port }}
   tls:
   - hosts:
     - "{{ .Values.deployment.ingress.deployment_name }}.{{ .Values.deployment.ingress.common_domain }}"
-    secretName: {{ .Values.deployment.ingress.frontend_tls_secret }}
+    secretName: {{ .Values.deployment.ingress.frontend.tls_secret }}
 
+{{ end }} # end of ingress frontend enabled check
+
+{{ if .Values.deployment.ingress.downloads.enabled }}
 ---
 
 apiVersion: networking.k8s.io/v1
@@ -57,7 +60,7 @@ kind: Ingress
 metadata:
   namespace: {{ .Values.global.namespace }}
   annotations: 
-    {{- with .Values.deployment.ingress.download_annotations }}
+    {{- with .Values.deployment.ingress.downloads.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: polytope-ingress-downloads
@@ -69,7 +72,7 @@ spec:
       paths:
       - backend:
           service:
-            name: "{{- if .Values.seaweedfs.enabled }}seaweedfs-s3{{- else }}{{ .Values.download_host }}{{- end }}"
+            name: "{{- if .Values.seaweedfs.enabled }}seaweedfs-s3{{- else }}{{ .Values.deployment.ingress.downloads.host }}{{- end }}"
             port:
               number: {{ .Values.deployment.ingress.downloads.port }}
         path: /
@@ -77,18 +80,18 @@ spec:
   tls:
   - hosts:
     - "download-{{ .Values.deployment.ingress.deployment_name }}.{{ .Values.deployment.ingress.common_domain }}"
-    secretName: {{ .Values.deployment.ingress.downloads.downloads_tls_secret }}
+    secretName: {{ .Values.deployment.ingress.downloads.tls_secret }}
 
-{{ end }} # end of ingress enabled check defined in the beginning
+{{ end }} # end of ingress download enabled check
 
-{{ if .Values.telemetry.ingress.enabled }}
+{{ if .Values.deployment.ingress.telemetry.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   namespace: {{ .Values.global.namespace }}
   annotations:
-    {{- with .Values.telemetry.ingress.annotations }}
+    {{- with .Values.deployment.ingress.telemetry.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: polytope-ingress-telemetry
@@ -108,5 +111,5 @@ spec:
   tls:
   - hosts:
     - "telemetry-{{ .Values.deployment.ingress.deployment_name }}.{{ .Values.deployment.ingress.common_domain }}"
-    secretName: {{ .Values.telemetry.ingress.telemetry_tls_secret}}
+    secretName: {{ .Values.deployment.ingress.telemetry.tls_secret}}
 {{ end}}
