@@ -365,7 +365,7 @@ testrunner:
   port: 5000
 
 staging:
-  s3_boto3:
+  s3:
     access_key: *s3_access_key
     buffer_size: 10971520
     host: *download_host
