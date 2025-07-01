@@ -33,8 +33,7 @@ data:
   {{- end }}
   {{- if .Values.seaweedfs.enabled }}
     {{- $_ := set $config.staging.s3 "host" "http://seaweedfs-s3" }}
-    {{- $_ := set $config.staging.s3 "should_set_policy" false }}
-  {{- else }}
+  {{- else if (.Values.minio.enabled) }}
     {{- $_ := set $config.staging.s3 "should_set_policy" true }}
   {{- end }}
 {{- end }}
