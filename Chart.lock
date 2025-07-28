@@ -14,5 +14,8 @@ dependencies:
 - name: minio
   repository: ""
   version: 0.1.0
-digest: sha256:a8d3803c2890fd3cd826c4a2e82f9370486457aa484326c4a9ba059b2a457787
-generated: "2025-05-28T12:56:22.781353374Z"
+- name: auth-o-tron
+  repository: https://eccr.ecmwf.int/chartrepo/auth-o-tron
+  version: 0.1.2
+digest: sha256:425b116ee6888480df850c73e78e59b142c8f89fd346aa743bf9c03eaa61a4e1
+generated: "2025-07-18T15:09:50.704262871Z"

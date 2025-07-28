@@ -54,6 +54,9 @@ download_port: &download_port 9000
 #                                        H E L M   D E P E N D E N C I E S
 #################################################################################################
 
+auth-o-tron:
+  enabled: false
+
 rabbitmq:
   enabled: true
   replicaCount: 1

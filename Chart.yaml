@@ -42,4 +42,8 @@ dependencies:
   - name: minio
     version: 0.1.0
     condition: minio.enabled
+  - name: auth-o-tron
+    version: 0.1.2
+    repository: https://eccr.ecmwf.int/chartrepo/auth-o-tron
+    condition: auth-o-tron.enabled
 icon: https://github.com/ecmwf/polytope/blob/develop/docs/images/polytope_logo_new_animated_AdobeExpress_3.gif
