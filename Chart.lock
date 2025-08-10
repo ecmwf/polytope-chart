@@ -16,6 +16,6 @@ dependencies:
   version: 0.1.0
 - name: auth-o-tron
   repository: https://eccr.ecmwf.int/chartrepo/auth-o-tron
-  version: 0.1.2
-digest: sha256:425b116ee6888480df850c73e78e59b142c8f89fd346aa743bf9c03eaa61a4e1
-generated: "2025-07-18T15:09:50.704262871Z"
+  version: 0.1.4
+digest: sha256:3d928e38e49f4dd714d5c85a76356d951fe03b88911109711493c2ba8183e905
+generated: "2025-08-06T13:31:16.847178335Z"
