@@ -457,7 +457,8 @@ garbage-collector:
 #################################################################################################
 #                   D A T A S O U R C E S   &   C O L L E C T I O N S
 #################################################################################################
-
+## Datasources are inheritable, so one could list parent datasources that get merged in order, 
+## with each new config overwriting the previous if there are conflicts. The child config is the last overwrite.
 # datasources:
 #   mars_c:
 #     type: mars
@@ -466,9 +467,17 @@ garbage-collector:
 #     tmp_dir: /data
 #     match:
 #     patch:
-
+#   fdb_base:
+#     fdb_config:
+#       type: remote
+#       host: 
+#       port: 10000
+#       engine: remote
+#       store: remote
 #   mars_cpp:
 #     type: mars
+#     parents:
+#.      - fdb_base # THIS MEANS THIS CONFIG HAS THE fdb_config FROM fdb_base!
 #     command: /opt/ecmwf/mars-client-cpp/bin/mars-client
 #     # command: mars-wrapper.py
 #     tmp_dir: /home/polytope/data
@@ -480,12 +489,6 @@ garbage-collector:
 #     - name: databridge
 #       class: fdb5base
 #       visit: true
-#     fdb_config:
-#     - type: remote
-#       host: 
-#       port: 10000
-#       engine: remote
-#       store: remote
 
 #   webmars:
 #     type: webmars
@@ -496,7 +499,7 @@ garbage-collector:
 
 #   fdb:
 #     type: fdb
-#     config:
+#     fdb_config:
 #       type: local
 #       engine: toc
 #       schema:
@@ -516,8 +519,19 @@ garbage-collector:
 #   polytope:
 #     type: polytope
 #     gribjump_config:
+#       servermap:
+#         - fdb: 'store1.somewhe.re:10000'
+#           gribjump: 'store1.somewhe.re:10001'
+#         - fdb: 'store2.somewhe.re:10000'
+#           gribjump: 'store2.somewhe.re:10001'
+#       forwardExtraction: true
+#       threads: 2
+#     fdb_config:
 #       type: remote
-#       uri: fdbtest:9123
+#       host: 
+#       port: 10000
+#       engine: remote
+#         store: remote
 #     datacube:
 #       type: gribjump
 #     options:
