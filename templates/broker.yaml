@@ -26,6 +26,10 @@ kind: Deployment
 metadata:
   name: broker
   namespace: {{ .Values.global.namespace }}
+  annotations:
+    {{- with .Values.deployment.broker.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   replicas: {{ .Values.deployment.broker.replicas }}
   selector:
