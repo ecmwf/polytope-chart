@@ -26,6 +26,10 @@ kind: Deployment
 metadata:
   name: telemetry
   namespace: {{ .Values.global.namespace }}
+  annotations:
+    {{- with .Values.deployment.telemetry.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   replicas: {{ .Values.deployment.telemetry.replicas }}
   selector:
