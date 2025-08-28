@@ -36,7 +36,7 @@ logging:
 
 # Only relevant to Seaweedfs/mysql
 mysql_service_name: &mysql_svc_name
-filer_database: &filer_database 
+filer_database: &filer_database
 secretName: &s3_secret_name
 
 # Only relevant to Seaweedfs/mysql and MinIO
@@ -138,10 +138,10 @@ mysql:
         memory: "16Gi"
         cpu: "8000m"
   auth:
-    rootPassword: 
+    rootPassword:
     database: *filer_database
-    username: 
-    password: 
+    username:
+    password:
   networkPolicy:
     enabled: false
 seaweedfs:
@@ -233,9 +233,9 @@ deployment:
       #     name: secret-name
       #     key: secret-key
   imageCredentials:
-    registry: 
-    username: 
-    password: 
+    registry:
+    username:
+    password:
   ingress:
     common_domain: # deployment specific, e.g. ecmwf.int
     deployment_name: # deployment specific, e.g. polytope
@@ -256,17 +256,23 @@ deployment:
       tls_secret: # deployment specific
       annotations:
         # list all telemetry ingress annotations
-      
+
   broker:
     replicas: 1
+    annotations:
+        # list all broker annotations
 
   frontend:
     replicas: 1
+    annotations:
+        # list all frontend annotations
 
   garbage-collector:
     host: garbage-collector
     port: 9000
     replicas: 1
+    annotations:
+        # list all garbage-collector annotations
 
   minio:
     host: staging
@@ -275,6 +281,8 @@ deployment:
 
   telemetry:
     replicas: 1
+    annotations:
+        # list all telemetry annotations
 
   testrunner:
     replicas: 0
@@ -293,6 +301,8 @@ deployment:
       enabled: false
       folder: /etc/polytope_schedule/
       XML: ""
+    annotations:
+        # list all worker annotations
 
   polytope_proxy: ""
 #################################################################################################
@@ -323,13 +333,13 @@ telemetry:
       - 7d
       - 30d
   basic_auth:
-    enabled: false 
+    enabled: false
     log_suppression_ttl: 3600 # in seconds
     users:
       - attributes: {}
         password: # deployment specific
         uid: # deployment specific
-    
+
 
 metric_store:
   mongodb:
@@ -404,7 +414,7 @@ garbage-collector:
 #     authenticators:
 #       ecmwfapi:
 #         type: ecmwfapi
-#         url: 
+#         url:
 #         status_url:
 
 #     authorizers:
@@ -412,15 +422,15 @@ garbage-collector:
 #         type: plain
 #         roles:
 #           polytope-admin:
-#           - 
+#           -
 
 #       ldap:
 #         type: ldap
-#         url: 
-#         filter: 
-#         search_base: 
-#         ldap_user: 
-#         ldap_password: 
+#         url:
+#         filter:
+#         search_base:
+#         ldap_user:
+#         ldap_password:
 
 #   ####################################
 #   #  DestinE Service Platform Realm
@@ -430,16 +440,16 @@ garbage-collector:
 #     authenticators:
 #       keycloak:
 #         type: jwt
-#         cert_url: 
-#         client_id: 
+#         cert_url:
+#         client_id:
 #       openid_offline_access:
 #         type: openid_offline_access
-#         cert_url: 
-#         public_client_id: 
-#         private_client_id: 
+#         cert_url:
+#         public_client_id:
+#         private_client_id:
 #         private_client_secret:
-#         iam_url: 
-#         iam_realm: 
+#         iam_url:
+#         iam_realm:
 
 # admin:
 #   roles:
@@ -457,12 +467,12 @@ garbage-collector:
 #################################################################################################
 #                   D A T A S O U R C E S   &   C O L L E C T I O N S
 #################################################################################################
-## Datasources are inheritable, so one could list parent datasources that get merged in order, 
+## Datasources are inheritable, so one could list parent datasources that get merged in order,
 ## with each new config overwriting the previous if there are conflicts. The child config is the last overwrite.
 # datasources:
 #   mars_c:
 #     type: mars
-#     #command: /usr/local/bin/mars 
+#     #command: /usr/local/bin/mars
 #     command: mars-wrapper.py # this is for using mars-c client
 #     tmp_dir: /data
 #     match:
@@ -470,7 +480,7 @@ garbage-collector:
 #   fdb_base:
 #     fdb_config:
 #       type: remote
-#       host: 
+#       host:
 #       port: 10000
 #       engine: remote
 #       store: remote
@@ -492,7 +502,7 @@ garbage-collector:
 
 #   webmars:
 #     type: webmars
-#     url: 
+#     url:
 #     override_email:
 #     override_apikey:
 #     tmp_dir: /data
@@ -504,9 +514,9 @@ garbage-collector:
 #       engine: toc
 #       schema:
 #         git: # path to a git repository containing the fdb schema
-#           remote: 
-#           branch: 
-#           path: 
+#           remote:
+#           branch:
+#           path:
 #       spaces:
 #       - handler: Default
 #         roots:
@@ -514,7 +524,7 @@ garbage-collector:
 
 #   ionbeam:
 #     type: ionbeam
-#     api_endpoint: 
+#     api_endpoint:
 
 #   polytope:
 #     type: polytope
@@ -528,7 +538,7 @@ garbage-collector:
 #       threads: 2
 #     fdb_config:
 #       type: remote
-#       host: 
+#       host:
 #       port: 10000
 #       engine: remote
 #         store: remote

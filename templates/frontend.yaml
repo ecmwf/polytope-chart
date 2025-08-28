@@ -26,6 +26,10 @@ kind: Deployment
 metadata:
   name: frontend
   namespace: {{ .Values.global.namespace }}
+  annotations:
+    {{- with .Values.deployment.frontend.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   replicas: {{ .Values.deployment.frontend.replicas }}
   selector:
