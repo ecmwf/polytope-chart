@@ -27,7 +27,7 @@ metadata:
   name: garbage-collector
   namespace: {{ .Values.global.namespace }}
   annotations:
-    {{- with .Values.deployment.garbage-collector.annotations }}
+    {{- with index .Values "deployment.garbage-collector.annotations" }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
