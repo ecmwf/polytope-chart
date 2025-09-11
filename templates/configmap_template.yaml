@@ -25,7 +25,6 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: polytope-config-generic
-  namespace: {{ .Values.global.namespace }}
   annotations:
 
 data:

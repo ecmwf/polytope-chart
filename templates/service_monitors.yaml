@@ -6,7 +6,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: seaweedfs-master-monitor
-  namespace: {{ .Values.global.namespace }}
 spec:
   selector:
     matchLabels:
@@ -29,7 +28,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: seaweedfs-filer-monitor
-  namespace: {{ .Values.global.namespace }}
 spec:
   selector:
     matchLabels:
@@ -48,7 +46,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: seaweedfs-filer-client-monitor
-  namespace: {{ .Values.global.namespace }}
 spec:
   selector:
     matchLabels:
@@ -71,7 +68,6 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: seaweedfs-volume-monitor
-  namespace: {{ .Values.global.namespace }}
 spec:
   selector:
     matchLabels:
