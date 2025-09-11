@@ -19,7 +19,6 @@
 ##
 
 global:
-  namespace: my-namespace
   # to allow us to use bitnami legacy images 
   security:
     allowInsecureImages: true
@@ -58,7 +57,38 @@ download_port: &download_port 9000
 #################################################################################################
 
 auth-o-tron:
-  enabled: false
+  enabled: true
+  image:
+    pullPolicy: Always
+    tag: 0.2.8dev
+  config:
+    version: 1.0.0
+    logging:
+      level: "debug"
+      format: "json"
+    auth:
+      timeout_in_ms: 3000 # 3 seconds
+    providers:
+      - name: "Plain Provider"
+        type: "plain"
+        realm: "test-realm"
+        users:
+          - username: admin
+            password: admin
+            roles:
+              - polytope-admin
+    store:
+      enabled: false
+      # type: mongo
+      # database: tokens
+      # uri: mongodb://mongodb:27017
+    services: []
+    jwt:
+      exp: 3600
+      iss: authotron
+      secret: 6ec91aa8de4b579b5b6b87c289b5c818
+    bind_address: 0.0.0.0:8080
+
 
 rabbitmq:
   enabled: true
@@ -225,8 +255,8 @@ minio:
 #################################################################################################
 
 deployment:
-  registry:
-  tag:
+  registry: eccr.ecmwf.int/polytope-pub
+  tag: 1.5.0
   mars_c: # in certain environments you may need to use the mars c client
     enabled: false
     # the mars c client requires configuration which is currently accessed at runtime via git, so you need to provide an ssh key
@@ -294,6 +324,9 @@ deployment:
   minio:
     host: staging
     port: 9000
+    replicas: 1
+
+  polytope_staging:
     replicas: 1
 
   telemetry:
@@ -396,14 +429,18 @@ testrunner:
   port: 5000
 
 staging:
-  s3:
-    access_key: *s3_access_key
-    buffer_size: 10971520
-    host: *download_host
-    max_threads: 10
-    port: *download_port
-    secret_key: *s3_secret_key
-    use_ssl: true
+  polytope:
+    host: staging
+    port: 8000
+    root_dir: /home/polytope/data
+  # s3:
+  #   access_key: *s3_access_key
+  #   buffer_size: 10971520
+  #   host: *download_host
+  #   max_threads: 10
+  #   port: *download_port
+  #   secret_key: *s3_secret_key
+  #   use_ssl: true
 
 garbage-collector:
   interval: 10s
@@ -415,10 +452,10 @@ garbage-collector:
 #################################################################################################
 #                                A U T H - O - T R O N   A U T H E N T I C A T I O N
 #################################################################################################
-# authentication:
-#   auth-o-tron:
-#     url: http://auth-o-tron-svc:8080
-#     secret: your_secret
+authentication:
+  auth-o-tron:
+    url: http://auth-o-tron-svc:8080
+    secret: 6ec91aa8de4b579b5b6b87c289b5c818
 
 #################################################################################################
 #            L E G A C Y   A U T H E N T I C A T I O N   &   A U T H O R I Z A T I O N
@@ -488,7 +525,7 @@ garbage-collector:
 #################################################################################################
 ## Datasources are inheritable, so one could list parent datasources that get merged in order,
 ## with each new config overwriting the previous if there are conflicts. The child config is the last overwrite.
-# datasources:
+datasources:
 #   mars_c:
 #     type: mars
 #     #command: /usr/local/bin/mars
@@ -633,10 +670,15 @@ garbage-collector:
 #   raise:
 #     type: raise
 
-#   dummy:
-#     type: dummy
+  dummy:
+    type: dummy
 
-# collections:
+collections:
+  dummy:
+    roles:
+      test-realm: [ default] # everybody gets default role
+    datasources:
+    - name: dummy
 #   ecmwf-mars:
 #     roles: # per realm
 #       ecmwf: [  ]
