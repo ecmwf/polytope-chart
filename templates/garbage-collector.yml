@@ -25,7 +25,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: garbage-collector
-  namespace: {{ .Values.global.namespace }}
   annotations:
     {{- with index .Values "deployment.garbage-collector.annotations" }}
     {{- toYaml . | nindent 4 }}
