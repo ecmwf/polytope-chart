@@ -22,7 +22,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: polytope-ingress
-  namespace: {{ .Values.global.namespace }}
   annotations:
     {{- with .Values.deployment.ingress.frontend.annotations }}
     {{- toYaml . | nindent 4 }}
@@ -58,7 +57,6 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  namespace: {{ .Values.global.namespace }}
   annotations: 
     {{- with .Values.deployment.ingress.downloads.annotations }}
     {{- toYaml . | nindent 4 }}
@@ -89,7 +87,6 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  namespace: {{ .Values.global.namespace }}
   annotations:
     {{- with .Values.deployment.ingress.telemetry.annotations }}
     {{- toYaml . | nindent 4 }}

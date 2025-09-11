@@ -25,7 +25,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: broker
-  namespace: {{ .Values.global.namespace }}
   annotations:
     {{- with .Values.deployment.broker.annotations }}
     {{- toYaml . | nindent 4 }}
