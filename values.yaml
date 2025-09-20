@@ -108,7 +108,7 @@ rabbitmq:
   networkPolicy:
     enabled: false
   metrics:
-    enabled: true
+    enabled: false
     serviceMonitor:
       enabled: true
       default:
@@ -129,17 +129,17 @@ mongodb:
   image:
     repository: bitnamilegacy/mongodb
   systemLogVerbosity: 0 #default value 0
-  replicaCount: 2 #default value 2
-  resourcesPreset: xlarge
+  replicaCount: 1 #default value 2
+  resourcesPreset: medium
   service:
     nameOverride: mongodb #required for polytope to find the mongodb service
   networkPolicy:
     enabled: false #default value true but we dont need it
   persistence:
-    enabled: true
-    size: 20Gi #default value 8Gi
+    enabled: false
+    # size: 20Gi #default value 8Gi
   metrics:
-    enabled: true
+    enabled: false
     image:
       repository: bitnamilegacy/mongodb-exporter
     collector:
@@ -256,7 +256,7 @@ minio:
 
 deployment:
   registry: eccr.ecmwf.int/polytope-pub
-  tag: 1.5.0
+  tag: 1.5.1
   mars_c: # in certain environments you may need to use the mars c client
     enabled: false
     # the mars c client requires configuration which is currently accessed at runtime via git, so you need to provide an ssh key
@@ -281,14 +281,14 @@ deployment:
     common_domain: # deployment specific, e.g. ecmwf.int
     deployment_name: # deployment specific, e.g. polytope
     downloads:
-      enabled: true
+      enabled: false
       host: *download_host
       port: *download_port
       tls_secret: # deployment specific
       annotations:
         # list all download ingress annotations
     frontend:
-      enabled: true
+      enabled: false
       tls_secret:  # deployment specific
       annotations:
         # list all frontend ingress annotations
