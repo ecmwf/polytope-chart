@@ -13,7 +13,7 @@ spec:
       app.kubernetes.io/name: seaweedfs
   namespaceSelector:
     matchNames:
-      - {{ .Values.global.namespace }}
+      - {{ .Release.Namespace }}
   endpoints:
     - port: metrics
       interval: 30s
@@ -35,7 +35,7 @@ spec:
       app.kubernetes.io/name: seaweedfs
   namespaceSelector:
     matchNames:
-      - {{ .Values.global.namespace }}
+      - {{ .Release.Namespace }}
   endpoints:
     - port: metrics
       interval: 30s
@@ -53,7 +53,7 @@ spec:
       app.kubernetes.io/name: seaweedfs
   namespaceSelector:
     matchNames:
-      - {{ .Values.global.namespace }}
+      - {{ .Release.Namespace }}
   endpoints:
     - port: metrics
       interval: 30s
@@ -75,7 +75,7 @@ spec:
       app.kubernetes.io/name: seaweedfs
   namespaceSelector:
     matchNames:
-      - {{ .Values.global.namespace }}
+      - {{ .Release.Namespace }}
   endpoints:
     - port: metrics
       interval: 30s
