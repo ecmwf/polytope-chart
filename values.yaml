@@ -110,6 +110,8 @@ mongodb:
     size: 20Gi #default value 8Gi
   metrics:
     enabled: true
+    image:
+      repository: bitnamilegacy/mongodb-exporter
     collector:
       all: true #export all metrics, default false
     resourcesPreset: small
