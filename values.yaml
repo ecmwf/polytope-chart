@@ -20,6 +20,9 @@
 
 global:
   namespace: my-namespace
+  # to allow us to use bitnami legacy images 
+  security:
+    allowInsecureImages: true
 
 developer:
   disable_schema_check: true
@@ -68,6 +71,8 @@ rabbitmq:
   auth: #polytope assumes default rabbitmq user and password are set to guest
     username: guest
     password: guest
+  image:
+    repository: bitnamilegacy/rabbitmq
   persistence:
     enabled: false
   networkPolicy:
@@ -91,6 +96,8 @@ mongodb:
   architecture: replicaset
   auth:
     enabled: false
+  image:
+    repository: bitnamilegacy/mongodb
   systemLogVerbosity: 0 #default value 0
   replicaCount: 2 #default value 2
   resourcesPreset: xlarge
@@ -115,6 +122,8 @@ mongodb:
 mysql:
   enabled: false # activate together with seaweedfs
   fullnameOverride: *mysql_svc_name
+  image:
+    repository: bitnamilegacy/mysql
   startdbScripts:
     init.sql: |
       CREATE TABLE IF NOT EXISTS `filemeta` (
