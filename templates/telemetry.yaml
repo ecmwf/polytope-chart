@@ -40,6 +40,9 @@ spec:
       annotations:
         checksum/config: {{ .Values | toYaml | sha256sum }}
         date: {{ date "20060102150405" (now) | quote }}
+        {{- with .Values.deployment.telemetry.template_annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       labels:
         app: telemetry
     spec:

@@ -261,11 +261,15 @@ deployment:
     replicas: 1
     annotations:
         # list all broker annotations
+    template_annotations:
+        # list all broker template annotations
 
   frontend:
     replicas: 1
     annotations:
         # list all frontend annotations
+    template_annotations:
+        # list all frontend template annotations
 
   garbage-collector:
     host: garbage-collector
@@ -273,6 +277,8 @@ deployment:
     replicas: 1
     annotations:
         # list all garbage-collector annotations
+    template_annotations:
+        # list all garbage-collector template annotations
 
   minio:
     host: staging
@@ -283,6 +289,8 @@ deployment:
     replicas: 1
     annotations:
         # list all telemetry annotations
+    template_annotations:
+        # list all telemetry template annotations
 
   testrunner:
     replicas: 0

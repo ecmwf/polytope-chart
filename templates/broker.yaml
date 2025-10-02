@@ -39,6 +39,9 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ .Values | toYaml | sha256sum }}
+        {{- with .Values.deployment.broker.template_annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       labels:
         app: broker
     spec:
