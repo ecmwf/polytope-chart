@@ -55,7 +55,7 @@ spec:
         {{ else }}
         image: {{ .Values.deployment.registry }}/worker:{{ .Release.Namespace }}-latest
         {{ end }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.deployment.imagePullPolicy | default "IfNotPresent" }}
         resources:
           {{ with .Values.deployment.worker.resources }}
           {{ toYaml . | nindent 10 }}
@@ -193,7 +193,7 @@ spec:
         {{ else }}
         image: {{ .Values.deployment.registry }}/worker:{{ .Release.Namespace }}-latest
         {{ end }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.deployment.imagePullPolicy | default "IfNotPresent" }}
         resources:
           {{ with .Values.deployment.worker.resources }}
           {{ toYaml . | nindent 10 }}

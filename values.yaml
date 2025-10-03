@@ -255,8 +255,12 @@ minio:
 #################################################################################################
 
 deployment:
-  registry: mycluster-registry:0.0.0.0:5432 #eccr.ecmwf.int/polytope-pub
+  registry: eccr.ecmwf.int/polytope-pub
   tag: 1.5.1
+  # fqn_images: 
+  #   polytope_common: eccr.ecmwf.int/polytope-pub/polytope-common:1.5.1
+  #   worker: eccr.ecmwf.int/polytope-pub/worker:1.5.1
+  imagePullPolicy: IfNotPresent
   mars_c: # in certain environments you may need to use the mars c client
     enabled: false
     # the mars c client requires configuration which is currently accessed at runtime via git, so you need to provide an ssh key
