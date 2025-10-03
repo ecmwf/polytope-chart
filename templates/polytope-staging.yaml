@@ -47,7 +47,7 @@ spec:
         {{ else }}
         image: {{ .Values.deployment.registry }}/polytope-common:{{ .Release.Namespace }}-latest
         {{ end }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.deployment.imagePullPolicy | default "IfNotPresent" }}
         volumeMounts:
           - name: config-volume
             mountPath: /etc/polytope
