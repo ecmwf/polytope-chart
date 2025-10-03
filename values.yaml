@@ -57,37 +57,37 @@ download_port: &download_port 9000
 #################################################################################################
 
 auth-o-tron:
-  enabled: true
-  image:
-    pullPolicy: Always
-    tag: 0.2.8dev
-  config:
-    version: 1.0.0
-    logging:
-      level: "debug"
-      format: "json"
-    auth:
-      timeout_in_ms: 3000 # 3 seconds
-    providers:
-      - name: "Plain Provider"
-        type: "plain"
-        realm: "test-realm"
-        users:
-          - username: admin
-            password: admin
-            roles:
-              - polytope-admin
-    store:
-      enabled: false
-      # type: mongo
-      # database: tokens
-      # uri: mongodb://mongodb:27017
-    services: []
-    jwt:
-      exp: 3600
-      iss: authotron
-      secret: 6ec91aa8de4b579b5b6b87c289b5c818
-    bind_address: 0.0.0.0:8080
+  enabled: false
+#   image:
+#     pullPolicy: Always
+#     tag: 0.2.8dev
+#   config:
+#     version: 1.0.0
+#     logging:
+#       level: "debug"
+#       format: "json"
+#     auth:
+#       timeout_in_ms: 3000 # 3 seconds
+#     providers:
+#       - name: "Plain Provider"
+#         type: "plain"
+#         realm: "test-realm"
+#         users:
+#           - username: admin
+#             password: admin
+#             roles:
+#               - polytope-admin
+#     store:
+#       enabled: false
+#       # type: mongo
+#       # database: tokens
+#       # uri: mongodb://mongodb:27017
+#     services: []
+#     jwt:
+#       exp: 3600
+#       iss: authotron
+#       secret: 6ec91aa8de4b579b5b6b87c289b5c818
+#     bind_address: 0.0.0.0:8080
 
 
 rabbitmq:
@@ -255,7 +255,7 @@ minio:
 #################################################################################################
 
 deployment:
-  registry: eccr.ecmwf.int/polytope-pub
+  registry: mycluster-registry:0.0.0.0:5432 #eccr.ecmwf.int/polytope-pub
   tag: 1.5.1
   mars_c: # in certain environments you may need to use the mars c client
     enabled: false
@@ -452,17 +452,29 @@ garbage-collector:
 #################################################################################################
 #                                A U T H - O - T R O N   A U T H E N T I C A T I O N
 #################################################################################################
-authentication:
-  auth-o-tron:
-    url: http://auth-o-tron-svc:8080
-    secret: 6ec91aa8de4b579b5b6b87c289b5c818
+# authentication:
+#   auth-o-tron:
+#     url: http://auth-o-tron-svc:8080
+#     secret: 6ec91aa8de4b579b5b6b87c289b5c818
 
 #################################################################################################
 #            L E G A C Y   A U T H E N T I C A T I O N   &   A U T H O R I Z A T I O N
 #################################################################################################
 
-# authentication:
-#   ####################################
+authentication:
+####################################
+#       T E S T   R E A L M
+####################################
+  test-realm: # realm name
+    authenticators:
+      plain:
+        type: plain
+        users:
+          - username: test # REPLACE
+            password: test # REPLACE
+            roles:
+              - default
+  ####################################
 #   #       E C M W F   R E A L M
 #   ####################################
 
@@ -675,8 +687,10 @@ datasources:
 
 collections:
   dummy:
+    limits:
+      total: 1 # in case this accidentally does not get overridden, we set a low limit
     roles:
-      test-realm: [ default] # everybody gets default role
+      test-realm: [ default ] # everybody gets default role
     datasources:
     - name: dummy
 #   ecmwf-mars:
