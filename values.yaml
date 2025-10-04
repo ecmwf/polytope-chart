@@ -27,7 +27,7 @@ developer:
   disable_schema_check: true
 
 logging:
-  level: INFO
+  level: DEBUG
   mars_debug: 0
   fdb_debug: 0
 #################################################################################################
@@ -309,6 +309,7 @@ deployment:
     template_annotations:
         # list all broker template annotations
 
+  nodeport: 32002 # this is the nodeport for the frontend service, it must be between 30000 and 32767
   frontend:
     replicas: 1
     annotations:
@@ -474,7 +475,7 @@ authentication:
       plain:
         type: plain
         users:
-          - username: test # REPLACE
+          - uid: test # REPLACE
             password: test # REPLACE
             roles:
               - default
