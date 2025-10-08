@@ -30,6 +30,7 @@ logging:
   level: DEBUG
   mars_debug: 0
   fdb_debug: 0
+  mode: json
 #################################################################################################
 #                                        C O M M O N
 #################################################################################################
@@ -60,7 +61,7 @@ auth-o-tron:
   enabled: false
 #   image:
 #     pullPolicy: Always
-#     tag: 0.2.8dev
+#     tag: 0.2.8
 #   config:
 #     version: 1.0.0
 #     logging:
@@ -243,12 +244,12 @@ seaweedfs:
       WEED_MYSQL_HOSTNAME: *mysql_svc_name
 minio:
   enabled: false
-  host: *download_host
-  port: *download_port
-  size: 1Ti
-  replicas: 1
-  s3_access_key: *s3_access_key
-  s3_secret_key: *s3_secret_key
+#   host: *download_host
+#   port: *download_port
+#   size: 1Ti
+#   replicas: 1
+#   s3_access_key: *s3_access_key
+#   s3_secret_key: *s3_secret_key
 
 #################################################################################################
 #                   D E P L O Y M E N T
