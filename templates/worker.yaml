@@ -171,6 +171,7 @@ kind: StatefulSet
 metadata:
   name: worker
 spec:
+  podManagementPolicy: Parallel
   replicas: {{ .Values.deployment.worker.replicas }}
   selector:
     matchLabels:
@@ -185,77 +186,77 @@ spec:
         app: worker
     spec:
       containers:
-      - name: worker-pod
-        {{ if .Values.deployment.fqn_images }}
-        image: {{ .Values.deployment.fqn_images.worker }}
-        {{ else if .Values.deployment.tag }}
-        image: {{ .Values.deployment.registry }}/worker:{{ .Values.deployment.tag }}
-        {{ else }}
-        image: {{ .Values.deployment.registry }}/worker:{{ .Release.Namespace }}-latest
-        {{ end }}
-        imagePullPolicy: {{ .Values.deployment.imagePullPolicy | default "IfNotPresent" }}
-        resources:
-          {{ with .Values.deployment.worker.resources }}
-          {{ toYaml . | nindent 10 }}
+        - name: worker-pod
+          {{ if .Values.deployment.fqn_images }}
+          image: {{ .Values.deployment.fqn_images.worker }}
+          {{ else if .Values.deployment.tag }}
+          image: {{ .Values.deployment.registry }}/worker:{{ .Values.deployment.tag }}
+          {{ else }}
+          image: {{ .Values.deployment.registry }}/worker:{{ .Release.Namespace }}-latest
           {{ end }}
-        env:
-          - name: K8S_POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: K8S_NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-          - name: K8S_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: POLYTOPE_PROXY
-            value: {{ .Values.deployment.polytope_proxy }}
-          - name: MIR_CACHE_PATH
-            value: /home/polytope/data/mir_cache
-          - name: MARS_READANY_BUFFER_SIZE
-            value: "1073741824"
-          - name: MIR_GRIB_INPUT_BUFFER_SIZE
-            value: "1073741824"
-          - name: METKIT_RAW_PARAM
-            value: "1"
-          - name: SCHEDULE_ENABLED
-            value: {{ .Values.deployment.worker.schedule.enabled | quote }}
-          - name: MARS_DEBUG
-            value: {{ .Values.logging.mars_debug | quote | default "0" }}
-          - name: FDB_DEBUG
-            value: {{ .Values.logging.fdb_debug | quote | default "0" }}
-        volumeMounts:
-          - name: config-volume
-            mountPath: /etc/polytope
-          - name: ppdir
-            mountPath: /var/tmp/ppdir
-          - name: statistics
-            mountPath: /logs/mars/statistics
-          - name: tmp
-            mountPath: /tmp
-          # - name: fdb
-          #   mountPath: /data
-          - name: worker-persistent
-            mountPath: /persistent
-          {{ if .Values.deployment.mars_c.enabled }}
-          - name: mars-ssh-key
-            mountPath: /home/polytope/.ssh/id_rsa.pub
-            subPath: "id_rsa.pub"
-            readOnly: true
-          - name: mars-ssh-key
-            mountPath: /home/polytope/.ssh/id_rsa
-            subPath: "id_rsa"
-            readOnly: true
-          {{ end }}
-          {{ if .Values.deployment.worker.schedule.enabled }}
-          - name: schedule-config
-            mountPath: /etc/polytope_schedule
-          {{ end }}
-        command: ["sh", "-c"]
-        args: ["while python -m polytope_server.worker; do if [ $? -ne 0 ]; then exit $?; fi; echo 'Worker finished with exit code' $?; sleep 1; done"]
+          imagePullPolicy: {{ .Values.deployment.imagePullPolicy | default "IfNotPresent" }}
+          resources:
+            {{ with .Values.deployment.worker.resources }}
+            {{ toYaml . | nindent 12 }}
+            {{ end }}
+          env:
+            - name: K8S_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POLYTOPE_PROXY
+              value: {{ .Values.deployment.polytope_proxy }}
+            - name: MIR_CACHE_PATH
+              value: /home/polytope/data/mir_cache
+            - name: MARS_READANY_BUFFER_SIZE
+              value: "1073741824"
+            - name: MIR_GRIB_INPUT_BUFFER_SIZE
+              value: "1073741824"
+            - name: METKIT_RAW_PARAM
+              value: "1"
+            - name: SCHEDULE_ENABLED
+              value: {{ .Values.deployment.worker.schedule.enabled | quote }}
+            - name: MARS_DEBUG
+              value: {{ .Values.logging.mars_debug | quote | default "0" }}
+            - name: FDB_DEBUG
+              value: {{ .Values.logging.fdb_debug | quote | default "0" }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/polytope
+            - name: ppdir
+              mountPath: /var/tmp/ppdir
+            - name: statistics
+              mountPath: /logs/mars/statistics
+            - name: tmp
+              mountPath: /tmp
+            # - name: fdb
+            #   mountPath: /data
+            - name: worker-persistent
+              mountPath: /persistent
+            {{ if .Values.deployment.mars_c.enabled }}
+            - name: mars-ssh-key
+              mountPath: /home/polytope/.ssh/id_rsa.pub
+              subPath: "id_rsa.pub"
+              readOnly: true
+            - name: mars-ssh-key
+              mountPath: /home/polytope/.ssh/id_rsa
+              subPath: "id_rsa"
+              readOnly: true
+            {{ end }}
+            {{ if .Values.deployment.worker.schedule.enabled }}
+            - name: schedule-config
+              mountPath: /etc/polytope_schedule
+            {{ end }}
+          command: ["sh", "-c"]
+          args: ["while python -m polytope_server.worker; do if [ $? -ne 0 ]; then exit $?; fi; echo 'Worker finished with exit code' $?; sleep 1; done"]
       volumes:
         - name: config-volume
           configMap:
@@ -296,6 +297,9 @@ spec:
                     values:
                       - {{ .Values.deployment.worker_node }}
       {{ end }}
+      updateStrategy:
+        rollingUpdate:
+          maxUnavailable: 1
 
   volumeClaimTemplates:
   - metadata:
