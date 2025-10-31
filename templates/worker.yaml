@@ -297,9 +297,6 @@ spec:
                     values:
                       - {{ .Values.deployment.worker_node }}
       {{ end }}
-      updateStrategy:
-        rollingUpdate:
-          maxUnavailable: 1
 
   volumeClaimTemplates:
   - metadata:
