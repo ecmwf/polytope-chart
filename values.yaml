@@ -380,23 +380,53 @@ telemetry:
   host: telemetry
   port: 32012
   bind_to: 0.0.0.0
-  obfuscate_apikeys: True # obfuscate api keys in the endpoints
+  obfuscate_apikeys: true # obfuscate api keys in the endpoints
   usage:
-    enabled: True
-    cache_expiry_seconds: 30 # set a value similar to prometheus scrape interval, default is 30 seconds
-    timeframes: # in s/h/d format, it controls the timeframes for which the usage is calculated in /usage endpoint
+    enabled: true
+    timeframes:
       - 12h
       - 1d
       - 3d
       - 7d
       - 30d
+      - 365d
   basic_auth:
-    enabled: false
-    log_suppression_ttl: 3600 # in seconds
-    users:
-      - attributes: {}
-        password: # deployment specific
-        uid: # deployment specific
+    enabled: true
+    log_suppression_ttl: 3600
+
+metrics:
+  prefix: polytope
+  product_labels:
+    - class
+    - type
+  canonical_label_order:
+    - status
+    - collection
+    - realm
+    - class
+    - type
+  request_duration_buckets:
+    - 0.5
+    - 1
+    - 2
+    - 5
+    - 10
+    - 20
+    - 30
+    - 60
+    - 120
+    - 300
+  processing_duration_buckets:
+    - 0.5
+    - 1
+    - 2
+    - 5
+    - 10
+    - 20
+    - 30
+    - 60
+    - 120
+    - 300
 
 
 metric_store:
