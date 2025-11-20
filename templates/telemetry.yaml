@@ -111,16 +111,43 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Values.telemetry.host }}
+  labels:
+    app: telemetry
+    app.kubernetes.io/name: telemetry
 spec:
   selector:
     app: telemetry
   type: NodePort
   ports:
-  - protocol: TCP
+  - name: http
+    protocol: TCP
     {{- if .Values.deployment.telemetry.nodeport }}
     nodePort: {{ .Values.deployment.telemetry.nodeport }}
     {{- end }}
     targetPort: {{ .Values.telemetry.port }}
     port: {{ .Values.telemetry.port }}
+---
 
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: telemetry
+spec:
+  selector:
+    matchLabels:
+      app: telemetry
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: http
+      scheme: http
+      path: /telemetry/v1/application-metrics
+      interval: "30s"
+      scrapeTimeout: "20s"
+      honorLabels: true
+      relabelings:
+        - action: replace
+          targetLabel: job
+          replacement: "telemetry-app"
 {{- end }}
