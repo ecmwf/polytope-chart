@@ -393,6 +393,10 @@ telemetry:
   basic_auth:
     enabled: true
     log_suppression_ttl: 3600
+  allowed_roles:
+    - polytope-telemetry
+    - polytope-admin
+  expose_requests: false # whether to expose /requests endpoint
 
 metrics:
   prefix: polytope
