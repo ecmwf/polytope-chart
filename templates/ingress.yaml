@@ -105,8 +105,24 @@ spec:
               number: {{ .Values.telemetry.port }}
         path: /telemetry/v1/metrics
         pathType: Prefix
+      {{- if .Values.telemetry.expose_requests }}
+      - backend:
+          service:
+            name: {{ .Values.telemetry.host }}
+            port:
+              number: {{ .Values.telemetry.port }}
+        path: /telemetry/v1/requests
+        pathType: Prefix
+      - backend:
+          service:
+            name: {{ .Values.telemetry.host }}
+            port:
+              number: {{ .Values.telemetry.port }}
+        path: /telemetry/v1/users
+        pathType: Prefix
+      {{- end }}
   tls:
   - hosts:
     - "telemetry-{{ .Values.deployment.ingress.deployment_name }}.{{ .Values.deployment.ingress.common_domain }}"
     secretName: {{ .Values.deployment.ingress.telemetry.tls_secret}}
-{{ end}}
+{{ end }}
