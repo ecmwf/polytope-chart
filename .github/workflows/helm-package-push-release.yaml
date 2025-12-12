@@ -62,7 +62,7 @@ jobs:
         run: |
           PACKAGE_FILE="${{ env.CHART_NAME }}-${{ env.EFFECTIVE_VERSION }}.tgz"
           echo "Pushing package file: $PACKAGE_FILE"
-          helm push "$PACKAGE_FILE" oci://eccr.ecmwf.int/polytope
+          helm push "$PACKAGE_FILE" oci://eccr.ecmwf.int/polytope-pub
 
       - name: Create GitHub Release if Tag Equals Chart Version
         if: ${{ env.EFFECTIVE_VERSION == env.CHART_VERSION }}
