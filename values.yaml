@@ -143,8 +143,6 @@ mongodb:
     enabled: false
     image:
       repository: bitnamilegacy/mongodb-exporter
-    collector:
-      all: true #export all metrics, default false
     resourcesPreset: small
     serviceMonitor:
       enabled: true #this is for prometheus to scrape metrics
