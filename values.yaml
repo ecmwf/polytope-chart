@@ -104,6 +104,21 @@ rabbitmq:
     password: guest
   image:
     repository: bitnamilegacy/rabbitmq
+  # Disable the chart’s default logging setup so you can take full control
+  logs: false  # "custom logging" mode per Bitnami docs
+
+  # Lines below are appended to rabbitmq.conf
+  extraConfiguration: |-
+    # Reasonable default log level for all categories
+    log.default.level = info
+
+    # Log to console in JSON format so K8s can scrape from stdout
+    log.console = true
+    log.console.level = info
+    log.console.formatter = json
+
+    # Don’t write traditional log files (optional, but common in containers)
+    log.file = false
   persistence:
     enabled: false
   networkPolicy:
