@@ -193,6 +193,7 @@ mysql:
         memory: "16Gi"
         cpu: "8000m"
   auth:
+    defaultAuthenticationPlugin: caching_sha2_password # default is deprecated
     rootPassword:
     database: *filer_database
     username:
