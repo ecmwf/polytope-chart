@@ -76,7 +76,7 @@ spec:
           - name: config-volume
             mountPath: /etc/polytope
         command: ["python"]
-        args: ["-m", "polytope_server.garbage-collector"]
+        args: ["-m", "polytope_server.garbage_collector"]
       volumes:
         - name: config-volume
           configMap:
