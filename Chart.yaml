@@ -20,7 +20,7 @@
 
 apiVersion: v2
 name: polytope
-version: 0.1.7
+version: 0.1.8
 
 dependencies:
   - name: mysql
