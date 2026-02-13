@@ -226,7 +226,7 @@ seaweedfs:
     - name: data
       type: "persistentVolumeClaim"
       size: 1Ti
-      maxVolumes: 0
+      maxVolumes: 29 # don't try to allocate beyond minFreeSpacePercent
   filer:
     enabled: true
     replicas: 1
