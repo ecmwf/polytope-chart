@@ -597,6 +597,8 @@ datasources:
 #     #command: /usr/local/bin/mars
 #     command: mars-wrapper.py # this is for using mars-c client
 #     tmp_dir: /data
+#     # fifo_read_timeout: 30 # we found that sometimes the fifo can get stuck, so we set a timeout to avoid hanging the worker indefinitely
+#     # fifo_poll_interval: 0.1
 #     match:
 #     patch:
 #   fdb_base:
@@ -613,6 +615,8 @@ datasources:
 #     command: /opt/ecmwf/mars-client-cpp/bin/mars-client
 #     # command: mars-wrapper.py
 #     tmp_dir: /home/polytope/data
+#     # fifo_read_timeout: 30
+#     # fifo_poll_interval: 0.1
 #     match:
 #     patch:
 #     protocol: remote
