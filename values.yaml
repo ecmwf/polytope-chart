@@ -356,9 +356,6 @@ deployment:
     template_annotations:
         # list all telemetry template annotations
 
-  testrunner:
-    replicas: 0
-
   worker:
     replicas: 1
     resources:
@@ -477,10 +474,6 @@ broker:
   host: broker
   port: 5000
   interval: 1
-
-testrunner:
-  host: testrunner
-  port: 5000
 
 staging:
   polytope:
