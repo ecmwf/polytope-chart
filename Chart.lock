@@ -16,6 +16,6 @@ dependencies:
   version: 0.1.0
 - name: auth-o-tron-chart
   repository: oci://eccr.ecmwf.int/auth-o-tron
-  version: 0.1.5
-digest: sha256:ad5f9b643b3a09cb8898a122b88654bb760c70ec1e445448d56cd499fff720ef
-generated: "2025-12-12T11:11:00.897239414Z"
+  version: 0.1.7
+digest: sha256:a9d75c3e58c799bbb9f8265bc9315f4b3cfd2deec2749237058b963a6ef2f429
+generated: "2026-02-27T02:14:11.933966295Z"
