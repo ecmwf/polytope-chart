@@ -43,7 +43,7 @@ dependencies:
     version: 0.1.0
     condition: minio.enabled
   - name: auth-o-tron-chart
-    version: 0.1.5
+    version: 0.1.7
     repository: oci://eccr.ecmwf.int/auth-o-tron
     condition: auth-o-tron.enabled
     alias: auth-o-tron
