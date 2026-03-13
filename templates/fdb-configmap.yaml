@@ -1,0 +1,11 @@
+{{- if and .Values.fdbWorker.enabled .Values.fdbConfig }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "polytope-server.fullname" . }}-fdb-config
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+data:
+  fdb.yaml: |
+    {{- toYaml .Values.fdbConfig | nindent 4 }}
+{{- end }}
