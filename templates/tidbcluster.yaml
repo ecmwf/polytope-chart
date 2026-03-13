@@ -1,0 +1,42 @@
+{{- if .Values.tikv.enabled }}
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: {{ include "polytope-server.fullname" . }}-tikv
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+spec:
+  version: v8.5.0
+  pvReclaimPolicy: {{ .Values.tikv.pvReclaimPolicy | default "Retain" }}
+  discovery: {}
+  pd:
+    baseImage: pingcap/pd
+    maxFailoverCount: {{ .Values.tikv.maxFailoverCount | default 0 }}
+    replicas: {{ .Values.tikv.pd.replicas }}
+    requests:
+      storage: {{ .Values.tikv.pd.requests.storage | quote }}
+    {{- if .Values.tikv.pd.storageClassName }}
+    storageClassName: {{ .Values.tikv.pd.storageClassName | quote }}
+    {{- end }}
+    config: {}
+  tikv:
+    baseImage: pingcap/tikv
+    maxFailoverCount: {{ .Values.tikv.maxFailoverCount | default 0 }}
+    replicas: {{ .Values.tikv.tikv.replicas }}
+    requests:
+      storage: {{ .Values.tikv.tikv.requests.storage | quote }}
+    {{- if .Values.tikv.tikv.storageClassName }}
+    storageClassName: {{ .Values.tikv.tikv.storageClassName | quote }}
+    {{- end }}
+    {{- if eq (int .Values.tikv.tikv.replicas) 1 }}
+    evictLeaderTimeout: 1m
+    {{- else }}
+    evictLeaderTimeout: {{ .Values.tikv.tikv.evictLeaderTimeout | default "10m" }}
+    {{- end }}
+    config: {}
+  tidb:
+    baseImage: pingcap/tidb
+    replicas: 0
+    config: {}
+{{- end }}
