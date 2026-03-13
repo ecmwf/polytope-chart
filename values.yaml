@@ -6,6 +6,8 @@ image:
   pullPolicy: IfNotPresent
   tag: ""
 
+# ECMWF registry (eccr.ecmwf.int) requires authentication. Create a secret and reference it here.
+# Example: kubectl create secret docker-registry polytope-registry-cred --docker-server=eccr.ecmwf.int ...
 imagePullSecrets: []
 
 frontend:
@@ -31,6 +33,9 @@ marsWorker:
 
 fdbConfig: {}
 
+# bits configuration. The nesting is: bitsConfig.bits.bits.<field> for BitsConfig fields,
+# bitsConfig.bits.targets, bitsConfig.bits.routes, etc. for routing config.
+# internal_poll_base_url and tikv.endpoints are computed automatically from release name/namespace.
 bitsConfig:
   server:
     host: "0.0.0.0"
@@ -54,6 +59,9 @@ bitsConfig:
       default:
         - target::worker_pool
 
+# TiDB Operator must be installed cluster-wide before deploying this chart.
+# Install: helm install tidb-operator pingcap/tidb-operator -n tidb-admin --create-namespace
+# Dev override (1+1 replicas): --set tikv.pd.replicas=1 --set tikv.tikv.replicas=1
 tikv:
   enabled: true
   pd:
@@ -67,6 +75,7 @@ tikv:
       storage: 100Gi
     storageClassName: ""
     evictLeaderTimeout: 10m
+  # WARNING: Retain prevents data loss on helm uninstall. Change to Delete only if you want PVs cleaned up.
   pvReclaimPolicy: Retain
   maxFailoverCount: 0
 
