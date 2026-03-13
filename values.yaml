@@ -1,0 +1,78 @@
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  registry: eccr.ecmwf.int/polytope-server
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+
+frontend:
+  replicas: 1
+  port: 3000
+  brokerPort: 9001
+
+polytopeWorker:
+  enabled: false
+  replicas: 1
+  python: python3
+  wrapper: /app/run_polytope_worker.py
+  configPath: /etc/polytope/worker-config.yaml
+
+fdbWorker:
+  enabled: false
+  replicas: 1
+  fdbConfigPath: /etc/fdb/fdb.yaml
+
+marsWorker:
+  enabled: false
+  replicas: 1
+
+fdbConfig: {}
+
+bitsConfig:
+  server:
+    host: "0.0.0.0"
+    port: 3000
+  bits:
+    bits:
+      persist_after_ms: 10000
+      poll_timeout_ms: 30000
+      persist_guard_ms: 1000
+    targets:
+      worker_pool:
+        type: remote
+        dispatcher:
+          queue: cost_weighted
+          concurrency: 16
+          executor:
+            remote_pool:
+              bind: "0.0.0.0:9001"
+              heartbeat_timeout_secs: 60
+    routes:
+      default:
+        - target::worker_pool
+
+tikv:
+  enabled: true
+  pd:
+    replicas: 3
+    requests:
+      storage: 10Gi
+    storageClassName: ""
+  tikv:
+    replicas: 3
+    requests:
+      storage: 100Gi
+    storageClassName: ""
+    evictLeaderTimeout: 10m
+  pvReclaimPolicy: Retain
+  maxFailoverCount: 0
+
+ingress:
+  enabled: false
+  className: nginx
+  host: ""
+  annotations: {}
+  tls: []
