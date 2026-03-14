@@ -2,11 +2,8 @@ apiVersion: v2
 name: polytope-server
 description: >
   Polytope data retrieval server backed by the BITS routing engine.
-  Deploys the polytope-server frontend, worker pool, and TiKV persistence
-  via the TiDB Operator.
+  Deploys the polytope-server frontend (broker), dynamic worker pools,
+  and TiKV persistence (raw StatefulSets — no operator required).
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
-# Prerequisites:
-#   helm repo add pingcap https://charts.pingcap.com
-#   helm install tidb-operator pingcap/tidb-operator -n tidb-admin --create-namespace

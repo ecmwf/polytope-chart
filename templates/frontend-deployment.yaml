@@ -15,6 +15,9 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.frontend.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       labels:
         {{- include "polytope-server.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: frontend
@@ -50,11 +53,25 @@ spec:
           env:
             - name: RUST_LOG
               value: info
+          {{- with .Values.frontend.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: config
               mountPath: /etc/polytope/config.yaml
               subPath: config.yaml
+            {{- if .Values.schedule }}
+            - name: schedule
+              mountPath: /etc/polytope/schedule.xml
+              subPath: schedule.xml
+            {{- end }}
       volumes:
         - name: config
           configMap:
             name: {{ include "polytope-server.fullname" . }}-config
+        {{- if .Values.schedule }}
+        - name: schedule
+          configMap:
+            name: {{ include "polytope-server.fullname" . }}-schedule
+        {{- end }}

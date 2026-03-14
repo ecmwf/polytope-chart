@@ -1,18 +1,14 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: '{{ include "polytope-server.fullname" . }}-config'
+  name: {{ include "polytope-server.fullname" . }}-config
   labels:
-    helm.sh/chart: '{{ include "polytope-server.chart" . }}'
-    app.kubernetes.io/name: '{{ include "polytope-server.name" . }}'
-    app.kubernetes.io/instance: '{{ .Release.Name }}'
-    app.kubernetes.io/version: '{{ .Chart.AppVersion }}'
-    app.kubernetes.io/managed-by: '{{ .Release.Service }}'
+    {{- include "polytope-server.labels" . | nindent 4 }}
 data:
   config.yaml: |
     server:
-      host: {{ .Values.bitsConfig.server.host | default "0.0.0.0" | quote }}
-      port: {{ .Values.bitsConfig.server.port | default 3000 }}
+      host: {{ .Values.frontend.host | default "0.0.0.0" | quote }}
+      port: {{ .Values.frontend.port | default 3000 }}
     bits:
       bits:
         {{- if .Values.tikv.enabled }}
@@ -21,27 +17,39 @@ data:
             - {{ include "polytope-server.pdEndpoint" . | quote }}
           broker_lease_ttl_secs: 30
         {{- end }}
-        internal_poll_base_url: {{ printf "http://%s-frontend.%s.svc:%d" (include "polytope-server.fullname" .) .Release.Namespace (.Values.frontend.port | int) | quote }}
-        {{- with .Values.bitsConfig.bits.bits }}
-        {{- range $k, $v := . }}
-        {{- if and (ne $k "tikv") (ne $k "internal_poll_base_url") }}
-        {{ $k }}: {{ $v | toYaml | trim }}
-        {{- end }}
-        {{- end }}
-        {{- end }}
-      {{- with .Values.bitsConfig.bits.targets }}
+        internal_poll_base_url: {{ include "polytope-server.pollBaseUrl" . | quote }}
+        persist_after_ms: {{ .Values.frontend.persist_after_ms | default 10000 }}
+        poll_timeout_ms: {{ .Values.frontend.poll_timeout_ms | default 30000 }}
+        persist_guard_ms: {{ .Values.frontend.persist_guard_ms | default 1000 }}
+      {{- with .Values.broker.targets }}
       targets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.bitsConfig.bits.routes }}
+      {{- with .Values.broker.routes }}
       routes:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.bitsConfig.bits.checks }}
+      {{- if or .Values.broker.checks .Values.schedule }}
       checks:
-        {{- toYaml . | nindent 8 }}
+        {{- if .Values.broker.checks }}
+        {{- range $name, $check := .Values.broker.checks }}
+        {{- if and (eq $name "schedule_released") $.Values.schedule }}
+        {{ $name }}:
+          path: /etc/polytope/schedule.xml
+          {{- with $check.now_rfc3339 }}
+          now_rfc3339: {{ . | quote }}
+          {{- end }}
+        {{- else }}
+        {{ $name }}:
+          {{- toYaml $check | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        {{- else if .Values.schedule }}
+        schedule_released:
+          path: /etc/polytope/schedule.xml
+        {{- end }}
       {{- end }}
-      {{- with .Values.bitsConfig.bits.transforms }}
+      {{- with .Values.broker.transforms }}
       transforms:
         {{- toYaml . | nindent 8 }}
       {{- end }}

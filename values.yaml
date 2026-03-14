@@ -2,86 +2,83 @@ nameOverride: ""
 fullnameOverride: ""
 
 image:
-  registry: eccr.ecmwf.int/polytope-server
+  registry: eccr.ecmwf.int/polytope
   pullPolicy: IfNotPresent
   tag: ""
 
-# ECMWF registry (eccr.ecmwf.int) requires authentication. Create a secret and reference it here.
-# Example: kubectl create secret docker-registry polytope-registry-cred --docker-server=eccr.ecmwf.int ...
 imagePullSecrets: []
 
+# ── Frontend (broker) ─────────────────────────────────────────────────────────
 frontend:
-  replicas: 1
+  host: "0.0.0.0"
   port: 3000
   brokerPort: 9001
-
-polytopeWorker:
-  enabled: false
   replicas: 1
-  python: python3
-  wrapper: /app/run_polytope_worker.py
-  configPath: /etc/polytope/worker-config.yaml
+  persist_after_ms: 10000
+  poll_timeout_ms: 30000
+  persist_guard_ms: 1000
+  resources: {}
+  podAnnotations: {}
 
-fdbWorker:
-  enabled: false
-  replicas: 1
-  fdbConfigPath: /etc/fdb/fdb.yaml
+# ── Broker ────────────────────────────────────────────────────────────────────
+# Targets, routes, checks, and transforms for the bits routing engine.
+# tikv endpoints and internal_poll_base_url are injected by the chart.
+broker:
+  targets:
+    worker_pool:
+      type: remote
+      dispatcher:
+        queue: cost_weighted
+        executor:
+          type: remote_pool
+          bind: "0.0.0.0:9001"
+          heartbeat_timeout_secs: 60
+  routes:
+    default:
+      - target::worker_pool
 
-marsWorker:
-  enabled: false
-  replicas: 1
+# ── Schedule ──────────────────────────────────────────────────────────────────
+# Raw schedule XML for the bits-ecmwf schedule_released check.
+# When set, the chart mounts it and injects the path into routing.checks
+# automatically — no internal paths required in config.
+schedule: ""
 
-fdbConfig: {}
+# ── Worker pools ──────────────────────────────────────────────────────────────
+# Each key produces a Deployment (+ optional ConfigMap when config is set).
+# The chart handles mounting and CLI args internally.
+#
+# workerPools:
+#   fdb-alps:
+#     image: fdb-worker
+#     replicas: 5
+#     config:
+#       type: remote
+#       host: svc001.alpsb.cscs.ch
+#       port: 9000
+workerPools: {}
 
-# bits configuration. The nesting is: bitsConfig.bits.bits.<field> for BitsConfig fields,
-# bitsConfig.bits.targets, bitsConfig.bits.routes, etc. for routing config.
-# internal_poll_base_url and tikv.endpoints are computed automatically from release name/namespace.
-bitsConfig:
-  server:
-    host: "0.0.0.0"
-    port: 3000
-  bits:
-    bits:
-      persist_after_ms: 10000
-      poll_timeout_ms: 30000
-      persist_guard_ms: 1000
-    targets:
-      worker_pool:
-        type: remote
-        dispatcher:
-          queue: cost_weighted
-          concurrency: 16
-          executor:
-            remote_pool:
-              bind: "0.0.0.0:9001"
-              heartbeat_timeout_secs: 60
-    routes:
-      default:
-        - target::worker_pool
-
-# TiDB Operator must be installed cluster-wide before deploying this chart.
-# Install: helm install tidb-operator pingcap/tidb-operator -n tidb-admin --create-namespace
-# Dev override (1+1 replicas): --set tikv.pd.replicas=1 --set tikv.tikv.replicas=1
+# ── TiKV (raw StatefulSets — no operator) ─────────────────────────────────────
 tikv:
   enabled: true
   pd:
     replicas: 3
-    requests:
-      storage: 10Gi
+    image: pingcap/pd:v8.5.0
+    storage: 10Gi
     storageClassName: ""
+    resources: {}
   tikv:
     replicas: 3
-    requests:
-      storage: 100Gi
+    image: pingcap/tikv:v8.5.0
+    storage: 100Gi
     storageClassName: ""
-    evictLeaderTimeout: 10m
-  # WARNING: Retain prevents data loss on helm uninstall. Change to Delete only if you want PVs cleaned up.
-  pvReclaimPolicy: Retain
-  maxFailoverCount: 0
+    resources: {}
 
+# ── Ingress ───────────────────────────────────────────────────────────────────
+# Host is constructed as {{ hostPrefix }}.{{ domain }}.
 ingress:
   enabled: false
   className: nginx
-  host: ""
+  hostPrefix: polytope
+  domain: ""
   annotations: {}
   tls: []

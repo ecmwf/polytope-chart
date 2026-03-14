@@ -1,0 +1,91 @@
+{{- if .Values.tikv.enabled }}
+{{- $fullname := include "polytope-server.fullname" . }}
+{{- $peerSvc := include "polytope-server.pdPeerService" . }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $fullname }}-pd
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pd
+spec:
+  serviceName: {{ $peerSvc }}
+  replicas: {{ .Values.tikv.pd.replicas }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      {{- include "polytope-server.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: pd
+  template:
+    metadata:
+      labels:
+        {{- include "polytope-server.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: pd
+    spec:
+      containers:
+        - name: pd
+          image: {{ .Values.tikv.pd.image }}
+          ports:
+            - name: client
+              containerPort: 2379
+            - name: peer
+              containerPort: 2380
+          command:
+            - /bin/sh
+            - -c
+            - |
+              HOSTNAME=$(hostname)
+              PEER_URL="http://${HOSTNAME}.{{ $peerSvc }}.{{ .Release.Namespace }}.svc:2380"
+              CLIENT_URL="http://0.0.0.0:2379"
+              ADVERTISE_CLIENT="http://${HOSTNAME}.{{ $peerSvc }}.{{ .Release.Namespace }}.svc:2379"
+
+              INITIAL_CLUSTER=""
+              for i in $(seq 0 $(( {{ .Values.tikv.pd.replicas }} - 1 ))); do
+                NAME="{{ $fullname }}-pd-${i}"
+                URL="http://${NAME}.{{ $peerSvc }}.{{ .Release.Namespace }}.svc:2380"
+                if [ -n "$INITIAL_CLUSTER" ]; then
+                  INITIAL_CLUSTER="${INITIAL_CLUSTER},"
+                fi
+                INITIAL_CLUSTER="${INITIAL_CLUSTER}${NAME}=${URL}"
+              done
+
+              exec pd-server \
+                --name="${HOSTNAME}" \
+                --data-dir=/var/lib/pd \
+                --peer-urls="${PEER_URL}" \
+                --advertise-peer-urls="${PEER_URL}" \
+                --client-urls="${CLIENT_URL}" \
+                --advertise-client-urls="${ADVERTISE_CLIENT}" \
+                --initial-cluster="${INITIAL_CLUSTER}" \
+                --initial-cluster-state=new
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/pd
+          {{- with .Values.tikv.pd.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: client
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: client
+            initialDelaySeconds: 15
+            periodSeconds: 20
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.tikv.pd.storageClassName }}
+        storageClassName: {{ .Values.tikv.pd.storageClassName | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.tikv.pd.storage }}
+{{- end }}

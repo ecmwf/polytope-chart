@@ -1,0 +1,40 @@
+{{- if .Values.tikv.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "polytope-server.fullname" . }}-pd
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pd
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "polytope-server.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: pd
+  ports:
+    - name: client
+      port: 2379
+      targetPort: client
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "polytope-server.pdPeerService" . }}
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pd
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    {{- include "polytope-server.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: pd
+  ports:
+    - name: client
+      port: 2379
+      targetPort: client
+    - name: peer
+      port: 2380
+      targetPort: peer
+{{- end }}

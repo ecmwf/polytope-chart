@@ -1,0 +1,75 @@
+{{- if .Values.tikv.enabled }}
+{{- $fullname := include "polytope-server.fullname" . }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $fullname }}-tikv
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: tikv
+spec:
+  serviceName: {{ $fullname }}-tikv-peer
+  replicas: {{ .Values.tikv.tikv.replicas }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      {{- include "polytope-server.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: tikv
+  template:
+    metadata:
+      labels:
+        {{- include "polytope-server.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: tikv
+    spec:
+      containers:
+        - name: tikv
+          image: {{ .Values.tikv.tikv.image }}
+          ports:
+            - name: tikv
+              containerPort: 20160
+          command:
+            - /bin/sh
+            - -c
+            - |
+              HOSTNAME=$(hostname)
+              ADDR="${HOSTNAME}.{{ $fullname }}-tikv-peer.{{ .Release.Namespace }}.svc:20160"
+              exec tikv-server \
+                --addr="0.0.0.0:20160" \
+                --advertise-addr="${ADDR}" \
+                --data-dir=/var/lib/tikv \
+                --pd={{ include "polytope-server.pdEndpoint" . | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/tikv
+          {{- with .Values.tikv.tikv.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "tikv-ctl --host 127.0.0.1:20160 metrics 2>/dev/null | head -1"
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "tikv-ctl --host 127.0.0.1:20160 metrics 2>/dev/null | head -1"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.tikv.tikv.storageClassName }}
+        storageClassName: {{ .Values.tikv.tikv.storageClassName | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.tikv.tikv.storage }}
+{{- end }}

@@ -1,0 +1,15 @@
+{{- range $name, $pool := .Values.workerPools }}
+{{- if $pool.config }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "polytope-server.fullname" $ }}-{{ $name }}-config
+  labels:
+    {{- include "polytope-server.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+data:
+  config.yaml: |
+    {{- toYaml $pool.config | nindent 4 }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,65 @@
+{{- range $name, $pool := .Values.workerPools }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "polytope-server.fullname" $ }}-{{ $name }}
+  labels:
+    {{- include "polytope-server.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+spec:
+  replicas: {{ $pool.replicas | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "polytope-server.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: {{ $name }}
+  template:
+    metadata:
+      annotations:
+        {{- if $pool.config }}
+        checksum/worker-config: {{ toYaml $pool.config | sha256sum }}
+        {{- end }}
+        {{- with $pool.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "polytope-server.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: {{ $name }}
+    spec:
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $name }}
+          image: "{{ $.Values.image.registry }}/{{ $pool.image }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          args:
+            - --broker-url
+            - {{ include "polytope-server.brokerUrl" $ | quote }}
+            {{- range $pool.args }}
+            - {{ . | quote }}
+            {{- end }}
+          env:
+            - name: RUST_LOG
+              value: info
+            {{- with $pool.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with $pool.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if $pool.config }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/worker/config.yaml
+              subPath: config.yaml
+          {{- end }}
+      {{- if $pool.config }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "polytope-server.fullname" $ }}-{{ $name }}-config
+      {{- end }}
+{{- end }}
