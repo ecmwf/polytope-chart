@@ -46,7 +46,7 @@ spec:
             periodSeconds: 15
           readinessProbe:
             httpGet:
-              path: /api/v2/test
+              path: /api/v2/health
               port: http
             initialDelaySeconds: 5
             periodSeconds: 10

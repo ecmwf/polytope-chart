@@ -1,25 +1,30 @@
 {{- if and .Values.ingress.enabled .Values.ingress.domain }}
+{{- $host := include "polytope-server.ingressHost" . }}
+{{- $fullname := include "polytope-server.fullname" . }}
+{{- $annotations := .Values.ingress.annotations | default dict }}
+{{- $hasCertManager := or (hasKey $annotations "cert-manager.io/cluster-issuer") (hasKey $annotations "cert-manager.io/issuer") }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "polytope-server.fullname" . }}
+  name: {{ $fullname }}
   labels:
     {{- include "polytope-server.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
   annotations:
+    dns.operators.ecmwf.int/on-transport-server: vs-transport-https
+    {{- with $annotations }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
-    - host: {{ include "polytope-server.ingressHost" . | quote }}
+    - host: {{ $host | quote }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "polytope-server.fullname" . }}-frontend
+                name: {{ $fullname }}-frontend
                 port:
                   name: http
   {{- if .Values.ingress.tls }}
@@ -27,7 +32,12 @@ spec:
     {{- range .Values.ingress.tls }}
     - secretName: {{ .secretName }}
       hosts:
-        - {{ include "polytope-server.ingressHost" $ | quote }}
+        - {{ $host | quote }}
     {{- end }}
+  {{- else if $hasCertManager }}
+  tls:
+    - secretName: {{ $fullname }}-tls
+      hosts:
+        - {{ $host | quote }}
   {{- end }}
 {{- end }}

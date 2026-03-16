@@ -33,7 +33,7 @@ spec:
             - |
               HOSTNAME=$(hostname)
               ADDR="${HOSTNAME}.{{ $fullname }}-tikv-peer.{{ .Release.Namespace }}.svc:20160"
-              exec tikv-server \
+              exec /tikv-server \
                 --addr="0.0.0.0:20160" \
                 --advertise-addr="${ADDR}" \
                 --data-dir=/var/lib/tikv \
@@ -50,7 +50,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - "tikv-ctl --host 127.0.0.1:20160 metrics 2>/dev/null | head -1"
+                - "/tikv-ctl --host 127.0.0.1:20160 metrics 2>/dev/null | head -1"
             initialDelaySeconds: 10
             periodSeconds: 15
           livenessProbe:
@@ -58,7 +58,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - "tikv-ctl --host 127.0.0.1:20160 metrics 2>/dev/null | head -1"
+                - "/tikv-ctl --host 127.0.0.1:20160 metrics 2>/dev/null | head -1"
             initialDelaySeconds: 30
             periodSeconds: 30
   volumeClaimTemplates:

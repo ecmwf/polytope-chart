@@ -8,6 +8,14 @@ image:
 
 imagePullSecrets: []
 
+# When set, the chart creates a kubernetes.io/dockerconfigjson Secret called
+# "polytope-registry-cred".  You still need to list the secret name in
+# imagePullSecrets above (or in your per-environment config overlay).
+imageCredentials: {}
+  # registry: eccr.ecmwf.int
+  # username: robot$polytope+polytope-pull
+  # password: changeme
+
 # ── Frontend (broker) ─────────────────────────────────────────────────────────
 frontend:
   host: "0.0.0.0"
