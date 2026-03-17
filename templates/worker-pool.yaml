@@ -26,6 +26,10 @@ spec:
         {{- include "polytope-server.selectorLabels" $ | nindent 8 }}
         app.kubernetes.io/component: {{ $name }}
     spec:
+      {{- if $pool.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -43,6 +47,12 @@ spec:
           env:
             - name: RUST_LOG
               value: info
+            {{- if $pool.hostNetwork }}
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            {{- end }}
             {{- with $pool.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
