@@ -28,8 +28,8 @@ spec:
       {{- end }}
       containers:
         - name: polytope-server
-          image: "{{ .Values.image.registry }}/polytope-server:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: {{ include "polytope-server.image" (dict "imageRoot" .Values.frontend.image "global" .Values.global "chart" .Chart) | quote }}
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy | default "IfNotPresent" }}
           args:
             - /etc/polytope/config.yaml
           ports:

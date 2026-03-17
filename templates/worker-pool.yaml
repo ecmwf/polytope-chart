@@ -36,8 +36,8 @@ spec:
       {{- end }}
       containers:
         - name: {{ $name }}
-          image: "{{ $.Values.image.registry }}/{{ $pool.image }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
-          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          image: {{ include "polytope-server.image" (dict "imageRoot" $pool.image "global" $.Values.global "chart" $.Chart) | quote }}
+          imagePullPolicy: {{ $pool.image.pullPolicy | default "IfNotPresent" }}
           args:
             - --broker-url
             - {{ include "polytope-server.workerBrokerUrl" (dict "root" $ "pool" ($pool.pool | default "worker_pool")) | quote }}
