@@ -1,10 +1,9 @@
 nameOverride: ""
 fullnameOverride: ""
 
-image:
-  registry: eccr.ecmwf.int/polytope
-  pullPolicy: IfNotPresent
-  tag: ""
+global:
+  # Override ALL image registries in the chart (e.g. for air-gapped environments).
+  imageRegistry: ""
 
 imagePullSecrets: []
 
@@ -18,6 +17,10 @@ imageCredentials: {}
 
 # ── Frontend (broker) ─────────────────────────────────────────────────────────
 frontend:
+  image:
+    repository: polytope-server
+    tag: ""
+    pullPolicy: IfNotPresent
   host: "0.0.0.0"
   port: 3000
   brokerPort: 9001
@@ -57,7 +60,9 @@ schedule: ""
 #
 # workerPools:
 #   fdb-alps:
-#     image: fdb-worker
+#     image:
+#       repository: fdb-worker
+#       tag: ""
 #     pool: worker_pool
 #     replicas: 5
 #     config:
