@@ -21,6 +21,7 @@ spec:
       labels:
         {{- include "polytope-server.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: frontend
+        app: frontend
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

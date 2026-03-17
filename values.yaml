@@ -41,8 +41,8 @@ broker:
           type: remote_pool
           heartbeat_timeout_secs: 60
   routes:
-    default:
-      - target::worker_pool
+    - default:
+        - target::worker_pool
 
 # ── Schedule ──────────────────────────────────────────────────────────────────
 # Raw schedule XML for the bits-ecmwf schedule_released check.
@@ -89,5 +89,6 @@ ingress:
   className: nginx
   hostPrefix: polytope
   domain: ""
-  annotations: {}
+  annotations:
+    nginx.org/lb-method: "hash $http_authorization$proxy_protocol_addr consistent"
   tls: []

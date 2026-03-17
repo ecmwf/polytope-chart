@@ -54,7 +54,8 @@ spec:
                 --advertise-peer-urls="http://${FQDN}:2380" \
                 --client-urls="${CLIENT_URL}" \
                 --advertise-client-urls="http://${FQDN}:2379" \
-                --initial-cluster="${INITIAL_CLUSTER}"
+                --initial-cluster="${INITIAL_CLUSTER}" \
+                --log-level=warn
           volumeMounts:
             - name: data
               mountPath: /var/lib/pd

@@ -12,4 +12,21 @@ data:
   config.yaml: |
     {{- toYaml $pool.config | nindent 4 }}
 {{- end }}
+{{- if $pool.marsConfig }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: worker-{{ $name }}-mars-config
+  labels:
+    {{- include "polytope-server.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+data:
+  databases.yaml: |
+    {{- toYaml $pool.marsConfig.databases | nindent 4 }}
+  {{- if $pool.marsConfig.config }}
+  config.yaml: |
+    {{- toYaml $pool.marsConfig.config | nindent 4 }}
+  {{- end }}
+{{- end }}
 {{- end }}

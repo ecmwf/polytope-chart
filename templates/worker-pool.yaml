@@ -25,6 +25,7 @@ spec:
       labels:
         {{- include "polytope-server.selectorLabels" $ | nindent 8 }}
         app.kubernetes.io/component: {{ $name }}
+        app: worker-{{ $name }}
     spec:
       {{- if $pool.hostNetwork }}
       hostNetwork: true
@@ -53,6 +54,10 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
             {{- end }}
+            {{- if $pool.marsConfig }}
+            - name: MARS_HOME
+              value: /mars-home
+            {{- end }}
             {{- with $pool.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -60,16 +65,39 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if $pool.config }}
+          {{- if or $pool.config $pool.marsConfig $pool.cacheDir }}
           volumeMounts:
+            {{- if $pool.config }}
             - name: config
               mountPath: /etc/worker/config.yaml
               subPath: config.yaml
+            {{- end }}
+            {{- if $pool.marsConfig }}
+            - name: mars-config
+              mountPath: /mars-home/etc/mars-client
+            {{- end }}
+            {{- if $pool.cacheDir }}
+            - name: cache
+              mountPath: /tmp/cache
+            {{- end }}
           {{- end }}
-      {{- if $pool.config }}
+      {{- if or $pool.config $pool.marsConfig $pool.cacheDir }}
       volumes:
+        {{- if $pool.config }}
         - name: config
           configMap:
             name: worker-{{ $name }}-config
+        {{- end }}
+        {{- if $pool.marsConfig }}
+        - name: mars-config
+          configMap:
+            name: worker-{{ $name }}-mars-config
+        {{- end }}
+        {{- if $pool.cacheDir }}
+        - name: cache
+          hostPath:
+            path: {{ $pool.cacheDir }}
+            type: DirectoryOrCreate
+        {{- end }}
       {{- end }}
 {{- end }}

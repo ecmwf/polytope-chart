@@ -36,7 +36,8 @@ spec:
                 --addr="0.0.0.0:20160" \
                 --advertise-addr="${ADDR}" \
                 --data-dir=/var/lib/tikv \
-                --pd={{ include "polytope-server.pdEndpoint" . | quote }}
+                --pd={{ include "polytope-server.pdEndpoint" . | quote }} \
+                --log-level=warn
           volumeMounts:
             - name: data
               mountPath: /var/lib/tikv
