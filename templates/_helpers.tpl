@@ -40,3 +40,24 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "polytope-server.ingressHost" -}}
 {{- printf "%s.%s" .Values.ingress.hostPrefix .Values.ingress.domain }}
 {{- end }}
+
+{{/*
+Return the image reference for a component.
+Usage:
+  {{ include "polytope-server.image" (dict "imageRoot" .Values.frontend.image "global" .Values.global "chart" .Chart) }}
+*/}}
+{{- define "polytope-server.image" -}}
+{{- $registryName := default .imageRoot.registry ((.global).imageRegistry) -}}
+{{- $repositoryName := .imageRoot.repository -}}
+{{- $tag := .imageRoot.tag | toString -}}
+{{- if not .imageRoot.tag }}
+  {{- if .chart }}
+    {{- $tag = .chart.AppVersion | toString -}}
+  {{- end }}
+{{- end }}
+{{- if $registryName }}
+  {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+{{- else }}
+  {{- printf "%s:%s" $repositoryName $tag -}}
+{{- end }}
+{{- end -}}
