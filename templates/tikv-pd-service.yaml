@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "polytope-server.fullname" . }}-pd
+  name: pd
   labels:
     {{- include "polytope-server.labels" . | nindent 4 }}
     app.kubernetes.io/component: pd
@@ -19,7 +19,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "polytope-server.pdPeerService" . }}
+  name: pd-peer
   labels:
     {{- include "polytope-server.labels" . | nindent 4 }}
     app.kubernetes.io/component: pd

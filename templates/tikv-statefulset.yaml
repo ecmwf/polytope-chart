@@ -1,14 +1,13 @@
 {{- if .Values.tikv.enabled }}
-{{- $fullname := include "polytope-server.fullname" . }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ $fullname }}-tikv
+  name: tikv
   labels:
     {{- include "polytope-server.labels" . | nindent 4 }}
     app.kubernetes.io/component: tikv
 spec:
-  serviceName: {{ $fullname }}-tikv-peer
+  serviceName: tikv-peer
   replicas: {{ .Values.tikv.tikv.replicas }}
   podManagementPolicy: Parallel
   selector:
@@ -32,7 +31,7 @@ spec:
             - -c
             - |
               HOSTNAME=$(hostname)
-              ADDR="${HOSTNAME}.{{ $fullname }}-tikv-peer.{{ .Release.Namespace }}.svc:20160"
+              ADDR="${HOSTNAME}.tikv-peer.{{ .Release.Namespace }}.svc:20160"
               exec /tikv-server \
                 --addr="0.0.0.0:20160" \
                 --advertise-addr="${ADDR}" \

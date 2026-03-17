@@ -39,7 +39,6 @@ broker:
         queue: cost_weighted
         executor:
           type: remote_pool
-          bind: "0.0.0.0:9001"
           heartbeat_timeout_secs: 60
   routes:
     default:
@@ -54,10 +53,12 @@ schedule: ""
 # ── Worker pools ──────────────────────────────────────────────────────────────
 # Each key produces a Deployment (+ optional ConfigMap when config is set).
 # The chart handles mounting and CLI args internally.
+# `pool` is the broker target name — workers connect to /pool/work on the broker.
 #
 # workerPools:
 #   fdb-alps:
 #     image: fdb-worker
+#     pool: worker_pool
 #     replicas: 5
 #     config:
 #       type: remote

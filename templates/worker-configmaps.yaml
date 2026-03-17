@@ -4,7 +4,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "polytope-server.fullname" $ }}-{{ $name }}-config
+  name: worker-{{ $name }}-config
   labels:
     {{- include "polytope-server.labels" $ | nindent 4 }}
     app.kubernetes.io/component: {{ $name }}

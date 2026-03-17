@@ -3,7 +3,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "polytope-server.fullname" $ }}-{{ $name }}
+  name: worker-{{ $name }}
   labels:
     {{- include "polytope-server.labels" $ | nindent 4 }}
     app.kubernetes.io/component: {{ $name }}
@@ -36,7 +36,7 @@ spec:
           imagePullPolicy: {{ $.Values.image.pullPolicy }}
           args:
             - --broker-url
-            - {{ include "polytope-server.brokerUrl" $ | quote }}
+            - {{ include "polytope-server.workerBrokerUrl" (dict "root" $ "pool" ($pool.pool | default "worker_pool")) | quote }}
             {{- range $pool.args }}
             - {{ . | quote }}
             {{- end }}
@@ -60,6 +60,6 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ include "polytope-server.fullname" $ }}-{{ $name }}-config
+            name: worker-{{ $name }}-config
       {{- end }}
 {{- end }}

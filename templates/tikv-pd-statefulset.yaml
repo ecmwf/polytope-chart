@@ -1,15 +1,13 @@
 {{- if .Values.tikv.enabled }}
-{{- $fullname := include "polytope-server.fullname" . }}
-{{- $peerSvc := include "polytope-server.pdPeerService" . }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ $fullname }}-pd
+  name: pd
   labels:
     {{- include "polytope-server.labels" . | nindent 4 }}
     app.kubernetes.io/component: pd
 spec:
-  serviceName: {{ $peerSvc }}
+  serviceName: pd-peer
   replicas: {{ .Values.tikv.pd.replicas }}
   podManagementPolicy: Parallel
   selector:
@@ -35,14 +33,14 @@ spec:
             - -c
             - |
               HOSTNAME=$(hostname)
-              FQDN="${HOSTNAME}.{{ $peerSvc }}.{{ .Release.Namespace }}.svc"
+              FQDN="${HOSTNAME}.pd-peer.{{ .Release.Namespace }}.svc"
               CLIENT_URL="http://0.0.0.0:2379"
               PEER_URL="http://0.0.0.0:2380"
 
               INITIAL_CLUSTER=""
               for i in $(seq 0 $(( {{ .Values.tikv.pd.replicas }} - 1 ))); do
-                NAME="{{ $fullname }}-pd-${i}"
-                URL="http://${NAME}.{{ $peerSvc }}.{{ .Release.Namespace }}.svc:2380"
+                NAME="pd-${i}"
+                URL="http://${NAME}.pd-peer.{{ .Release.Namespace }}.svc:2380"
                 if [ -n "$INITIAL_CLUSTER" ]; then
                   INITIAL_CLUSTER="${INITIAL_CLUSTER},"
                 fi

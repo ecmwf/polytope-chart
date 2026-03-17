@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "polytope-server.fullname" . }}-tikv-peer
+  name: tikv-peer
   labels:
     {{- include "polytope-server.labels" . | nindent 4 }}
     app.kubernetes.io/component: tikv
