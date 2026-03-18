@@ -29,7 +29,11 @@ spec:
       {{- end }}
       containers:
         - name: polytope-server
+          {{- if and .Values.frontend.image (kindIs "map" .Values.frontend.image) }}
+          image: "{{ .Values.image.registry }}/{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag | default .Chart.AppVersion }}"
+          {{- else }}
           image: "{{ .Values.image.registry }}/polytope-server:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - /etc/polytope/config.yaml

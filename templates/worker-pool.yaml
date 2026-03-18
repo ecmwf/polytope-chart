@@ -37,7 +37,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ $name }}
-          image: "{{ $.Values.image.registry }}/{{ $pool.image }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+          image: "{{ $.Values.image.registry }}/{{ $pool.image.repository }}:{{ $pool.image.tag | default $.Values.image.tag }}"
           imagePullPolicy: {{ $.Values.image.pullPolicy }}
           args:
             - --broker-url
