@@ -56,3 +56,7 @@ data:
       transforms:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+    {{- with .Values.edr }}
+    edr:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
