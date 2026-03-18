@@ -60,3 +60,11 @@ data:
     edr:
       {{- toYaml . | nindent 6 }}
     {{- end }}
+    {{- with .Values.authentication }}
+    authentication:
+      url: {{ .url | quote }}
+      secret: {{ .secret | quote }}
+      {{- with .timeout_ms }}
+      timeout_ms: {{ . }}
+      {{- end }}
+    {{- end }}
