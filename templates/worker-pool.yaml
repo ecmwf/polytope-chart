@@ -27,13 +27,12 @@ spec:
         app.kubernetes.io/component: {{ $name }}
         app: worker-{{ $name }}
     spec:
-      {{- if $pool.hostNetwork }}
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
-      {{- end }}
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if $pool.marsConfig }}
+      serviceAccountName: mars-worker
       {{- end }}
       containers:
         - name: {{ $name }}
@@ -48,12 +47,22 @@ spec:
           env:
             - name: RUST_LOG
               value: info
-            {{- if $pool.hostNetwork }}
             - name: K8S_NODE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            {{- end }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             {{- if $pool.marsConfig }}
             - name: MARS_HOME
               value: /mars-home
