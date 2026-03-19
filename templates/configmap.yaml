@@ -32,14 +32,19 @@ data:
       routes:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or .Values.broker.checks .Values.schedule }}
+      {{- if or .Values.broker.checks .Values.schedule.url }}
       checks:
         {{- if .Values.broker.checks }}
         {{- range $name, $check := .Values.broker.checks }}
-        {{- if and (eq $name "schedule_released") $.Values.schedule }}
+        {{- $scheduleType := eq (default "" (index (default dict $check) "type")) "schedule_released" }}
+        {{- if and (or (eq $name "schedule_released") $scheduleType) $.Values.schedule.url }}
         {{ $name }}:
-          path: /etc/polytope/schedule.xml
-          {{- with $check.now_rfc3339 }}
+          type: schedule_released
+          url: {{ $.Values.schedule.url | quote }}
+          {{- if not $.Values.schedule.secretName }}
+          token: {{ $.Values.schedule.token | required "schedule.token or schedule.secretName is required when schedule.url is set" | quote }}
+          {{- end }}
+          {{- with (index (default dict $check) "now_rfc3339") }}
           now_rfc3339: {{ . | quote }}
           {{- end }}
         {{- else }}
@@ -47,9 +52,13 @@ data:
           {{- toYaml $check | nindent 10 }}
         {{- end }}
         {{- end }}
-        {{- else if .Values.schedule }}
+        {{- else if .Values.schedule.url }}
         schedule_released:
-          path: /etc/polytope/schedule.xml
+          type: schedule_released
+          url: {{ .Values.schedule.url | quote }}
+          {{- if not .Values.schedule.secretName }}
+          token: {{ .Values.schedule.token | required "schedule.token or schedule.secretName is required when schedule.url is set" | quote }}
+          {{- end }}
         {{- end }}
       {{- end }}
       {{- with .Values.broker.transforms }}

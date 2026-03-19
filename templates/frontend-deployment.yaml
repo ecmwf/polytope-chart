@@ -54,6 +54,13 @@ spec:
           env:
             - name: RUST_LOG
               value: info
+            {{- with .Values.schedule.secretName }}
+            - name: SCHEDULE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ . }}
+                  key: {{ $.Values.schedule.secretKey }}
+            {{- end }}
           {{- with .Values.frontend.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -62,17 +69,7 @@ spec:
             - name: config
               mountPath: /etc/polytope/config.yaml
               subPath: config.yaml
-            {{- if .Values.schedule }}
-            - name: schedule
-              mountPath: /etc/polytope/schedule.xml
-              subPath: schedule.xml
-            {{- end }}
       volumes:
         - name: config
           configMap:
             name: config
-        {{- if .Values.schedule }}
-        - name: schedule
-          configMap:
-            name: schedule
-        {{- end }}
