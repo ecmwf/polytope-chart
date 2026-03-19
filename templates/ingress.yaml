@@ -15,8 +15,8 @@ metadata:
     {{- end }}
     {{- if .Values.bobs.enabled }}
     nginx.org/server-snippets: |
-      location ~ ^/download-(\d+)(/.+)$ {
-        proxy_pass http://bobs-$1.{{ .Values.bobs.headlessService.name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.bobs.service.port }}$2;
+      location ~ ^/download-(\d+)/([^/]+)$ {
+        proxy_pass http://bobs-$1.{{ .Values.bobs.headlessService.name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.bobs.service.port }}/read/$2;
       }
     {{- end }}
 spec:
