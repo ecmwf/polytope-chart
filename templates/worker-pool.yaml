@@ -45,6 +45,10 @@ spec:
             {{- range $pool.args }}
             - {{ . | quote }}
             {{- end }}
+            {{- if $pool.deliveryConfig }}
+            - --delivery-config-path
+            - /etc/worker/delivery.yaml
+            {{- end }}
           env:
             - name: RUST_LOG
               value: info
@@ -75,7 +79,7 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if or $pool.config $pool.marsConfig $pool.cacheDir }}
+          {{- if or $pool.config $pool.marsConfig $pool.cacheDir $pool.deliveryConfig }}
           volumeMounts:
             {{- if $pool.config }}
             - name: config
@@ -90,8 +94,13 @@ spec:
             - name: cache
               mountPath: /tmp/cache
             {{- end }}
+            {{- if $pool.deliveryConfig }}
+            - name: delivery-config
+              mountPath: /etc/worker/delivery.yaml
+              subPath: delivery.yaml
+            {{- end }}
           {{- end }}
-      {{- if or $pool.config $pool.marsConfig $pool.cacheDir }}
+      {{- if or $pool.config $pool.marsConfig $pool.cacheDir $pool.deliveryConfig }}
       volumes:
         {{- if $pool.config }}
         - name: config
@@ -108,6 +117,11 @@ spec:
           hostPath:
             path: {{ $pool.cacheDir }}
             type: DirectoryOrCreate
+        {{- end }}
+        {{- if $pool.deliveryConfig }}
+        - name: delivery-config
+          configMap:
+            name: worker-{{ $name }}-delivery-config
         {{- end }}
       {{- end }}
 {{- end }}

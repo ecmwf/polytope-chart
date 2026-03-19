@@ -7,3 +7,9 @@ description: >
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
+
+dependencies:
+  - name: bobs
+    version: "0.1.0"
+    repository: "file://../bobs/chart"
+    condition: bobs.enabled

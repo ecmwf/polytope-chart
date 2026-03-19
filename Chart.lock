@@ -1,0 +1,6 @@
+dependencies:
+- name: bobs
+  repository: file://../bobs/chart
+  version: 0.1.0
+digest: sha256:67e70b9f3540571d03268e8e02e15c5be26439768f3f50218e433b6086431c29
+generated: "2026-03-19T12:58:55.915544258Z"
