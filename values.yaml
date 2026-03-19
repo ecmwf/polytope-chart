@@ -60,6 +60,9 @@ schedule:
     enabled: false
     path: ""
     refreshAfter: "60s"
+    authRef: vault-auth
+    type: kv-v2
+    mount: k8s_clusters
 
 # ── Worker pools ──────────────────────────────────────────────────────────────
 # Each key produces a Deployment (+ optional ConfigMap when config is set).

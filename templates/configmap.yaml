@@ -42,7 +42,7 @@ data:
           type: schedule_released
           url: {{ $.Values.schedule.url | quote }}
           {{- if not $.Values.schedule.secretName }}
-          token: {{ $.Values.schedule.token | quote }}
+          token: {{ $.Values.schedule.token | required "schedule.token or schedule.secretName is required when schedule.url is set" | quote }}
           {{- end }}
           {{- with (index (default dict $check) "now_rfc3339") }}
           now_rfc3339: {{ . | quote }}
@@ -57,7 +57,7 @@ data:
           type: schedule_released
           url: {{ .Values.schedule.url | quote }}
           {{- if not .Values.schedule.secretName }}
-          token: {{ .Values.schedule.token | quote }}
+          token: {{ .Values.schedule.token | required "schedule.token or schedule.secretName is required when schedule.url is set" | quote }}
           {{- end }}
         {{- end }}
       {{- end }}

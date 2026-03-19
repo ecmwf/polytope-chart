@@ -8,9 +8,16 @@ The `schedule_released` check fetches the ECMWF pgen schedule XML from GitHub
 at pod startup and caches it in memory for the lifetime of the process. It
 needs a GitHub Personal Access Token (PAT) to authenticate.
 
-The PAT is read from the `SCHEDULE_TOKEN` environment variable. The chart can
-populate that variable from a Kubernetes Secret in two ways: manually created,
-or provisioned automatically via the HashiCorp Vault Secrets Operator.
+The PAT can be provided in two ways:
+
+- **Config file** (`schedule.token`): rendered directly into the BITS config
+  YAML. Simple but the token is visible in the ConfigMap.
+- **Kubernetes Secret** (`schedule.secretName`): the chart injects the
+  `SCHEDULE_TOKEN` environment variable from the Secret. The token is **not**
+  rendered into the ConfigMap.
+
+The Secret can be created manually or provisioned via the HashiCorp Vault
+Secrets Operator.
 
 ### Option 1 — Manual Secret
 
