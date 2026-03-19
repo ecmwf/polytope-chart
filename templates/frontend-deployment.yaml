@@ -54,6 +54,15 @@ spec:
           env:
             - name: RUST_LOG
               value: info
+            {{- with .Values.authentication }}
+            {{- if .secretName }}
+            - name: AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .secretName }}
+                  key: {{ .secretKey | default "auth-secret" }}
+            {{- end }}
+            {{- end }}
           {{- with .Values.frontend.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
