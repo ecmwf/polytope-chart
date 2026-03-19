@@ -69,6 +69,9 @@ schedule: ""
 #       type: remote
 #       host: svc001.alpsb.cscs.ch
 #       port: 9000
+#     deliveryConfig:
+#       delivery_type: bobs
+#       bobs_index: 0   # selects bobs-0; bobs_url and bobs_public_url are auto-filled from the ingress
 workerPools: {}
 
 # ── TiKV (raw StatefulSets — no operator) ─────────────────────────────────────
@@ -97,3 +100,40 @@ ingress:
   annotations:
     nginx.org/lb-method: "hash $http_authorization$proxy_protocol_addr consistent"
   tls: []
+
+# ── BOBS (result spool storage) ──────────────────────────────────────────────
+bobs:
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: bobs
+    tag: ""
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3000
+  config:
+    host: "0.0.0.0"
+    port: 3000
+    data_dir: "/var/lib/bobs"
+    page_size: 4096
+    max_cache_bytes: 1048576
+    writer_inactivity_timeout_secs: 300
+    reader_done_ttl_secs: 60
+    unread_ttl_secs: 3600
+    cleanup_sweep_interval_secs: 30
+    long_poll_timeout_ms: 25000
+    bob_id: "bobs"
+  headlessService:
+    enabled: true
+    name: bobs-svc
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+  ingress:
+    enabled: false
+    className: nginx
+    host: ""
+    annotations: {}
+    tls: []

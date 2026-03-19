@@ -13,6 +13,12 @@ metadata:
     {{- with $annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+    {{- if .Values.bobs.enabled }}
+    nginx.org/server-snippets: |
+      location ~ ^/download-(\d+)(/.+)$ {
+        proxy_pass http://bobs-$1.{{ .Values.bobs.headlessService.name }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.bobs.service.port }}$2;
+      }
+    {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:

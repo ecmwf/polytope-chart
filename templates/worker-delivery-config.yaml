@@ -1,0 +1,25 @@
+{{- range $name, $pool := .Values.workerPools }}
+{{- if $pool.deliveryConfig }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: worker-{{ $name }}-delivery-config
+  labels:
+    {{- include "polytope-server.labels" $ | nindent 4 }}
+data:
+  delivery.yaml: |
+    {{- $cfg := deepCopy $pool.deliveryConfig }}
+    {{- if eq (default "" $cfg.delivery_type) "bobs" }}
+    {{- $idx := int (default 0 $cfg.bobs_index) }}
+    {{- if not $cfg.bobs_url }}
+    {{- $_ := set $cfg "bobs_url" (printf "bobs-%d.%s.%s.svc.cluster.local:%d" $idx $.Values.bobs.headlessService.name $.Release.Namespace (int $.Values.bobs.service.port)) }}
+    {{- end }}
+    {{- if and (not $cfg.bobs_public_url) $.Values.ingress.enabled $.Values.ingress.domain }}
+    {{- $host := include "polytope-server.ingressHost" $ }}
+    {{- $_ := set $cfg "bobs_public_url" (printf "https://%s/download-%d" $host $idx) }}
+    {{- end }}
+    {{- end }}
+    {{- omit $cfg "bobs_index" | toYaml | nindent 4 }}
+{{- end }}
+{{- end }}
