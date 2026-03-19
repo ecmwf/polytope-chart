@@ -48,10 +48,18 @@ broker:
         - target::worker_pool
 
 # ── Schedule ──────────────────────────────────────────────────────────────────
-# Raw schedule XML for the bits-ecmwf schedule_released check.
-# When set, the chart mounts it and injects the path into routing.checks
-# automatically — no internal paths required in config.
-schedule: ""
+# The schedule_released check fetches the pgen schedule XML at startup.
+# When schedule.url is set, the chart injects url + token into any
+# schedule_released check automatically.
+schedule:
+  url: ""
+  token: ""
+  secretName: ""
+  secretKey: schedule-token
+  vault:
+    enabled: false
+    path: ""
+    refreshAfter: "60s"
 
 # ── Worker pools ──────────────────────────────────────────────────────────────
 # Each key produces a Deployment (+ optional ConfigMap when config is set).
