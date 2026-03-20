@@ -2,5 +2,11 @@ dependencies:
 - name: bobs
   repository: file://../bobs/chart
   version: 0.1.0
-digest: sha256:67e70b9f3540571d03268e8e02e15c5be26439768f3f50218e433b6086431c29
-generated: "2026-03-19T12:58:55.915544258Z"
+- name: mysql
+  repository: https://charts.bitnami.com/bitnami
+  version: 10.2.2
+- name: seaweedfs
+  repository: https://seaweedfs.github.io/seaweedfs/helm
+  version: 3.67.0
+digest: sha256:de80c34318596067b8ac9b08fd0c3162cd8575580caf3aa1b262498c97254af3
+generated: "2026-03-19T19:17:11.523654351Z"

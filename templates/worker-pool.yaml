@@ -1,4 +1,5 @@
 {{- range $name, $pool := .Values.workerPools }}
+{{- $hasConfig := or $pool.config $pool.deliveryConfig }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -16,11 +17,8 @@ spec:
   template:
     metadata:
       annotations:
-        {{- if $pool.config }}
-        checksum/worker-config: {{ toYaml $pool.config | sha256sum }}
-        {{- end }}
-        {{- if $pool.deliveryConfig }}
-        checksum/delivery-config: {{ toYaml $pool.deliveryConfig | sha256sum }}
+        {{- if $hasConfig }}
+        checksum/worker-config: {{ toYaml (dict "config" $pool.config "delivery" $pool.deliveryConfig) | sha256sum }}
         {{- end }}
         {{- with $pool.podAnnotations }}
         {{- toYaml . | nindent 8 }}
@@ -45,12 +43,12 @@ spec:
           args:
             - --broker-url
             - {{ include "polytope-server.workerBrokerUrl" (dict "root" $ "pool" ($pool.pool | default "worker_pool")) | quote }}
+            {{- if $hasConfig }}
+            - --config-path
+            - /etc/polytope-worker/config.yaml
+            {{- end }}
             {{- range $pool.args }}
             - {{ . | quote }}
-            {{- end }}
-            {{- if $pool.deliveryConfig }}
-            - --delivery-config-path
-            - /etc/worker/delivery.yaml
             {{- end }}
           env:
             - name: RUST_LOG
@@ -82,11 +80,11 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if or $pool.config $pool.marsConfig $pool.cacheDir $pool.deliveryConfig }}
+          {{- if or $hasConfig $pool.marsConfig $pool.cacheDir }}
           volumeMounts:
-            {{- if $pool.config }}
+            {{- if $hasConfig }}
             - name: config
-              mountPath: /etc/worker/config.yaml
+              mountPath: /etc/polytope-worker/config.yaml
               subPath: config.yaml
             {{- end }}
             {{- if $pool.marsConfig }}
@@ -97,15 +95,10 @@ spec:
             - name: cache
               mountPath: /tmp/cache
             {{- end }}
-            {{- if $pool.deliveryConfig }}
-            - name: delivery-config
-              mountPath: /etc/worker/delivery.yaml
-              subPath: delivery.yaml
-            {{- end }}
           {{- end }}
-      {{- if or $pool.config $pool.marsConfig $pool.cacheDir $pool.deliveryConfig }}
+      {{- if or $hasConfig $pool.marsConfig $pool.cacheDir }}
       volumes:
-        {{- if $pool.config }}
+        {{- if $hasConfig }}
         - name: config
           configMap:
             name: worker-{{ $name }}-config
@@ -120,11 +113,6 @@ spec:
           hostPath:
             path: {{ $pool.cacheDir }}
             type: DirectoryOrCreate
-        {{- end }}
-        {{- if $pool.deliveryConfig }}
-        - name: delivery-config
-          configMap:
-            name: worker-{{ $name }}-delivery-config
         {{- end }}
       {{- end }}
 {{- end }}
