@@ -60,3 +60,13 @@ data:
     edr:
       {{- toYaml . | nindent 6 }}
     {{- end }}
+    {{- with .Values.authentication }}
+    authentication:
+      url: {{ .url | required "authentication.url is required when authentication is enabled" | quote }}
+      {{- if not .secretName }}
+      secret: {{ .secret | required "authentication.secret or authentication.secretName is required" | quote }}
+      {{- end }}
+      {{- with .timeout_ms }}
+      timeout_ms: {{ . }}
+      {{- end }}
+    {{- end }}

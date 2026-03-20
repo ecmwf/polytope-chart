@@ -91,6 +91,16 @@ tikv:
     storageClassName: ""
     resources: {}
 
+# ── Authentication (auth-o-tron gateway) ──────────────────────────────────────
+# When set, all API endpoints require valid credentials.
+# /api/v2/health remains public (used by k8s probes).
+# authentication:
+#   url: "http://auth-o-tron:8080"
+#   secret: ""              # plaintext fallback (prefer secretName)
+#   secretName: ""          # K8s Secret holding the JWT signing secret
+#   secretKey: auth-secret  # key inside the Secret
+#   timeout_ms: 3000
+
 # ── Ingress ───────────────────────────────────────────────────────────────────
 # Host is constructed as {{ hostPrefix }}.{{ domain }}.
 ingress:
