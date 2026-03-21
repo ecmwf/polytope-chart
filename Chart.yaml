@@ -13,11 +13,3 @@ dependencies:
     version: "0.1.0"
     repository: "file://../bobs/chart"
     condition: bobs.enabled
-  - name: mysql
-    version: 10.2.2
-    repository: https://charts.bitnami.com/bitnami
-    condition: mysql.enabled
-  - name: seaweedfs
-    version: 3.67.0
-    repository: https://seaweedfs.github.io/seaweedfs/helm
-    condition: seaweedfs.enabled
