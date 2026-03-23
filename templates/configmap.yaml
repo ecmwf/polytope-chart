@@ -60,6 +60,16 @@ data:
     edr:
       {{- toYaml . | nindent 6 }}
     {{- end }}
+    {{- if .Values.authotron.enabled }}
+    {{- $authotronConfig := get .Values.authotron "config" | default dict }}
+    {{- $authotronServer := get $authotronConfig "server" | default dict }}
+    {{- $authotronJwt := get $authotronConfig "jwt" | default dict }}
+    {{- $authotronAuth := get $authotronConfig "auth" | default dict }}
+    authentication:
+      url: "http://{{ .Release.Name }}-authotron:{{ get $authotronServer "port" | default 8080 }}"
+      secret: {{ get $authotronJwt "secret" | default "" | quote }}
+      timeout_ms: {{ get $authotronAuth "timeout_in_ms" | default 3000 }}
+    {{- else }}
     {{- with .Values.authentication }}
     authentication:
       url: {{ .url | required "authentication.url is required when authentication is enabled" | quote }}
@@ -69,4 +79,5 @@ data:
       {{- with .timeout_ms }}
       timeout_ms: {{ . }}
       {{- end }}
+    {{- end }}
     {{- end }}

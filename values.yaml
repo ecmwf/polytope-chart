@@ -116,6 +116,10 @@ ingress:
 bobs:
   enabled: false
 
+# ── Auth-o-tron (authentication gateway) ─────────────────────────────────────
+authotron:
+  enabled: false
+
 # ── SeaweedFS S3 storage ─────────────────────────────────────────────────────
 # Requires mysql to be enabled alongside for the filer database.
 # Shared anchors keep credentials in sync between mysql and seaweedfs.

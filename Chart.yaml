@@ -13,3 +13,8 @@ dependencies:
     version: "0.1.0"
     repository: "file://../bobs/chart"
     condition: bobs.enabled
+  - name: auth-o-tron
+    version: "0.3.0"
+    repository: "file://../auth-o-tron-chart"
+    alias: authotron
+    condition: authotron.enabled
