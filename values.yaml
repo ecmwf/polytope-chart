@@ -54,8 +54,8 @@ broker:
 schedule: ""
 
 # ── Worker pools ──────────────────────────────────────────────────────────────
-# Each key produces a Deployment (+ optional ConfigMap when config is set).
-# The chart handles mounting and CLI args internally.
+# Each key produces a Deployment (+ ConfigMap when config or deliveryConfig is set).
+# All config is merged into a single YAML file mounted at /etc/polytope-worker/config.yaml.
 # `pool` is the broker target name — workers connect to /pool/work on the broker.
 #
 # workerPools:
@@ -66,9 +66,13 @@ schedule: ""
 #     pool: worker_pool
 #     replicas: 5
 #     config:
-#       type: remote
-#       host: svc001.alpsb.cscs.ch
-#       port: 9000
+#       fdb:
+#         type: remote
+#         host: svc001.alpsb.cscs.ch
+#         port: 9000
+#     deliveryConfig:
+#       delivery_type: bobs
+#       bobs_index: 0   # selects bobs-0; bobs_url and bobs_public_url are auto-filled from the ingress
 workerPools: {}
 
 # ── TiKV (raw StatefulSets — no operator) ─────────────────────────────────────
@@ -107,3 +111,113 @@ ingress:
   annotations:
     nginx.org/lb-method: "hash $http_authorization$proxy_protocol_addr consistent"
   tls: []
+
+# ── BOBS (result spool storage) ──────────────────────────────────────────────
+bobs:
+  enabled: false
+
+# ── Auth-o-tron (authentication gateway) ─────────────────────────────────────
+auth-o-tron:
+  enabled: false
+
+# ── SeaweedFS S3 storage ─────────────────────────────────────────────────────
+# Requires mysql to be enabled alongside for the filer database.
+# Shared anchors keep credentials in sync between mysql and seaweedfs.
+mysql_service_name: &mysql_svc_name ""
+filer_database: &filer_database ""
+secretName: &s3_secret_name ""
+s3_access_key: &s3_access_key ""
+s3_secret_key: &s3_secret_key ""
+
+mysql:
+  enabled: false  # activate together with seaweedfs
+  fullnameOverride: *mysql_svc_name
+  image:
+    repository: bitnamilegacy/mysql
+  startdbScripts:
+    init.sql: |
+      CREATE TABLE IF NOT EXISTS `filemeta` (
+        `dirhash`   BIGINT NOT NULL       COMMENT 'first 64 bits of MD5 hash value of directory field',
+        `name`      VARCHAR(766) NOT NULL COMMENT 'directory or file name',
+        `directory` TEXT NOT NULL         COMMENT 'full path to parent directory',
+        `meta`      LONGBLOB,
+        PRIMARY KEY (`dirhash`, `name`)
+      ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+  primary:
+    service:
+      type: ClusterIP
+    persistence:
+      enabled: true
+      size: "200Gi"
+    resources:
+      requests:
+        memory: "4Gi"
+        cpu: "3000m"
+      limits:
+        memory: "16Gi"
+        cpu: "8000m"
+  auth:
+    defaultAuthenticationPlugin: caching_sha2_password
+    rootPassword: ""
+    database: *filer_database
+    username: ""
+    password: ""
+  networkPolicy:
+    enabled: false
+
+seaweedfs:
+  enabled: false  # activate together with mysql
+  serviceMonitor:
+    enabled: true
+  createS3Secret:
+    enabled: true
+    secretName: *s3_secret_name
+  global:
+    createClusterRole: false
+    enableReplication: false
+  master:
+    enabled: true
+    replicas: 1
+    volumePreallocate: true
+    volumeSizeLimitMB: 30000
+    logs:
+      type: "emptyDir"
+  volume:
+    enabled: true
+    replicas: 1
+    minFreeSpacePercent: 7
+    index: leveldbLarge
+    dataDirs:
+      - name: data
+        type: "persistentVolumeClaim"
+        size: 1Ti
+        maxVolumes: 29
+  filer:
+    enabled: true
+    replicas: 1
+    enablePVC: true
+    storage: 50Gi
+    maxMB: 1000
+    logs:
+      type: "emptyDir"
+    data:
+      type: "persistentVolumeClaim"
+      size: "50Gi"
+    s3:
+      enabled: true
+      port: 9000
+      allowEmptyFolder: true
+      enableAuth: true
+      existingConfigSecret: *s3_secret_name
+      createBuckets:
+        - name: default
+          anonymousRead: true
+      credentials:
+        anvAdmin:
+          accessKey: *s3_access_key
+          secretKey: *s3_secret_key
+    extraEnvironmentVars:
+      WEED_LEVELDB2_ENABLED: "false"
+      WEED_MYSQL_ENABLED: "true"
+      WEED_MYSQL_DATABASE: *filer_database
+      WEED_MYSQL_HOSTNAME: *mysql_svc_name

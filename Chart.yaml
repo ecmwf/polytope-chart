@@ -7,3 +7,14 @@ description: >
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
+
+dependencies:
+  - name: bobs
+    version: "0.1.0"
+    repository: "file://../bobs/chart"
+    condition: bobs.enabled
+  - name: auth-o-tron-chart
+    version: "0.1.8"
+    repository: "oci://eccr.ecmwf.int/auth-o-tron"
+    condition: auth-o-tron.enabled
+    alias: auth-o-tron

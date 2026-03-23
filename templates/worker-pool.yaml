@@ -1,4 +1,5 @@
 {{- range $name, $pool := .Values.workerPools }}
+{{- $hasConfig := or $pool.config $pool.deliveryConfig }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -16,8 +17,8 @@ spec:
   template:
     metadata:
       annotations:
-        {{- if $pool.config }}
-        checksum/worker-config: {{ toYaml $pool.config | sha256sum }}
+        {{- if $hasConfig }}
+        checksum/worker-config: {{ toYaml (dict "config" $pool.config "delivery" $pool.deliveryConfig) | sha256sum }}
         {{- end }}
         {{- with $pool.podAnnotations }}
         {{- toYaml . | nindent 8 }}
@@ -27,6 +28,7 @@ spec:
         app.kubernetes.io/component: {{ $name }}
         app: worker-{{ $name }}
     spec:
+      terminationGracePeriodSeconds: {{ $pool.terminationGracePeriodSeconds | default 30 }}
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -37,10 +39,14 @@ spec:
       containers:
         - name: {{ $name }}
           image: {{ include "polytope-server.image" (dict "imageRoot" $pool.image "global" $.Values.global "chart" $.Chart) | quote }}
-          imagePullPolicy: {{ $pool.image.pullPolicy | default "IfNotPresent" }}
+          imagePullPolicy: {{ $pool.image.pullPolicy | default "Always" }}
           args:
             - --broker-url
             - {{ include "polytope-server.workerBrokerUrl" (dict "root" $ "pool" ($pool.pool | default "worker_pool")) | quote }}
+            {{- if $hasConfig }}
+            - --config-path
+            - /etc/polytope-worker/config.yaml
+            {{- end }}
             {{- range $pool.args }}
             - {{ . | quote }}
             {{- end }}
@@ -74,11 +80,11 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if or $pool.config $pool.marsConfig $pool.cacheDir }}
+          {{- if or $hasConfig $pool.marsConfig $pool.cacheDir }}
           volumeMounts:
-            {{- if $pool.config }}
+            {{- if $hasConfig }}
             - name: config
-              mountPath: /etc/worker/config.yaml
+              mountPath: /etc/polytope-worker/config.yaml
               subPath: config.yaml
             {{- end }}
             {{- if $pool.marsConfig }}
@@ -90,9 +96,9 @@ spec:
               mountPath: /tmp/cache
             {{- end }}
           {{- end }}
-      {{- if or $pool.config $pool.marsConfig $pool.cacheDir }}
+      {{- if or $hasConfig $pool.marsConfig $pool.cacheDir }}
       volumes:
-        {{- if $pool.config }}
+        {{- if $hasConfig }}
         - name: config
           configMap:
             name: worker-{{ $name }}-config

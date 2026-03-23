@@ -61,3 +61,7 @@ Usage:
   {{- printf "%s:%s" $repositoryName $tag -}}
 {{- end }}
 {{- end -}}
+
+{{- define "seaweedfs.name" -}}
+seaweedfs
+{{- end -}}
