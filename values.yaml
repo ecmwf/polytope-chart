@@ -117,7 +117,7 @@ bobs:
   enabled: false
 
 # ── Auth-o-tron (authentication gateway) ─────────────────────────────────────
-authotron:
+auth-o-tron:
   enabled: false
 
 # ── SeaweedFS S3 storage ─────────────────────────────────────────────────────

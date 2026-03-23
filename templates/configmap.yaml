@@ -60,15 +60,16 @@ data:
     edr:
       {{- toYaml . | nindent 6 }}
     {{- end }}
-    {{- if .Values.authotron.enabled }}
-    {{- $authotronConfig := get .Values.authotron "config" | default dict }}
-    {{- $authotronServer := get $authotronConfig "server" | default dict }}
-    {{- $authotronJwt := get $authotronConfig "jwt" | default dict }}
-    {{- $authotronAuth := get $authotronConfig "auth" | default dict }}
+    {{- $aot := index .Values "auth-o-tron" }}
+    {{- if $aot.enabled }}
+    {{- $aotConfig := get $aot "config" | default dict }}
+    {{- $aotServer := get $aotConfig "server" | default dict }}
+    {{- $aotJwt := get $aotConfig "jwt" | default dict }}
+    {{- $aotAuth := get $aotConfig "auth" | default dict }}
     authentication:
-      url: "http://{{ .Release.Name }}-authotron:{{ get $authotronServer "port" | default 8080 }}"
-      secret: {{ get $authotronJwt "secret" | default "" | quote }}
-      timeout_ms: {{ get $authotronAuth "timeout_in_ms" | default 3000 }}
+      url: "http://{{ .Release.Name }}-auth-o-tron:{{ get $aotServer "port" | default 8080 }}"
+      secret: {{ get $aotJwt "secret" | default "" | quote }}
+      timeout_ms: {{ get $aotAuth "timeout_in_ms" | default 3000 }}
     {{- else }}
     {{- with .Values.authentication }}
     authentication:
