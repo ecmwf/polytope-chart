@@ -120,7 +120,7 @@ rabbitmq:
     # Don’t write traditional log files (optional, but common in containers)
     log.file = false
   persistence:
-    enabled: false
+    enabled: true
   networkPolicy:
     enabled: false
   metrics:
