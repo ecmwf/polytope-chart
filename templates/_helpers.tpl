@@ -20,8 +20,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "polytope-server.pdEndpoint" -}}
-{{- printf "pd.%s.svc:2379" .Release.Namespace }}
+{{- define "polytope-server.natsUrl" -}}
+{{- printf "nats://%s-nats:4222" .Release.Name }}
 {{- end }}
 
 {{- define "polytope-server.brokerUrl" -}}

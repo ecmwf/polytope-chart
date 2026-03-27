@@ -11,10 +11,10 @@ data:
       port: {{ .Values.frontend.port | default 3000 }}
     bits:
       bits:
-        {{- if .Values.tikv.enabled }}
-        tikv:
-          endpoints:
-            - {{ include "polytope-server.pdEndpoint" . | quote }}
+        {{- if .Values.nats.enabled }}
+        persistence:
+          type: nats
+          url: {{ include "polytope-server.natsUrl" . | quote }}
           broker_lease_ttl_secs: 30
         {{- end }}
         internal_poll_base_url: {{ include "polytope-server.pollBaseUrl" . | quote }}

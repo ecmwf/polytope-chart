@@ -1,0 +1,9 @@
+dependencies:
+- name: nats
+  repository: https://nats-io.github.io/k8s/helm/charts/
+  version: 2.12.4
+- name: bobs
+  repository: file://charts/bobs
+  version: 0.1.0
+digest: sha256:b3f4f744a58b791bc672544caab7c8cfa3cc1efe145e8c18aa1984ba274782b6
+generated: "2026-03-27T20:44:09.76300744Z"
