@@ -32,6 +32,10 @@ data:
       routes:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.broker.collections }}
+      collections:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- if or .Values.broker.checks .Values.schedule }}
       checks:
         {{- if .Values.broker.checks }}
