@@ -3,7 +3,17 @@ name: polytope-server
 description: >
   Polytope data retrieval server backed by the BITS routing engine.
   Deploys the polytope-server frontend (broker), dynamic worker pools,
-  and TiKV persistence (raw StatefulSets — no operator required).
+  and NATS JetStream persistence.
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
+
+dependencies:
+  - name: nats
+    version: 2.12.4
+    repository: https://nats-io.github.io/k8s/helm/charts/
+    condition: nats.enabled
+  - name: bobs
+    version: 0.1.0
+    repository: file://charts/bobs
+    condition: bobs.enabled

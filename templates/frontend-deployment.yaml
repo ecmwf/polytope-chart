@@ -30,7 +30,7 @@ spec:
       containers:
         - name: polytope-server
           image: {{ include "polytope-server.image" (dict "imageRoot" .Values.frontend.image "global" .Values.global "chart" .Chart) | quote }}
-          imagePullPolicy: {{ .Values.frontend.image.pullPolicy | default "IfNotPresent" }}
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy | default "Always" }}
           args:
             - /etc/polytope/config.yaml
           ports:

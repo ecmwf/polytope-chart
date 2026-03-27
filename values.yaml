@@ -20,7 +20,7 @@ frontend:
   image:
     repository: polytope-server
     tag: ""
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   host: "0.0.0.0"
   port: 3000
   brokerPort: 9001
@@ -33,7 +33,7 @@ frontend:
 
 # ── Broker ────────────────────────────────────────────────────────────────────
 # Targets, routes, checks, and transforms for the bits routing engine.
-# tikv endpoints and internal_poll_base_url are injected by the chart.
+# persistence and internal_poll_base_url are injected by the chart.
 broker:
   targets:
     worker_pool:
@@ -71,21 +71,37 @@ schedule: ""
 #       port: 9000
 workerPools: {}
 
-# ── TiKV (raw StatefulSets — no operator) ─────────────────────────────────────
-tikv:
+# ── NATS JetStream (persistence backend) ──────────────────────────────────────
+# Bundled official NATS subchart. When enabled, the chart deploys a NATS server
+# with JetStream and wires it into the bits persistence config automatically.
+nats:
   enabled: true
-  pd:
-    replicas: 3
-    image: pingcap/pd:v8.5.0
-    storage: 10Gi
-    storageClassName: ""
-    resources: {}
-  tikv:
-    replicas: 3
-    image: pingcap/tikv:v8.5.0
-    storage: 100Gi
-    storageClassName: ""
-    resources: {}
+  config:
+    jetstream:
+      enabled: true
+      fileStore:
+        enabled: true
+        pvc:
+          enabled: true
+          size: 10Gi
+      memoryStore:
+        enabled: true
+        maxSize: 256Mi
+
+# ── BOBS (temporary spool storage) ────────────────────────────────────────────
+# Bundled subchart from ecmwf/bobs. Workers write results here; clients read
+# via redirect URLs. fullnameOverride ensures the service is reachable as
+# "bobs" regardless of the Helm release name.
+bobs:
+  enabled: true
+  fullnameOverride: bobs
+  image:
+    repository: bobs
+    tag: latest
+    pullPolicy: Always
+  persistence:
+    enabled: true
+    size: 10Gi
 
 # ── Authentication (auth-o-tron gateway) ──────────────────────────────────────
 # When set, all API endpoints require valid credentials.
