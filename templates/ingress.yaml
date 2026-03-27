@@ -10,6 +10,7 @@ metadata:
     {{- include "polytope-server.labels" . | nindent 4 }}
   annotations:
     dns.operators.ecmwf.int/on-transport-server: vs-transport-https
+    nginx.org/mergeable-ingress-type: master
     {{- with $annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -17,15 +18,6 @@ spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
     - host: {{ $host | quote }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: frontend
-                port:
-                  name: http
   {{- if .Values.ingress.tls }}
   tls:
     {{- range .Values.ingress.tls }}
@@ -39,4 +31,26 @@ spec:
       hosts:
         - {{ $host | quote }}
   {{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: polytope-ingress-frontend
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+  annotations:
+    nginx.org/mergeable-ingress-type: minion
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  name: http
 {{- end }}
