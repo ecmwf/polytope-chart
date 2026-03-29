@@ -27,6 +27,14 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.nats.enabled }}
+      # Block until NATS is healthy to avoid crash-loop backoff on the
+      # frontend, which fails immediately if persistence is unreachable.
+      initContainers:
+        - name: wait-for-nats
+          image: busybox:1.37
+          command: ['sh', '-c', 'until nc -z {{ .Release.Name }}-nats 4222; do sleep 1; done']
+      {{- end }}
       containers:
         - name: polytope-server
           image: {{ include "polytope-server.image" (dict "imageRoot" .Values.frontend.image "global" .Values.global "chart" .Chart) | quote }}
