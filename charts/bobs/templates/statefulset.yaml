@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: '{{ include "bobs.name" . }}'
     app.kubernetes.io/instance: '{{ .Release.Name }}'
 spec:
-  serviceName: '{{ .Values.headlessService.name }}'
+  serviceName: '{{ include "bobs.fullname" . }}-svc'
   replicas: {{ .Values.replicaCount }}
   podManagementPolicy: Parallel
   persistentVolumeClaimRetentionPolicy:

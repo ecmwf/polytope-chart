@@ -90,11 +90,9 @@ nats:
 
 # ── BOBS (temporary spool storage) ────────────────────────────────────────────
 # Bundled subchart from ecmwf/bobs. Workers write results here; clients read
-# via redirect URLs. fullnameOverride ensures the service is reachable as
-# "bobs" regardless of the Helm release name.
+# via redirect URLs.
 bobs:
   enabled: true
-  fullnameOverride: bobs
   image:
     repository: bobs
     tag: latest

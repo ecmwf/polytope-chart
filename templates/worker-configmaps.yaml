@@ -4,20 +4,24 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: worker-{{ $name }}-config
+  name: {{ include "polytope-server.fullname" $ }}-worker-{{ $name }}-config
   labels:
     {{- include "polytope-server.labels" $ | nindent 4 }}
     app.kubernetes.io/component: {{ $name }}
 data:
   config.yaml: |
-    {{- toYaml $pool.config | nindent 4 }}
+    {{- $cfg := deepCopy $pool.config }}
+    {{- if and (hasKey $cfg "delivery") (hasKey $cfg.delivery "bobs_url") }}
+    {{- $_ := set $cfg.delivery "bobs_url" (include "polytope-server.bobsUrl" $) }}
+    {{- end }}
+    {{- toYaml $cfg | nindent 4 }}
 {{- end }}
 {{- if $pool.marsConfig }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: worker-{{ $name }}-mars-config
+  name: {{ include "polytope-server.fullname" $ }}-worker-{{ $name }}-mars-config
   labels:
     {{- include "polytope-server.labels" $ | nindent 4 }}
     app.kubernetes.io/component: {{ $name }}

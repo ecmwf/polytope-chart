@@ -2,6 +2,14 @@
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
+{{- define "polytope-server.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+
 {{- define "polytope-server.labels" -}}
 helm.sh/chart: {{ include "polytope-server.chart" . }}
 {{ include "polytope-server.selectorLabels" . }}
@@ -25,7 +33,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{- define "polytope-server.brokerUrl" -}}
-{{- printf "http://frontend.%s.svc:%d" .Release.Namespace (.Values.frontend.brokerPort | int) }}
+{{- printf "http://%s-frontend.%s.svc:%d" (include "polytope-server.fullname" .) .Release.Namespace (.Values.frontend.brokerPort | int) }}
 {{- end }}
 
 {{- define "polytope-server.workerBrokerUrl" -}}
@@ -34,7 +42,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{- define "polytope-server.pollBaseUrl" -}}
-{{- printf "http://frontend.%s.svc:%d" .Release.Namespace (.Values.frontend.port | int) }}
+{{- printf "http://%s-frontend.%s.svc:%d" (include "polytope-server.fullname" .) .Release.Namespace (.Values.frontend.port | int) }}
+{{- end }}
+
+{{- define "polytope-server.bobsUrl" -}}
+{{- printf "http://%s-bobs:%v" .Release.Name (.Values.bobs.service.port | default 3000) }}
 {{- end }}
 
 {{- define "polytope-server.ingressHost" -}}

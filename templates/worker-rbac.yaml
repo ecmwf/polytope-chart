@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: mars-service-manager
+  name: {{ include "polytope-server.fullname" . }}-mars-service-manager
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "polytope-server.labels" . | nindent 4 }}
@@ -16,15 +16,15 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: mars-service-manager
+  name: {{ include "polytope-server.fullname" . }}-mars-service-manager
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "polytope-server.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: mars-service-manager
+  name: {{ include "polytope-server.fullname" . }}-mars-service-manager
 subjects:
   - kind: ServiceAccount
-    name: mars-worker
+    name: {{ include "polytope-server.fullname" . }}-mars-worker
     namespace: {{ .Release.Namespace }}

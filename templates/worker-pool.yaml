@@ -3,7 +3,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: worker-{{ $name }}
+  name: {{ include "polytope-server.fullname" $ }}-worker-{{ $name }}
   labels:
     {{- include "polytope-server.labels" $ | nindent 4 }}
     app.kubernetes.io/component: {{ $name }}
@@ -32,7 +32,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if $pool.marsConfig }}
-      serviceAccountName: mars-worker
+      serviceAccountName: {{ include "polytope-server.fullname" $ }}-mars-worker
       {{- end }}
       containers:
         - name: {{ $name }}
@@ -95,12 +95,12 @@ spec:
         {{- if $pool.config }}
         - name: config
           configMap:
-            name: worker-{{ $name }}-config
+            name: {{ include "polytope-server.fullname" $ }}-worker-{{ $name }}-config
         {{- end }}
         {{- if $pool.marsConfig }}
         - name: mars-config
           configMap:
-            name: worker-{{ $name }}-mars-config
+            name: {{ include "polytope-server.fullname" $ }}-worker-{{ $name }}-mars-config
         {{- end }}
         {{- if $pool.cacheDir }}
         - name: cache

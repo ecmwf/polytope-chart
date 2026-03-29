@@ -5,7 +5,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: polytope-ingress
+  name: {{ include "polytope-server.fullname" . }}-ingress
   labels:
     {{- include "polytope-server.labels" . | nindent 4 }}
   annotations:
@@ -27,7 +27,7 @@ spec:
     {{- end }}
   {{- else if $hasCertManager }}
   tls:
-    - secretName: ingress-tls
+    - secretName: {{ $host | replace "." "-" }}-tls
       hosts:
         - {{ $host | quote }}
   {{- end }}
@@ -35,7 +35,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: polytope-ingress-frontend
+  name: {{ include "polytope-server.fullname" . }}-ingress-frontend
   labels:
     {{- include "polytope-server.labels" . | nindent 4 }}
   annotations:
@@ -50,7 +50,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: frontend
+                name: {{ include "polytope-server.fullname" . }}-frontend
                 port:
                   name: http
 {{- end }}

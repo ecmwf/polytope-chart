@@ -5,5 +5,8 @@ dependencies:
 - name: bobs
   repository: file://charts/bobs
   version: 0.1.0
-digest: sha256:b3f4f744a58b791bc672544caab7c8cfa3cc1efe145e8c18aa1984ba274782b6
-generated: "2026-03-27T20:44:09.76300744Z"
+- name: auth-o-tron-chart
+  repository: oci://eccr.ecmwf.int/auth-o-tron
+  version: 0.1.8
+digest: sha256:c9bd704bbe2e81315fa25c48718b735d641d36cf5f252a66989a37b23db58f32
+generated: "2026-03-29T20:42:13.304597074+01:00"

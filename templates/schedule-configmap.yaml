@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: schedule
+  name: {{ include "polytope-server.fullname" . }}-schedule
   labels:
     {{- include "polytope-server.labels" . | nindent 4 }}
 data:
