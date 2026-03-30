@@ -17,10 +17,8 @@ data:
           url: {{ include "polytope-server.natsUrl" . | quote }}
           broker_lease_ttl_secs: 30
         {{- end }}
-        internal_poll_base_url: {{ include "polytope-server.pollBaseUrl" . | quote }}
-        persist_after_ms: {{ .Values.frontend.persist_after_ms | default 10000 }}
-        poll_timeout_ms: {{ .Values.frontend.poll_timeout_ms | default 30000 }}
-        persist_guard_ms: {{ .Values.frontend.persist_guard_ms | default 1000 }}
+        internal_poll_endpoint: {{ include "polytope-server.pollBaseUrl" . | quote }}
+        persist_after_secs: {{ .Values.frontend.persist_after_secs | default 10.0 }}
         worker_server:
           host: "0.0.0.0"
           port: {{ .Values.frontend.brokerPort | default 9001 }}
