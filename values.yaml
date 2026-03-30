@@ -25,15 +25,13 @@ frontend:
   port: 3000
   brokerPort: 9001
   replicas: 1
-  persist_after_ms: 10000
-  poll_timeout_ms: 30000
-  persist_guard_ms: 1000
+  persist_after_secs: 10.0
   resources: {}
   podAnnotations: {}
 
 # ── Broker ────────────────────────────────────────────────────────────────────
 # Targets, routes, checks, and transforms for the bits routing engine.
-# persistence and internal_poll_base_url are injected by the chart.
+# persistence and internal_poll_endpoint are injected by the chart.
 broker:
   targets:
     worker_pool:
