@@ -49,6 +49,29 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- printf "http://%s-bobs:%v" .Release.Name (.Values.bobs.service.port | default 3000) }}
 {{- end }}
 
+{{/*
+Collect imagePullSecrets from global + local values, and auto-append the
+chart-managed secret when imageCredentials is provided.
+*/}}
+{{- define "polytope-server.imagePullSecrets" -}}
+{{- $secrets := list -}}
+{{- if .Values.global -}}
+  {{- range .Values.global.imagePullSecrets | default list -}}
+    {{- $secrets = append $secrets . -}}
+  {{- end -}}
+{{- end -}}
+{{- range .Values.imagePullSecrets | default list -}}
+  {{- $secrets = append $secrets . -}}
+{{- end -}}
+{{- if (.Values.global).imageCredentials -}}
+  {{- $secrets = append $secrets (dict "name" "polytope-registry-cred") -}}
+{{- end -}}
+{{- if $secrets }}
+imagePullSecrets:
+  {{- toYaml $secrets | nindent 2 }}
+{{- end -}}
+{{- end }}
+
 {{- define "polytope-server.ingressHost" -}}
 {{- printf "%s.%s" .Values.ingress.hostPrefix .Values.ingress.domain }}
 {{- end }}
