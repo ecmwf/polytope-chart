@@ -1,4 +1,5 @@
 {{- range $name, $pool := .Values.workerPools }}
+{{- if $pool.pool }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -106,4 +107,5 @@ spec:
             type: DirectoryOrCreate
         {{- end }}
       {{- end }}
-{{- end }}
+{{- end }}{{/* if $pool.pool */}}
+{{- end }}{{/* range workerPools */}}

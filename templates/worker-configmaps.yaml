@@ -1,4 +1,5 @@
 {{- range $name, $pool := .Values.workerPools }}
+{{- if $pool.pool }}
 {{- if $pool.config }}
 ---
 apiVersion: v1
@@ -33,4 +34,5 @@ data:
     {{- toYaml $pool.marsConfig.config | nindent 4 }}
   {{- end }}
 {{- end }}
-{{- end }}
+{{- end }}{{/* if $pool.pool */}}
+{{- end }}{{/* range workerPools */}}

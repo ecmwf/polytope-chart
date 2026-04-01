@@ -24,13 +24,36 @@ spec:
         app: frontend
     spec:
       {{- include "polytope-server.imagePullSecrets" . | nindent 6 }}
-      {{- if .Values.nats.enabled }}
-      # Block until NATS is healthy to avoid crash-loop backoff on the
-      # frontend, which fails immediately if persistence is unreachable.
+      {{- if or .Values.nats.enabled .Values.schedule }}
       initContainers:
+        {{- if .Values.nats.enabled }}
+        # Block until NATS is healthy to avoid crash-loop backoff on the
+        # frontend, which fails immediately if persistence is unreachable.
         - name: wait-for-nats
           image: busybox:1.37
           command: ['sh', '-c', 'until nc -z {{ .Release.Name }}-nats 4222; do sleep 1; done']
+        {{- end }}
+        {{- if .Values.schedule }}
+        - name: fetch-schedule
+          image: alpine/git:2.47.2
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p ~/.ssh
+              cp /ssh-key/ssh-privatekey ~/.ssh/id_ed25519
+              chmod 600 ~/.ssh/id_ed25519
+              printf 'Host github.com\n  HostName ssh.github.com\n  Port 443\n  User git\n' > ~/.ssh/config
+              ssh-keyscan -p 443 ssh.github.com >> ~/.ssh/known_hosts 2>/dev/null
+              git clone --depth 1 --branch {{ .Values.schedule.branch | default "develop" }} {{ .Values.schedule.repo | quote }} /tmp/repo
+              cp /tmp/repo/{{ .Values.schedule.path }} /schedule/schedule.xml
+          volumeMounts:
+            - name: schedule
+              mountPath: /schedule
+            - name: schedule-ssh
+              mountPath: /ssh-key
+              readOnly: true
+        {{- end }}
       {{- end }}
       containers:
         - name: polytope-server
@@ -88,6 +111,9 @@ spec:
             name: {{ include "polytope-server.fullname" . }}-config
         {{- if .Values.schedule }}
         - name: schedule
-          configMap:
-            name: {{ include "polytope-server.fullname" . }}-schedule
+          emptyDir: {}
+        - name: schedule-ssh
+          secret:
+            secretName: {{ .Values.schedule.sshSecretName }}
+            defaultMode: 0400
         {{- end }}

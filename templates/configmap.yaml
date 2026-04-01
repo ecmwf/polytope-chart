@@ -40,6 +40,7 @@ data:
         {{- range $name, $check := .Values.broker.checks }}
         {{- if and (eq $name "schedule_released") $.Values.schedule }}
         {{ $name }}:
+          type: schedule_released
           path: /etc/polytope/schedule.xml
           {{- with $check.now_rfc3339 }}
           now_rfc3339: {{ . | quote }}
@@ -51,6 +52,7 @@ data:
         {{- end }}
         {{- else if .Values.schedule }}
         schedule_released:
+          type: schedule_released
           path: /etc/polytope/schedule.xml
         {{- end }}
       {{- end }}
@@ -62,9 +64,13 @@ data:
     edr:
       {{- toYaml . | nindent 6 }}
     {{- end }}
+    {{- with .Values.frontend.admin_bypass_roles }}
+    admin_bypass_roles:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     {{- if or .Values.authentication (index .Values "auth-o-tron" "enabled") }}
     authentication:
-      url: {{ (.Values.authentication).url | default (printf "http://auth-o-tron-svc:%v" ((index .Values "auth-o-tron" "service" "port") | default 8080)) | quote }}
+      url: {{ (.Values.authentication).url | default (printf "http://%s-auth-o-tron:%v" .Release.Name ((index .Values "auth-o-tron" "service" "port") | default 8080)) | quote }}
       {{- if not ((.Values.authentication).secretName) }}
       secret: {{ ((.Values.authentication).secret) | default (index .Values "auth-o-tron" "config" "jwt" "secret") | quote }}
       {{- end }}

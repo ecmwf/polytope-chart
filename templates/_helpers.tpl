@@ -64,7 +64,7 @@ chart-managed secret when imageCredentials is provided.
   {{- $secrets = append $secrets . -}}
 {{- end -}}
 {{- if (.Values.global).imageCredentials -}}
-  {{- $secrets = append $secrets (dict "name" "polytope-registry-cred") -}}
+  {{- $secrets = append $secrets (dict "name" (printf "%s-registry-cred" (include "polytope-server.fullname" .))) -}}
 {{- end -}}
 {{- if $secrets }}
 imagePullSecrets:

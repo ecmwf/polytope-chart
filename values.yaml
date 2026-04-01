@@ -47,10 +47,13 @@ broker:
         - target::worker_pool
 
 # ── Schedule ──────────────────────────────────────────────────────────────────
-# Raw schedule XML for the bits-ecmwf schedule_released check.
-# When set, the chart mounts it and injects the path into routing.checks
-# automatically — no internal paths required in config.
-schedule: ""
+# Schedule XML for the schedule_released check.
+# When set, an init container clones the repo via SSH and mounts the file.
+#   repo: SSH git URL (e.g. git@github.com:org/repo.git)
+#   branch: branch to clone (default: "develop")
+#   path: path to the schedule XML within the repo
+#   sshSecretName: k8s Secret containing an SSH deploy key
+schedule: {}
 
 # ── Worker pools ──────────────────────────────────────────────────────────────
 # Each key produces a Deployment (+ optional ConfigMap when config is set).
