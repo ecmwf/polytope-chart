@@ -27,6 +27,10 @@ frontend:
   brokerPort: 9001
   replicas: 1
   persist_after_secs: 10.0
+  # max_jobs: 500000              # Broker-wide job limit (OOM protection, default 500000)
+  # retry_after_secs: 5           # Retry-After header on 529 overload responses
+  # nats_connect_timeout_secs: 10 # NATS persistence connection timeout per attempt
+  # nats_init_max_attempts: 6     # NATS init retry attempts (exponential backoff)
   resources: {}
   podAnnotations: {}
 
@@ -39,6 +43,7 @@ broker:
       type: remote
       dispatcher:
         queue: cost_weighted
+        # queue_capacity: 500000    # Per-dispatcher queue bound (default 500000)
         executor:
           type: remote_pool
           heartbeat_timeout_secs: 60

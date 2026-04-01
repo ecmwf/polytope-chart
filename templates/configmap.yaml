@@ -9,13 +9,25 @@ data:
     server:
       host: {{ .Values.frontend.host | default "0.0.0.0" | quote }}
       port: {{ .Values.frontend.port | default 3000 }}
+      {{- with .Values.frontend.retry_after_secs }}
+      retry_after_secs: {{ . }}
+      {{- end }}
     bits:
       bits:
+        {{- with .Values.frontend.max_jobs }}
+        max_jobs: {{ . }}
+        {{- end }}
         {{- if .Values.nats.enabled }}
         persistence:
           type: nats
           url: {{ include "polytope-server.natsUrl" . | quote }}
           broker_lease_ttl_secs: 30
+          {{- with .Values.frontend.nats_connect_timeout_secs }}
+          connect_timeout_secs: {{ . }}
+          {{- end }}
+          {{- with .Values.frontend.nats_init_max_attempts }}
+          init_max_attempts: {{ . }}
+          {{- end }}
         {{- end }}
         internal_poll_endpoint: {{ include "polytope-server.pollBaseUrl" . | quote }}
         persist_after_secs: {{ .Values.frontend.persist_after_secs | default 10.0 }}
