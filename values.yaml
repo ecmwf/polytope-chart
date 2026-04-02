@@ -47,6 +47,9 @@ broker:
         executor:
           type: remote_pool
           heartbeat_timeout_secs: 60
+      # circuit_breaker:            # Stop sending requests when target is consistently failing
+      #   failure_threshold: 5      # Consecutive transport failures to trip open (default 5)
+      #   open_timeout_secs: 30     # Seconds before allowing a probe request (default 30)
   routes:
     - default:
         - target::worker_pool
