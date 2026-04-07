@@ -129,10 +129,6 @@ rabbitmq:
       enabled: true
       default:
         enabled: true
-      detailed:
-        enabled: true
-      perObject:
-        enabled: true
   pdb:
     enabled: false
     minAvailable: 1
