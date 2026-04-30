@@ -209,7 +209,7 @@ seaweedfs:
   master:
     enabled: true
     replicas: 1
-    volumePreallocate: true
+    volumePreallocate: false # disabled: preallocate causes writable-counter drift in 3.67 (see #5947)
     volumeSizeLimitMB: 30000
     logs:
       type: "emptyDir"
