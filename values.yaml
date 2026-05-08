@@ -16,6 +16,13 @@ global:
 # Additional pull secrets for the parent chart only (merged with global).
 imagePullSecrets: []
 
+# ── Polytope identity ─────────────────────────────────────────────────────────
+# Stable 1-3 character lowercase alphanumeric tags used in persisted request IDs.
+# Set explicitly from deployment values; these are not inferred from Kubernetes.
+polytope:
+  site: ""
+  env: ""
+
 # ── Frontend (broker) ─────────────────────────────────────────────────────────
 frontend:
   image:
@@ -26,7 +33,7 @@ frontend:
   port: 3000
   brokerPort: 9001
   replicas: 1
-  persist_after_ms: 10000
+  persist_after_secs: 10
   # max_jobs: 500000              # Broker-wide job limit (OOM protection, default 500000)
   # retry_after_secs: 5           # Retry-After header on 529 overload responses
   # nats_connect_timeout_secs: 10 # NATS persistence connection timeout per attempt
@@ -36,7 +43,7 @@ frontend:
 
 # ── Broker ────────────────────────────────────────────────────────────────────
 # Targets, routes, checks, and transforms for the bits routing engine.
-# persistence and internal_poll_base_url are injected by the chart.
+# persistence and internal_poll_endpoint are injected by the chart.
 broker:
   targets:
     worker_pool:
