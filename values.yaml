@@ -23,6 +23,14 @@ polytope:
   site: ""
   env: ""
 
+# Default pod annotations for log collection. Component-specific annotations are
+# merged over these defaults by the templates.
+podAnnotations:
+  splunk.com/include: "true"
+  splunk.com/index: polytope
+  opensearch.org/include: "true"
+  opensearch.org/service.name: polytope
+
 # ── Frontend (broker) ─────────────────────────────────────────────────────────
 frontend:
   image:
@@ -107,6 +115,13 @@ nats:
 # via redirect URLs.
 bobs:
   enabled: true
+  # BOBS subchart bridge for POLYTOPE_ENV. The parent chart writes top-level
+  # polytope.env into a release-scoped ConfigMap; BOBS reads it unless a
+  # standalone bobs.polytope.env value is supplied.
+  polytope:
+    env: ""
+    envConfigMapName: ""
+    envConfigMapKey: POLYTOPE_ENV
   image:
     repository: bobs
     tag: latest
