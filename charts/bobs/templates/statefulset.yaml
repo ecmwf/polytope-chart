@@ -18,6 +18,10 @@ spec:
       app.kubernetes.io/instance: '{{ .Release.Name }}'
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         app.kubernetes.io/name: '{{ include "bobs.name" . }}'
         app.kubernetes.io/instance: '{{ .Release.Name }}'
@@ -28,6 +32,25 @@ spec:
           image: '{{ .Values.image.repository }}:{{ .Values.image.tag }}'
           imagePullPolicy: '{{ .Values.image.pullPolicy }}'
           env:
+            - name: RUST_LOG
+              value: info
+            - name: K8S_NAMESPACE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: K8S_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POLYTOPE_ENV
+              {{- if .Values.polytope.env }}
+              value: {{ .Values.polytope.env | quote }}
+              {{- else }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.polytope.envConfigMapName | default (printf "%s-observability-env" .Release.Name) | quote }}
+                  key: {{ .Values.polytope.envConfigMapKey | default "POLYTOPE_ENV" | quote }}
+              {{- end }}
             - name: BOBS_INTERNAL_BASE_URL_TEMPLATE
               value: 'http://{{ include "bobs.fullname" . }}-{ordinal}:{{ .Values.service.port }}/api/v1'
           command: ["bobs"]

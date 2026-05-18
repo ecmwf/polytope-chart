@@ -1,0 +1,10 @@
+{{- if .Values.bobs.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-observability-env
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+data:
+  POLYTOPE_ENV: {{ .Values.polytope.env | quote }}
+{{- end }}

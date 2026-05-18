@@ -16,11 +16,12 @@ spec:
       app.kubernetes.io/component: {{ $name }}
   template:
     metadata:
+      {{- $podAnnotations := mergeOverwrite (deepCopy ($.Values.podAnnotations | default dict)) ($pool.podAnnotations | default dict) }}
       annotations:
         {{- if $pool.config }}
         checksum/worker-config: {{ toYaml $pool.config | sha256sum }}
         {{- end }}
-        {{- with $pool.podAnnotations }}
+        {{- with $podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
@@ -45,6 +46,16 @@ spec:
           env:
             - name: RUST_LOG
               value: info
+            - name: K8S_NAMESPACE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: K8S_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POLYTOPE_ENV
+              value: {{ $.Values.polytope.env | quote }}
             - name: K8S_NODE_NAME
               valueFrom:
                 fieldRef:
