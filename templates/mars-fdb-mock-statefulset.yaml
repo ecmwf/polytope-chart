@@ -1,0 +1,145 @@
+{{- if .Values.marsFdbMock.enabled }}
+{{- $mock := .Values.marsFdbMock }}
+{{- $runAsUser := $mock.securityContext.runAsUser | int }}
+{{- $runAsGroup := $mock.securityContext.runAsGroup | int }}
+{{- $fsGroup := $mock.securityContext.fsGroup | int }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "polytope-server.marsFdbMockName" . }}
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mars-fdb-mock
+spec:
+  serviceName: {{ include "polytope-server.marsFdbMockName" . }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "polytope-server.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: mars-fdb-mock
+  template:
+    metadata:
+      {{- $podAnnotations := mergeOverwrite (deepCopy (.Values.podAnnotations | default dict)) ($mock.podAnnotations | default dict) }}
+      annotations:
+        checksum/mars-fdb-mock-config: {{ include (print $.Template.BasePath "/mars-fdb-mock-configmap.yaml") . | sha256sum }}
+        {{- with $podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "polytope-server.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: mars-fdb-mock
+        app: mars-fdb-mock
+    spec:
+      {{- include "polytope-server.imagePullSecrets" . | nindent 6 }}
+      securityContext:
+        fsGroup: {{ $fsGroup }}
+      initContainers:
+        - name: seed
+          image: {{ include "polytope-server.image" (dict "imageRoot" $mock.image "global" .Values.global "chart" .Chart) | quote }}
+          imagePullPolicy: {{ $mock.image.pullPolicy | default "Always" }}
+          command:
+            - /bin/sh
+            - /opt/mars-fdb-mock/scripts/seed-with-fallback.sh
+          env:
+            - name: DHSHOME
+              value: {{ $mock.dhsHome | quote }}
+            - name: FDB_HOME
+              value: {{ $mock.fdbRoot | quote }}
+            - name: FDB5_CONFIG_FILE
+              value: {{ printf "%s/etc/fdb/config.yaml" $mock.dhsHome | quote }}
+            - name: MARS_FDB_MOCK_SEED_MARKER
+              value: {{ printf "%s/.seeded" $mock.fdbRoot | quote }}
+            - name: MARS_FDB_MOCK_SEED_DIR_DATA
+              value: {{ $mock.fdbRoot | quote }}
+            - name: MARS_FDB_MOCK_PREFER_CACHE
+              value: {{ $mock.seed.preferCache | default true | quote }}
+            - name: MARS_FDB_MOCK_PORT
+              value: {{ $mock.service.port | quote }}
+            - name: MARS_FDB_MOCK_SEED_FORCE
+              value: {{ $mock.seed.force | default false | quote }}
+            - name: MARS_FDB_MOCK_CONFIG_SOURCE
+              value: {{ printf "%s/etc-source" $mock.dhsHome | quote }}
+            - name: MARS_FDB_MOCK_CONFIG_TARGET
+              value: {{ printf "%s/etc" $mock.dhsHome | quote }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: {{ $runAsUser }}
+            runAsGroup: {{ $runAsGroup }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ $mock.fdbRoot | quote }}
+            - name: dhshome
+              mountPath: {{ $mock.dhsHome | quote }}
+            - name: config
+              mountPath: {{ printf "%s/etc-source" $mock.dhsHome | quote }}
+              readOnly: true
+      containers:
+        - name: mars
+          image: {{ include "polytope-server.image" (dict "imageRoot" $mock.image "global" .Values.global "chart" .Chart) | quote }}
+          imagePullPolicy: {{ $mock.image.pullPolicy | default "Always" }}
+          args:
+            - mars
+          ports:
+            - name: dhs
+              containerPort: {{ $mock.service.port | int }}
+              protocol: TCP
+          env:
+            - name: DHSHOME
+              value: {{ $mock.dhsHome | quote }}
+            - name: FDB_HOME
+              value: {{ $mock.fdbRoot | quote }}
+            - name: FDB5_CONFIG_FILE
+              value: /opt/mars-fdb-mock/etc/fdb/config.yaml
+            - name: MARS_FDB_MOCK_PORT
+              value: {{ $mock.service.port | quote }}
+            - name: MARS_FDB_MOCK_CONFIG_SOURCE
+              value: /opt/mars-fdb-mock/etc-source
+            - name: MARS_FDB_MOCK_CONFIG_TARGET
+              value: /opt/mars-fdb-mock/etc
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: {{ $runAsUser }}
+            runAsGroup: {{ $runAsGroup }}
+          {{- with $mock.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ $mock.fdbRoot | quote }}
+            - name: dhshome
+              mountPath: {{ $mock.dhsHome | quote }}
+            - name: etc
+              mountPath: /opt/mars-fdb-mock/etc
+            - name: config
+              mountPath: /opt/mars-fdb-mock/etc-source
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "polytope-server.marsFdbMockName" . }}
+        - name: dhshome
+          emptyDir: {}
+        - name: etc
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: {{ include "polytope-server.marsFdbMockName" . }}-config
+            items:
+              - key: fdb-config.yaml
+                path: fdb/config.yaml
+              - key: fdb-schema
+                path: fdb/schema
+              - key: mars
+                path: config/mars
+              - key: disks-fdb
+                path: disks/fdb
+              - key: disks-df
+                path: disks/df
+              - key: marsPermissions
+                path: marsPermissions
+              - key: marsLimits
+                path: marsLimits
+              - key: marsPriorities
+                path: marsPriorities
+{{- end }}

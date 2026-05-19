@@ -1,0 +1,55 @@
+{{- if .Values.marsFdbMock.enabled }}
+{{- $mock := .Values.marsFdbMock }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "polytope-server.marsFdbMockName" . }}-config
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mars-fdb-mock
+data:
+  fdb-config.yaml: |
+    ---
+    # `type: local` for the MARS server's FDB backend access (mars binary
+    # uses LibFdb5::defaultConfig() to read this; the MARS daemon
+    # internally serves DHS protocol on `marsPort` configured in
+    # etc/config/mars).
+    type: local
+    engine: toc
+    schema: {{ $mock.dhsHome }}/etc/fdb/schema
+    spaces:
+    - regex: .*
+      handler: Default
+      roots:
+      - path: {{ $mock.fdbRoot }}/root
+        wipe: true
+        archive: true
+        list: true
+        retrieve: true
+  fdb-schema: |
+    # Minimal FDB schema for the mars-fdb-mock smoke dataset.
+    [ class=od, expver=9999, stream=oper, date, time, domain
+        [ type=fc, levtype=sfc
+            [ step, param ]]]
+  mars: |
+    # MARS daemon serves DHS protocol on this port; backed by local FDB.
+    marsPort: {{ $mock.service.port | int }}
+    Dispatcher.queue.numberOfThreads: 2
+    Dispatcher.mars.numberOfThreads: 8
+    maxRequests: 10
+    doubleBuffer: True
+    doubleBufferSize: 20971520
+    doubleBufferCount: 10
+    reserveDiskSpace: False
+    FileHandleIOBufferSize: 1048576
+    fdbServer: True
+    fdbAsyncWrite: False
+    fdbDataLustreStripeHandle: False
+  disks-fdb: |
+    {{ $mock.fdbRoot }}/root
+  disks-df: |
+    fdb 95
+  marsPermissions: ""
+  marsLimits: ""
+  marsPriorities: ""
+{{- end }}

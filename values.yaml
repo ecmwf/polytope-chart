@@ -93,6 +93,34 @@ schedule: {}
 #       port: 9000
 workerPools: {}
 
+# ── MARS FDB mock server ──────────────────────────────────────────────────────
+# Disabled by default. Intended for dev happy-path stress tests with a tiny,
+# public ecCodes/opendata-backed FDB seeded into a persistent volume.
+marsFdbMock:
+  enabled: false
+  image:
+    repository: polytope/mars-fdb-mock
+    tag: ""
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 9000
+  persistence:
+    size: 5Gi
+    storageClass: ""
+  fdbRoot: /data/fdb
+  dhsHome: /dhshome
+  seed:
+    force: false
+  # The image creates a non-root mars user; keep UID/GID aligned with it so the
+  # PVC seed marker and FDB root remain writable under restricted policies.
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  resources: {}
+  podAnnotations: {}
+
 # ── NATS JetStream (persistence backend) ──────────────────────────────────────
 # Bundled official NATS subchart. When enabled, the chart deploys a NATS server
 # with JetStream and wires it into the bits persistence config automatically.

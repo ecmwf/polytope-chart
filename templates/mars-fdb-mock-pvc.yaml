@@ -1,0 +1,21 @@
+{{- if .Values.marsFdbMock.enabled }}
+{{- $mock := .Values.marsFdbMock }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "polytope-server.marsFdbMockName" . }}
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mars-fdb-mock
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $mock.persistence.size | quote }}
+  {{- if and $mock.persistence.storageClass (ne $mock.persistence.storageClass "-") }}
+  storageClassName: {{ $mock.persistence.storageClass | quote }}
+  {{- else if eq $mock.persistence.storageClass "-" }}
+  storageClassName: ""
+  {{- end }}
+{{- end }}

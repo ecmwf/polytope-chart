@@ -1,0 +1,24 @@
+{{- if .Values.marsFdbMock.enabled }}
+{{- $mock := .Values.marsFdbMock }}
+apiVersion: v1
+kind: Service
+metadata:
+  # Service name is intentionally NOT release-prefixed: workers in any release
+  # resolve the mock by the bare hostname `mars-fdb-mock` (so polytope-config's
+  # `host: mars-fdb-mock` works without per-release templating). Safe because
+  # this is a dev-only opt-in component with a fixed cluster role.
+  name: mars-fdb-mock
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mars-fdb-mock
+spec:
+  type: {{ $mock.service.type | default "ClusterIP" }}
+  selector:
+    {{- include "polytope-server.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: mars-fdb-mock
+  ports:
+    - name: dhs
+      port: {{ $mock.service.port | int }}
+      targetPort: dhs
+      protocol: TCP
+{{- end }}

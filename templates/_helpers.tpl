@@ -49,6 +49,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- printf "http://%s-bobs:%v" .Release.Name (.Values.bobs.service.port | default 3000) }}
 {{- end }}
 
+{{- define "polytope-server.marsFdbMockName" -}}
+{{- printf "%s-mars-fdb-mock" (include "polytope-server.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
 {{/*
 Collect imagePullSecrets from global + local values, and auto-append the
 chart-managed secret when imageCredentials is provided.
