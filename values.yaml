@@ -12,6 +12,28 @@ global:
     # registry: eccr.ecmwf.int
     # username: robot$polytope+polytope-pull
     # password: changeme
+  # ── Ingress controller selection ───────────────────────────────────────────
+  # Selects which ingress controller flavour the chart and BOBS subchart
+  # should render for. Supported values:
+  #   nginx-inc       — NGINX Inc / NGINX Plus controller (ECMWF Bologna).
+  #                     Renders mergeable master+minion Ingresses, uses
+  #                     `nginx.org/*` annotations, and BOBS rewrites via
+  #                     `nginx.org/location-snippets`. Default for backward
+  #                     compatibility with the existing Bologna deployment.
+  #   nginx-community — Community ingress-nginx (kubernetes/ingress-nginx).
+  #                     Renders a single frontend Ingress plus a single BOBS
+  #                     Ingress with `nginx.ingress.kubernetes.io/use-regex` +
+  #                     `rewrite-target` for `/<routeName>-N/<uuid>` ->
+  #                     `/api/v1/read/<uuid>`. Used by DestinE clusters
+  #                     (leo, lumi, mn5).
+  #
+  # IngressClass tip: on clusters with multiple ingress controllers installed,
+  # the bare `nginx` className can be ambiguous. Override `ingress.className`
+  # (parent) and `bobs.ingress.className` (subchart) per location to the
+  # controller-specific class actually registered in that cluster, e.g.
+  # `nginx`, `nginx-inc`, or `nginx-external`.
+  ingress:
+    controller: nginx-inc
 
 # Additional pull secrets for the parent chart only (merged with global).
 imagePullSecrets: []

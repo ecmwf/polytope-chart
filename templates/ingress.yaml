@@ -1,7 +1,9 @@
 {{- if and .Values.ingress.enabled .Values.ingress.domain }}
 {{- $host := include "polytope-server.ingressHost" . }}
-{{- $annotations := .Values.ingress.annotations | default dict }}
-{{- $hasCertManager := or (hasKey $annotations "cert-manager.io/cluster-issuer") (hasKey $annotations "cert-manager.io/issuer") }}
+{{- $userAnnotations := .Values.ingress.annotations | default dict }}
+{{- $hasCertManager := or (hasKey $userAnnotations "cert-manager.io/cluster-issuer") (hasKey $userAnnotations "cert-manager.io/issuer") }}
+{{- $controller := include "polytope-server.ingressController" . }}
+{{- if eq $controller "nginx-inc" }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -11,7 +13,7 @@ metadata:
   annotations:
     dns.operators.ecmwf.int/on-transport-server: vs-transport-https
     nginx.org/mergeable-ingress-type: master
-    {{- with $annotations }}
+    {{- with $userAnnotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
@@ -53,4 +55,62 @@ spec:
                 name: {{ include "polytope-server.fullname" . }}-frontend
                 port:
                   name: http
+{{- else if eq $controller "nginx-community" }}
+{{- /*
+Community ingress-nginx (kubernetes/ingress-nginx). Single Ingress per service
+on the same host; community nginx does not merge master/minion. Force HTTPS at
+the controller via ssl-redirect so requests on :80 are 308'd before any body
+is served. These redirect defaults are merged under user annotations so an
+operator can opt out by explicitly setting the same keys to "false".
+
+NGINX Inc / Bologna-only annotation keys (`nginx.org/*`, `dns.operators.ecmwf.int/*`)
+are stripped here so chart-default or values-inherited Bologna keys don't leak
+into community-controller ingresses where they would be silently ignored or
+misinterpreted.
+*/ -}}
+{{- $filtered := dict -}}
+{{- range $k, $v := $userAnnotations -}}
+  {{- if not (or (hasPrefix "nginx.org/" $k) (hasPrefix "dns.operators.ecmwf.int/" $k)) -}}
+    {{- $_ := set $filtered $k $v -}}
+  {{- end -}}
+{{- end -}}
+{{- $secureDefaults := dict
+  "nginx.ingress.kubernetes.io/ssl-redirect" "true"
+  "nginx.ingress.kubernetes.io/force-ssl-redirect" "true" }}
+{{- $annotations := mergeOverwrite (deepCopy $secureDefaults) $filtered }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "polytope-server.fullname" . }}-ingress
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+  annotations:
+    {{- toYaml $annotations | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "polytope-server.fullname" . }}-frontend
+                port:
+                  name: http
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - secretName: {{ .secretName }}
+      hosts:
+        - {{ $host | quote }}
+    {{- end }}
+  {{- else if $hasCertManager }}
+  tls:
+    - secretName: {{ $host | replace "." "-" }}-tls
+      hosts:
+        - {{ $host | quote }}
+  {{- end }}
+{{- end }}
 {{- end }}
