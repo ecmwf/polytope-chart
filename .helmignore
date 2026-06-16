@@ -1,0 +1,8 @@
+.git
+.git/*
+.weave
+.weave/*
+tmpcharts-*
+*.swp
+*.tmp
+.DS_Store
