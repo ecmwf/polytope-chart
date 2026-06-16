@@ -1,5 +1,11 @@
 replicaCount: 1
 
+# Default fallback for standalone bobs renders. When deployed as a subchart of
+# polytope-chart, the parent's `global.ingress.controller` propagates here.
+global:
+  ingress:
+    controller: nginx-inc
+
 imagePullSecrets: []
 
 image:

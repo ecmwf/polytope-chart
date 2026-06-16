@@ -2,6 +2,21 @@
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
+{{/*
+Resolve and validate the ingress controller flavour. Reads from
+`.Values.global.ingress.controller` (authoritative, also visible to the BOBS
+subchart). Returns the string. Fails with a clear message when the value
+is not one of the supported options.
+*/}}
+{{- define "polytope-server.ingressController" -}}
+{{- $c := (((.Values.global).ingress).controller) | default "nginx-inc" -}}
+{{- $supported := list "nginx-inc" "nginx-community" -}}
+{{- if not (has $c $supported) -}}
+{{- fail (printf "global.ingress.controller=%q is not supported. Supported values: %v" $c $supported) -}}
+{{- end -}}
+{{- $c -}}
+{{- end }}
+
 {{- define "polytope-server.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
