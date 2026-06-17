@@ -97,6 +97,15 @@ broker:
 #   sshSecretName: k8s Secret containing an SSH deploy key
 schedule: {}
 
+# ── Worker defaults ───────────────────────────────────────────────────────────
+worker:
+  # Long-poll timeout for idle worker→broker /work requests, in milliseconds.
+  # Busy brokers return jobs immediately; this timeout is reached only when the
+  # selected broker has no work. Lower values improve broker coverage convergence
+  # and frontend elasticity because idle workers re-sample another frontend more
+  # often, at the cost of more cheap empty 204 polls and TCP connections.
+  pollTimeoutMs: 3000
+
 # ── Worker pools ──────────────────────────────────────────────────────────────
 # Each key produces a Deployment (+ optional ConfigMap when config is set).
 # The chart handles mounting and CLI args internally.
@@ -109,6 +118,7 @@ schedule: {}
 #       tag: ""
 #     pool: worker_pool
 #     replicas: 5
+#     pollTimeoutMs: 3000   # optional per-pool override
 #     config:
 #       type: remote
 #       host: svc001.alpsb.cscs.ch
