@@ -12,6 +12,12 @@ data:
     data_dir: {{ .Values.config.data_dir | quote }}
     page_size: {{ int .Values.config.page_size }}
     max_cache_bytes: {{ int .Values.config.max_cache_bytes }}
+    {{- if .Values.config.io_uring_shards }}
+    io_uring_shards: {{ int .Values.config.io_uring_shards }}
+    {{- end }}
+    {{- if .Values.config.io_uring_queue_capacity }}
+    io_uring_queue_capacity: {{ int .Values.config.io_uring_queue_capacity }}
+    {{- end }}
     writer_inactivity_timeout_secs: {{ .Values.config.writer_inactivity_timeout_secs }}
     read_idle_ttl_secs: {{ .Values.config.read_idle_ttl_secs }}
     full_read_complete_ttl_secs: {{ .Values.config.full_read_complete_ttl_secs }}
