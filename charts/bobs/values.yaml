@@ -39,6 +39,10 @@ config:
   data_dir: "/var/lib/bobs"
   page_size: 4096
   max_cache_bytes: 1048576
+  # io_uring tuning. When unset, BOBS auto-resolves shards = (num_cpus/4).max(1)
+  # and a queue capacity of 1024. Override for higher per-volume write parallelism.
+  # io_uring_shards: 8
+  # io_uring_queue_capacity: 4096
   writer_inactivity_timeout_secs: 300
   read_idle_ttl_secs: 600
   full_read_complete_ttl_secs: 30
