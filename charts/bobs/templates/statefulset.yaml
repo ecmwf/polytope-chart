@@ -26,6 +26,16 @@ spec:
         app.kubernetes.io/name: '{{ include "bobs.name" . }}'
         app.kubernetes.io/instance: '{{ .Release.Name }}'
     spec:
+      {{- if .Values.podAntiAffinityHostname }}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: '{{ include "bobs.name" . }}'
+                  app.kubernetes.io/instance: '{{ .Release.Name }}'
+              topologyKey: kubernetes.io/hostname
+      {{- end }}
       {{- include "bobs.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: bobs
