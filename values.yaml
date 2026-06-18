@@ -48,8 +48,6 @@ polytope:
 # Default pod annotations for log collection. Component-specific annotations are
 # merged over these defaults by the templates.
 podAnnotations:
-  splunk.com/include: "true"
-  splunk.com/index: polytope
   opensearch.org/include: "true"
   opensearch.org/service.name: polytope
 
