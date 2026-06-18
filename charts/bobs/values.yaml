@@ -19,6 +19,11 @@ service:
 
 resources: {}
 
+# When true, add a required hostname pod-anti-affinity so no two BOBS pods in
+# this release schedule on the same node (avoids memory-overcommit OOMs when
+# requests==limits are large).
+podAntiAffinityHostname: false
+
 podAnnotations:
   splunk.com/include: "true"
   splunk.com/index: polytope
