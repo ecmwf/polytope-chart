@@ -1,0 +1,37 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "polytope-server.fullname" . }}-frontend
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "polytope-server.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    # Public HTTP remains reachable for ingress controllers and in-cluster clients.
+    - ports:
+        - port: http
+          protocol: TCP
+    # Worker pods in this release may reach the broker /{pool}/work endpoint.
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "polytope-server.selectorLabels" . | nindent 14 }}
+              app: worker
+      ports:
+        - port: broker
+          protocol: TCP
+    # Internal poll is restricted to frontend pods in this release and namespace.
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "polytope-server.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: frontend
+      ports:
+        - port: internal-poll
+          protocol: TCP
