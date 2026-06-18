@@ -69,6 +69,15 @@ spec:
             - name: broker
               containerPort: {{ .Values.frontend.brokerPort }}
               protocol: TCP
+            - name: internal-poll
+              containerPort: {{ .Values.frontend.internalPollPort }}
+              protocol: TCP
+          startupProbe:
+            tcpSocket:
+              port: internal-poll
+            initialDelaySeconds: 1
+            periodSeconds: 2
+            failureThreshold: 30
           livenessProbe:
             tcpSocket:
               port: http

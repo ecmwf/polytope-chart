@@ -57,7 +57,32 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{- define "polytope-server.pollBaseUrl" -}}
-{{- printf "http://%s-frontend.%s.svc:%d" (include "polytope-server.fullname" .) .Release.Namespace (.Values.frontend.port | int) }}
+{{- printf "http://%s-frontend.%s.svc:%d/internal/poll" (include "polytope-server.fullname" .) .Release.Namespace (.Values.frontend.internalPollPort | int) }}
+{{- end }}
+
+{{- define "polytope-server.validateFrontendServiceExposure" -}}
+{{- $serviceType := "ClusterIP" -}}
+{{- if and .Values.frontend (hasKey .Values.frontend "serviceType") -}}
+{{- $serviceType = .Values.frontend.serviceType -}}
+{{- end -}}
+{{- if and .Values.frontend (hasKey .Values.frontend "service") (hasKey .Values.frontend.service "type") -}}
+{{- $serviceType = .Values.frontend.service.type -}}
+{{- end -}}
+{{- if ne $serviceType "ClusterIP" -}}
+{{- fail (printf "frontend Service must remain ClusterIP while exposing internal-poll; got %s" $serviceType) -}}
+{{- end -}}
+{{- end }}
+
+{{- define "polytope-server.ingressBackendPortName" -}}
+{{- $backendPort := (.Values.ingress.backendPortName | default "http") -}}
+{{- $backendPortString := toString $backendPort -}}
+{{- if or (eq $backendPortString "internal-poll") (eq $backendPortString (toString (.Values.frontend.internalPollPort | int))) (eq $backendPortString "broker") (eq $backendPortString (toString (.Values.frontend.brokerPort | int))) -}}
+{{- fail (printf "ingress backend must use public service port name http, not %s" $backendPortString) -}}
+{{- end -}}
+{{- if ne $backendPortString "http" -}}
+{{- fail (printf "ingress backend must use public service port name http, not %s" $backendPortString) -}}
+{{- end -}}
+{{- $backendPortString -}}
 {{- end }}
 
 {{- define "polytope-server.bobsUrl" -}}
