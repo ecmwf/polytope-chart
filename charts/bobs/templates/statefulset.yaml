@@ -59,7 +59,8 @@ spec:
             - name: http
               containerPort: {{ .Values.config.port }}
               protocol: TCP
-          resources: {}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - name: config
               mountPath: /etc/bobs
