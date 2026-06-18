@@ -12,6 +12,7 @@ data:
     data_dir: {{ .Values.config.data_dir | quote }}
     page_size: {{ int .Values.config.page_size }}
     max_cache_bytes: {{ int .Values.config.max_cache_bytes }}
+    max_live_spools: {{ int .Values.config.max_live_spools }}
     {{- if .Values.config.io_uring_shards }}
     io_uring_shards: {{ int .Values.config.io_uring_shards }}
     {{- end }}
