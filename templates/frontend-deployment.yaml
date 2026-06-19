@@ -101,6 +101,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: POLYTOPE_ENV
               value: {{ .Values.polytope.env | quote }}
             {{- with .Values.authentication }}
