@@ -151,10 +151,13 @@ ingress:
     nginx.org/lb-method: "hash $http_authorization$proxy_protocol_addr consistent"
   tls: []
 
-# ── Telemetry (OTLP metrics export) ───────────────────────────────────────────
-# When enabled, sets OTEL_EXPORTER_OTLP_ENDPOINT on the frontend pod.
+# ── Telemetry (Prometheus metrics scrape) ─────────────────────────────────────
+# When enabled, the frontend exposes a /metrics endpoint for Prometheus.
 # Requires the polytope-server image to be built with --features telemetry.
 telemetry:
   enabled: false
-  # OTLP HTTP endpoint (the collector's /v1/metrics path is appended by the SDK)
-  endpoint: ""
+  port: 9090
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    labels: {}

@@ -104,3 +104,8 @@ data:
       allow_anonymous: {{ . }}
       {{- end }}
     {{- end }}
+    {{- if .Values.telemetry.enabled }}
+    metrics:
+      enabled: true
+      port: {{ .Values.telemetry.port | default 9090 }}
+    {{- end }}

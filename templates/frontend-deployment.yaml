@@ -69,6 +69,11 @@ spec:
             - name: broker
               containerPort: {{ .Values.frontend.brokerPort }}
               protocol: TCP
+            {{- if .Values.telemetry.enabled }}
+            - name: metrics
+              containerPort: {{ .Values.telemetry.port }}
+              protocol: TCP
+            {{- end }}
           livenessProbe:
             tcpSocket:
               port: http
@@ -102,10 +107,6 @@ spec:
                   name: {{ .secretName }}
                   key: {{ .secretKey | default "auth-secret" }}
             {{- end }}
-            {{- end }}
-            {{- if .Values.telemetry.enabled }}
-            - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: {{ .Values.telemetry.endpoint | quote }}
             {{- end }}
           {{- with .Values.frontend.resources }}
           resources:
