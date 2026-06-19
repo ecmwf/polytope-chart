@@ -24,3 +24,17 @@ data:
     host_prefix: {{ required "bobs.config.host_prefix must be set" .Values.config.host_prefix | quote }}
     domain: {{ required "bobs.config.domain must be set" .Values.config.domain | quote }}
     route_name: {{ required "bobs.config.route_name must be set" .Values.config.route_name | quote }}
+    {{- if .Values.config.metrics }}
+    metrics:
+      enabled: {{ .Values.config.metrics.enabled }}
+      {{- if .Values.config.metrics.otlp_endpoint }}
+      otlp_endpoint: {{ .Values.config.metrics.otlp_endpoint | quote }}
+      {{- end }}
+      {{- if .Values.config.metrics.allowed_labels }}
+      allowed_labels:
+        {{- range .Values.config.metrics.allowed_labels }}
+        - {{ . | quote }}
+        {{- end }}
+      {{- end }}
+      max_label_value_length: {{ .Values.config.metrics.max_label_value_length | default 128 }}
+    {{- end }}

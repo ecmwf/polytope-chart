@@ -103,6 +103,10 @@ spec:
                   key: {{ .secretKey | default "auth-secret" }}
             {{- end }}
             {{- end }}
+            {{- if .Values.telemetry.enabled }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.telemetry.endpoint | quote }}
+            {{- end }}
           {{- with .Values.frontend.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
