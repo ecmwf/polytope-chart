@@ -56,6 +56,8 @@ spec:
                   fieldPath: metadata.name
             - name: POLYTOPE_ENV
               value: {{ $.Values.polytope.env | quote }}
+            - name: POLYTOPE_WORKER_POOL
+              value: {{ $name | quote }}
             - name: K8S_NODE_NAME
               valueFrom:
                 fieldRef:

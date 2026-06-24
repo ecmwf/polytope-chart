@@ -27,8 +27,8 @@ data:
     {{- if .Values.config.metrics }}
     metrics:
       enabled: {{ .Values.config.metrics.enabled }}
-      {{- if .Values.config.metrics.otlp_endpoint }}
-      otlp_endpoint: {{ .Values.config.metrics.otlp_endpoint | quote }}
+      {{- if .Values.config.metrics.port }}
+      port: {{ .Values.config.metrics.port }}
       {{- end }}
       {{- if .Values.config.metrics.allowed_labels }}
       allowed_labels:
