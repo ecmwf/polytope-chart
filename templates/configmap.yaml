@@ -20,6 +20,7 @@ data:
     server:
       host: {{ .Values.frontend.host | default "0.0.0.0" | quote }}
       port: {{ .Values.frontend.port | default 3000 }}
+      internal_poll_port: {{ .Values.frontend.internalPollPort | default 9002 }}
       {{- with .Values.frontend.retry_after_secs }}
       retry_after_secs: {{ . }}
       {{- end }}
@@ -33,6 +34,12 @@ data:
           type: nats
           url: {{ include "polytope-server.natsUrl" . | quote }}
           broker_lease_ttl_secs: 30
+          # K:V replication factor, coupled to the NATS cluster size: R = cluster
+          # node count when clustered, else 1. Prevents R > node count (which
+          # fails bucket creation). New deploys create R-replicated buckets;
+          # existing buckets keep their R until recreated (get_or_create_bucket
+          # does not update R on an existing bucket).
+          num_replicas: {{ if (((.Values.nats).config).cluster).enabled }}{{ (((.Values.nats).config).cluster).replicas | default 3 }}{{ else }}1{{ end }}
           {{- with .Values.frontend.nats_connect_timeout_secs }}
           connect_timeout_secs: {{ . }}
           {{- end }}

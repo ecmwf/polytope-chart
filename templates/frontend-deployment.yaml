@@ -28,11 +28,26 @@ spec:
       {{- if or .Values.nats.enabled .Values.schedule }}
       initContainers:
         {{- if .Values.nats.enabled }}
-        # Block until NATS is healthy to avoid crash-loop backoff on the
-        # frontend, which fails immediately if persistence is unreachable.
+        # Block until NATS JetStream is actually serving (meta-group leader
+        # elected / quorum formed), not merely until the client TCP port is
+        # open. The 3-node JetStream cluster has a cold-start window where
+        # 4222 accepts connections but JetStream still returns 503
+        # ("system temporarily unavailable") while peers join and the meta
+        # group elects a leader. The frontend exits immediately on a
+        # persistence error, so starting it inside that window makes it create
+        # its KV bucket against a not-yet-quorate cluster and then crash when
+        # the meta group re-forms. The monitoring /healthz endpoint reports
+        # ok only once JetStream has a stable leader, so gate on its body.
         - name: wait-for-nats
           image: busybox:1.37
-          command: ['sh', '-c', 'until nc -z {{ .Release.Name }}-nats 4222; do sleep 1; done']
+          command:
+            - sh
+            - -c
+            - |
+              until wget -q -T 3 -O- "http://{{ .Release.Name }}-nats-headless:8222/healthz" 2>/dev/null | grep -q '"status":"ok"'; do
+                echo "waiting for nats jetstream to report healthy..."
+                sleep 2
+              done
         {{- end }}
         {{- if .Values.schedule }}
         - name: fetch-schedule
@@ -74,6 +89,15 @@ spec:
               containerPort: {{ .Values.telemetry.port }}
               protocol: TCP
             {{- end }}
+            - name: internal-poll
+              containerPort: {{ .Values.frontend.internalPollPort }}
+              protocol: TCP
+          startupProbe:
+            tcpSocket:
+              port: internal-poll
+            initialDelaySeconds: 1
+            periodSeconds: 2
+            failureThreshold: 30
           livenessProbe:
             tcpSocket:
               port: http
@@ -97,6 +121,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: POLYTOPE_ENV
               value: {{ .Values.polytope.env | quote }}
             {{- with .Values.authentication }}

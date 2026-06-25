@@ -1,3 +1,4 @@
+{{- include "polytope-server.validateFrontendServiceExposure" . -}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -25,3 +26,7 @@ spec:
       targetPort: metrics
       protocol: TCP
     {{- end }}
+    - name: internal-poll
+      port: {{ .Values.frontend.internalPollPort }}
+      targetPort: internal-poll
+      protocol: TCP

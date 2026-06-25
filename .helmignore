@@ -1,4 +1,11 @@
+.git
 .git/
+.git/*
 .gitignore
+.weave
+.weave/*
 tmpcharts-*/
+tmpcharts-*
 *.tmp
+*.swp
+.DS_Store

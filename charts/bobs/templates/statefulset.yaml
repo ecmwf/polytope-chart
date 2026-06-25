@@ -26,6 +26,20 @@ spec:
         app.kubernetes.io/name: '{{ include "bobs.name" . }}'
         app.kubernetes.io/instance: '{{ .Release.Name }}'
     spec:
+      # BOBS runs non-root (image USER 10001); fsGroup makes mounted PVCs
+      # group-writable so the process can write its spool data + sidecar metadata.
+      securityContext:
+        {{- toYaml (.Values.podSecurityContext | default (dict "fsGroup" 10001)) | nindent 8 }}
+      {{- if .Values.podAntiAffinityHostname }}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: '{{ include "bobs.name" . }}'
+                  app.kubernetes.io/instance: '{{ .Release.Name }}'
+              topologyKey: kubernetes.io/hostname
+      {{- end }}
       {{- include "bobs.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: bobs
@@ -59,7 +73,8 @@ spec:
             - name: http
               containerPort: {{ .Values.config.port }}
               protocol: TCP
-          resources: {}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - name: config
               mountPath: /etc/bobs

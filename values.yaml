@@ -12,6 +12,28 @@ global:
     # registry: eccr.ecmwf.int
     # username: robot$polytope+polytope-pull
     # password: changeme
+  # ── Ingress controller selection ───────────────────────────────────────────
+  # Selects which ingress controller flavour the chart and BOBS subchart
+  # should render for. Supported values:
+  #   nginx-inc       — NGINX Inc / NGINX Plus controller (ECMWF Bologna).
+  #                     Renders mergeable master+minion Ingresses, uses
+  #                     `nginx.org/*` annotations, and BOBS rewrites via
+  #                     `nginx.org/location-snippets`. Default for backward
+  #                     compatibility with the existing Bologna deployment.
+  #   nginx-community — Community ingress-nginx (kubernetes/ingress-nginx).
+  #                     Renders a single frontend Ingress plus a single BOBS
+  #                     Ingress with `nginx.ingress.kubernetes.io/use-regex` +
+  #                     `rewrite-target` for `/<routeName>-N/<uuid>` ->
+  #                     `/api/v1/read/<uuid>`. Used by DestinE clusters
+  #                     (leo, lumi, mn5).
+  #
+  # IngressClass tip: on clusters with multiple ingress controllers installed,
+  # the bare `nginx` className can be ambiguous. Override `ingress.className`
+  # (parent) and `bobs.ingress.className` (subchart) per location to the
+  # controller-specific class actually registered in that cluster, e.g.
+  # `nginx`, `nginx-inc`, or `nginx-external`.
+  ingress:
+    controller: nginx-inc
 
 # Additional pull secrets for the parent chart only (merged with global).
 imagePullSecrets: []
@@ -26,8 +48,6 @@ polytope:
 # Default pod annotations for log collection. Component-specific annotations are
 # merged over these defaults by the templates.
 podAnnotations:
-  splunk.com/include: "true"
-  splunk.com/index: polytope
   opensearch.org/include: "true"
   opensearch.org/service.name: polytope
 
@@ -40,6 +60,7 @@ frontend:
   host: "0.0.0.0"
   port: 3000
   brokerPort: 9001
+  internalPollPort: 9002
   replicas: 1
   persist_after_secs: 10
   # max_jobs: 500000              # Broker-wide job limit (OOM protection, default 500000)
@@ -75,6 +96,15 @@ broker:
 #   sshSecretName: k8s Secret containing an SSH deploy key
 schedule: {}
 
+# ── Worker defaults ───────────────────────────────────────────────────────────
+worker:
+  # Long-poll timeout for idle worker→broker /work requests, in milliseconds.
+  # Busy brokers return jobs immediately; this timeout is reached only when the
+  # selected broker has no work. Lower values improve broker coverage convergence
+  # and frontend elasticity because idle workers re-sample another frontend more
+  # often, at the cost of more cheap empty 204 polls and TCP connections.
+  pollTimeoutMs: 3000
+
 # ── Worker pools ──────────────────────────────────────────────────────────────
 # Each key produces a Deployment (+ optional ConfigMap when config is set).
 # The chart handles mounting and CLI args internally.
@@ -87,6 +117,7 @@ schedule: {}
 #       tag: ""
 #     pool: worker_pool
 #     replicas: 5
+#     pollTimeoutMs: 3000   # optional per-pool override
 #     config:
 #       type: remote
 #       host: svc001.alpsb.cscs.ch
