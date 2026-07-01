@@ -146,13 +146,10 @@ nats:
 # via redirect URLs.
 bobs:
   enabled: true
-  # BOBS subchart bridge for POLYTOPE_ENV. The parent chart writes top-level
-  # polytope.env into a release-scoped ConfigMap; BOBS reads it unless a
-  # standalone bobs.polytope.env value is supplied.
-  polytope:
-    env: ""
-    envConfigMapName: ""
-    envConfigMapKey: POLYTOPE_ENV
+  observability:
+    deploymentEnv: ""          # standalone override; if empty, inherits from parent
+    deploymentEnvConfigMapName: ""  # name of the ConfigMap carrying BOBS_DEPLOYMENT_ENV
+    deploymentEnvConfigMapKey: BOBS_DEPLOYMENT_ENV
   image:
     repository: bobs
     tag: latest
@@ -161,6 +158,8 @@ bobs:
     enabled: true
     size: 10Gi
   config:
+    page_size: 16777216
+    max_cache_bytes: 268435456
     metrics:
       enabled: false
       port: 9090
