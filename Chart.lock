@@ -3,10 +3,10 @@ dependencies:
   repository: https://nats-io.github.io/k8s/helm/charts/
   version: 2.12.4
 - name: bobs
-  repository: file://charts/bobs
+  repository: file://../bobs/chart
   version: 0.1.0
 - name: auth-o-tron-chart
   repository: oci://eccr.ecmwf.int/auth-o-tron
   version: 0.3.0
-digest: sha256:bea0abb84f5466dce218953d6defec9da09ddf4fcb75f459e67d394888ed2360
-generated: "2026-04-01T16:09:00.539632975+01:00"
+digest: sha256:a1f533f8004d01985cae42232c5fda06fdf8bc13ebf3f1bf6f6ead912aaa957e
+generated: "2026-07-01T13:20:51.421356+01:00"

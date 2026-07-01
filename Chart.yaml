@@ -15,7 +15,7 @@ dependencies:
     condition: nats.enabled
   - name: bobs
     version: 0.1.0
-    repository: file://charts/bobs
+    repository: file://../bobs/chart
     condition: bobs.enabled
   - name: auth-o-tron-chart
     version: 0.3.0
