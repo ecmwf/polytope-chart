@@ -160,6 +160,17 @@ bobs:
   persistence:
     enabled: true
     size: 10Gi
+  config:
+    metrics:
+      enabled: false
+      port: 9090
+      allowed_labels:
+        - collection
+      max_label_value_length: 128
+      serviceMonitor:
+        enabled: false
+        interval: 30s
+        labels: {}
 
 # ── Authentication (auth-o-tron gateway) ──────────────────────────────────────
 # When set, all API endpoints require valid credentials.
@@ -192,3 +203,10 @@ telemetry:
     enabled: false
     interval: 30s
     labels: {}
+  workers:
+    enabled: false
+    port: 9090
+    serviceMonitor:
+      enabled: false
+      interval: 30s
+      labels: {}

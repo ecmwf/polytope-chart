@@ -1,0 +1,21 @@
+{{- if and .Values.telemetry.workers.enabled .Values.telemetry.workers.serviceMonitor.enabled .Values.workerPools }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "polytope-server.fullname" . }}-workers
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: workers
+    {{- with .Values.telemetry.workers.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "polytope-server.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: workers
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: {{ .Values.telemetry.workers.serviceMonitor.interval }}
+{{- end }}
