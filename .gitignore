@@ -1,3 +1,2 @@
-charts/bobs/
-tmpcharts-*/
+*.tgz
 .DS_Store
