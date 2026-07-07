@@ -146,13 +146,10 @@ nats:
 # via redirect URLs.
 bobs:
   enabled: true
-  # BOBS subchart bridge for POLYTOPE_ENV. The parent chart writes top-level
-  # polytope.env into a release-scoped ConfigMap; BOBS reads it unless a
-  # standalone bobs.polytope.env value is supplied.
-  polytope:
-    env: ""
-    envConfigMapName: ""
-    envConfigMapKey: POLYTOPE_ENV
+  observability:
+    deploymentEnv: ""          # standalone override; if empty, inherits from parent
+    deploymentEnvConfigMapName: ""  # name of the ConfigMap carrying BOBS_DEPLOYMENT_ENV
+    deploymentEnvConfigMapKey: BOBS_DEPLOYMENT_ENV
   image:
     repository: bobs
     tag: latest
@@ -160,6 +157,19 @@ bobs:
   persistence:
     enabled: true
     size: 10Gi
+  config:
+    page_size: 16777216
+    max_cache_bytes: 268435456
+    metrics:
+      enabled: false
+      port: 9090
+      allowed_labels:
+        - collection
+      max_label_value_length: 128
+      serviceMonitor:
+        enabled: false
+        interval: 30s
+        labels: {}
 
 # ── Authentication (auth-o-tron gateway) ──────────────────────────────────────
 # When set, all API endpoints require valid credentials.
@@ -181,3 +191,21 @@ ingress:
   annotations:
     nginx.org/lb-method: "hash $http_authorization$proxy_protocol_addr consistent"
   tls: []
+
+# ── Telemetry (Prometheus metrics scrape) ─────────────────────────────────────
+# When enabled, the frontend exposes a /metrics endpoint for Prometheus.
+# Requires the polytope-server image to be built with --features telemetry.
+telemetry:
+  enabled: false
+  port: 9090
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    labels: {}
+  workers:
+    enabled: false
+    port: 9090
+    serviceMonitor:
+      enabled: false
+      interval: 30s
+      labels: {}

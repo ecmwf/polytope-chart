@@ -20,6 +20,12 @@ spec:
       port: {{ .Values.frontend.brokerPort }}
       targetPort: broker
       protocol: TCP
+    {{- if .Values.telemetry.enabled }}
+    - name: metrics
+      port: {{ .Values.telemetry.port }}
+      targetPort: metrics
+      protocol: TCP
+    {{- end }}
     - name: internal-poll
       port: {{ .Values.frontend.internalPollPort }}
       targetPort: internal-poll

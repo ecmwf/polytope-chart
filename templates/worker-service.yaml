@@ -1,0 +1,19 @@
+{{- if and .Values.telemetry.workers.enabled .Values.workerPools }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "polytope-server.fullname" . }}-workers
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: workers
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "polytope-server.selectorLabels" . | nindent 4 }}
+    app: worker
+  ports:
+    - name: metrics
+      port: {{ .Values.telemetry.workers.port }}
+      targetPort: metrics
+      protocol: TCP
+{{- end }}

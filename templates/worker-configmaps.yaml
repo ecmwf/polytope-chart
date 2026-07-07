@@ -12,6 +12,11 @@ metadata:
 data:
   config.yaml: |
     {{- $cfg := deepCopy $pool.config }}
+    {{- if $.Values.telemetry.workers.enabled }}
+    {{- $management := get $cfg "management" | default dict }}
+    {{- $_ := set $management "port" $.Values.telemetry.workers.port }}
+    {{- $_ := set $cfg "management" $management }}
+    {{- end }}
     {{- if and (hasKey $cfg "delivery") (hasKey $cfg.delivery "bobs_url") }}
     {{- $_ := set $cfg.delivery "bobs_url" (include "polytope-server.bobsUrl" $) }}
     {{- end }}

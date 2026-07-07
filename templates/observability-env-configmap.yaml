@@ -6,5 +6,5 @@ metadata:
   labels:
     {{- include "polytope-server.labels" . | nindent 4 }}
 data:
-  POLYTOPE_ENV: {{ .Values.polytope.env | quote }}
+  BOBS_DEPLOYMENT_ENV: {{ .Values.polytope.env | quote }}
 {{- end }}

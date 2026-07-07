@@ -84,6 +84,11 @@ spec:
             - name: broker
               containerPort: {{ .Values.frontend.brokerPort }}
               protocol: TCP
+            {{- if .Values.telemetry.enabled }}
+            - name: metrics
+              containerPort: {{ .Values.telemetry.port }}
+              protocol: TCP
+            {{- end }}
             - name: internal-poll
               containerPort: {{ .Values.frontend.internalPollPort }}
               protocol: TCP
