@@ -188,8 +188,19 @@ ingress:
   className: nginx
   hostPrefix: polytope
   domain: ""
-  annotations:
-    nginx.org/lb-method: "hash $http_authorization$proxy_protocol_addr consistent"
+  annotations: {}
+  # Broker stickiness. Route each user to the same broker to minimise cross-broker
+  # proxying, keyed by the Authorization header and falling back to the
+  # PROXY-protocol client address when the request is unauthenticated. On
+  # controllers without PROXY protocol $proxy_protocol_addr is the empty string,
+  # so the key degrades cleanly to auth-only (NOT $remote_addr, which would be the
+  # ingress LB address and collapse every client onto one broker). Consistent
+  # (ketama) hashing keeps routing stable across broker autoscaling/restarts —
+  # only ~1/N of users remap. Emitted as `nginx.org/lb-method: hash <key>
+  # consistent` on nginx-inc (inherited by the frontend minion) and as
+  # `nginx.ingress.kubernetes.io/upstream-hash-by: <key>` on nginx-community.
+  # Set to "" to disable stickiness (controller default: round-robin).
+  stickyHashBy: "$http_authorization$proxy_protocol_addr"
   tls: []
 
 # ── Telemetry (Prometheus metrics scrape) ─────────────────────────────────────

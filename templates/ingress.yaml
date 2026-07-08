@@ -5,6 +5,7 @@
 {{- $userAnnotations := .Values.ingress.annotations | default dict }}
 {{- $hasCertManager := or (hasKey $userAnnotations "cert-manager.io/cluster-issuer") (hasKey $userAnnotations "cert-manager.io/issuer") }}
 {{- $controller := include "polytope-server.ingressController" . }}
+{{- $stickyHashBy := .Values.ingress.stickyHashBy | default "" }}
 {{- if eq $controller "nginx-inc" }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -15,6 +16,11 @@ metadata:
   annotations:
     dns.operators.ecmwf.int/on-transport-server: vs-transport-https
     nginx.org/mergeable-ingress-type: master
+    {{- if $stickyHashBy }}
+    {{- /* lb-method is inherited by minions from the master, so the frontend
+           minion's upstream picks this up. */}}
+    nginx.org/lb-method: {{ printf "hash %s consistent" $stickyHashBy | quote }}
+    {{- end }}
     {{- with $userAnnotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -79,6 +85,13 @@ misinterpreted.
 {{- $secureDefaults := dict
   "nginx.ingress.kubernetes.io/ssl-redirect" "true"
   "nginx.ingress.kubernetes.io/force-ssl-redirect" "true" }}
+{{- /* Consistent-hash broker stickiness. ingress-nginx implements upstream-hash-by
+       with ketama consistent hashing over pod endpoints, so it is resilient to
+       broker autoscaling/restarts. Placed in defaults so an operator annotation
+       can still override it. */}}
+{{- if $stickyHashBy }}
+{{-   $_ := set $secureDefaults "nginx.ingress.kubernetes.io/upstream-hash-by" $stickyHashBy }}
+{{- end }}
 {{- $annotations := mergeOverwrite (deepCopy $secureDefaults) $filtered }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
