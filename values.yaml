@@ -159,12 +159,12 @@ nats:
 bobs:
   enabled: true
   observability:
-    deploymentEnv: ""          # standalone override; if empty, inherits from parent
-    deploymentEnvConfigMapName: ""  # name of the ConfigMap carrying BOBS_DEPLOYMENT_ENV
+    deploymentEnv: "" # standalone override; if empty, inherits from parent
+    deploymentEnvConfigMapName: "" # name of the ConfigMap carrying BOBS_DEPLOYMENT_ENV
     deploymentEnvConfigMapKey: BOBS_DEPLOYMENT_ENV
   image:
     repository: bobs
-    tag: latest
+    tag: "0.1.0"
     pullPolicy: Always
   persistence:
     enabled: true
@@ -192,6 +192,15 @@ bobs:
 #   secretName: ""          # K8s Secret holding the JWT signing secret
 #   secretKey: auth-secret  # key inside the Secret
 #   timeout_ms: 3000
+
+# ── auth-o-tron subchart ──────────────────────────────────────────────────────
+# Bundled auth-o-tron gateway (subchart alias "auth-o-tron"). Pin the image tag
+# to the released auth-o-tron so enabling the subchart does not deploy the
+# subchart's stale default tag. Providers/JWT config are supplied per-deployment.
+auth-o-tron:
+  enabled: true
+  image:
+    tag: "0.3.7"
 
 # ── Ingress ───────────────────────────────────────────────────────────────────
 # Host is constructed as {{ hostPrefix }}.{{ domain }}.
