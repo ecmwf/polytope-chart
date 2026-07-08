@@ -87,6 +87,18 @@ broker:
     - default:
         - target::worker_pool
 
+# ── MCP frontend ──────────────────────────────────────────────────────────────
+# Optional Model Context Protocol endpoint mounted at /mcp. Auth is handled by
+# the same frontend authentication middleware as the HTTP APIs.
+mcp:
+  enabled: false
+  catalogueUrl: ""
+  inlineResultMaxBytes: 65536
+  # Leave empty to let the server accept any Host header. Set to the public
+  # ingress host(s) for stricter Streamable HTTP host validation.
+  allowedHosts: []
+  allowedOrigins: []
+
 # ── Schedule ──────────────────────────────────────────────────────────────────
 # Schedule XML for the schedule_released check.
 # When set, an init container clones the repo via SSH and mounts the file.
