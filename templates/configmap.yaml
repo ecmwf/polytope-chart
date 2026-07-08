@@ -116,3 +116,7 @@ data:
       enabled: true
       port: {{ .Values.telemetry.port | default 9090 }}
     {{- end }}
+    {{- with .Values.support }}
+    support:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
