@@ -1,0 +1,10 @@
+workerPools:
+  conflict:
+    image:
+      repository: example/worker
+      tag: "1.2.3"
+    pool: worker_pool
+    cache:
+      emptyDir: {}
+      hostPath:
+        path: /var/lib/polytope/cache

@@ -55,13 +55,14 @@ podAnnotations:
 frontend:
   image:
     repository: polytope-server
-    tag: ""
+    tag: "2.0.0"
     pullPolicy: Always
   host: "0.0.0.0"
   port: 3000
   brokerPort: 9001
   internalPollPort: 9002
   replicas: 1
+  rustLog: info
   persist_after_secs: 10
   # max_jobs: 500000              # Broker-wide job limit (OOM protection, default 500000)
   # retry_after_secs: 5           # Retry-After header on 529 overload responses
@@ -100,12 +101,15 @@ mcp:
   allowedOrigins: []
 
 # ── Schedule ──────────────────────────────────────────────────────────────────
-# Schedule XML for the schedule_released check.
-# When set, an init container clones the repo via SSH and mounts the file.
-#   repo: SSH git URL (e.g. git@github.com:org/repo.git)
-#   branch: branch to clone (default: "develop")
-#   path: path to the schedule XML within the repo
-#   sshSecretName: k8s Secret containing an SSH deploy key
+# Schedule XML for the schedule_released check. `enabled` is tri-state during
+# migration: true/false are authoritative; omitted or null preserves the legacy
+# behaviour where a non-empty schedule map enables the integration.
+# schedule:
+#   enabled: true
+#   repo: "git@github.com:org/repo.git"
+#   branch: develop
+#   path: share/project/schedule.xml
+#   sshSecretName: polytope-schedule-ssh
 schedule: {}
 
 # ── Worker defaults ───────────────────────────────────────────────────────────
@@ -116,6 +120,7 @@ worker:
   # and frontend elasticity because idle workers re-sample another frontend more
   # often, at the cost of more cheap empty 204 polls and TCP connections.
   pollTimeoutMs: 3000
+  rustLog: info
 
 # ── Worker pools ──────────────────────────────────────────────────────────────
 # Each key produces a Deployment (+ optional ConfigMap when config is set).
@@ -126,14 +131,26 @@ worker:
 #   fdb-alps:
 #     image:
 #       repository: fdb-worker
-#       tag: ""
+#       tag: "2.0.0"
 #     pool: worker_pool
 #     replicas: 5
-#     pollTimeoutMs: 3000   # optional per-pool override
+#     rustLog: debug             # optional; overrides worker.rustLog
+#     pollTimeoutMs: 3000        # optional per-pool override
+#     cache:
+#       mountPath: /tmp/cache
+#       emptyDir:
+#         sizeLimit: 10Gi        # defaults to 10Gi when omitted
+#       # hostPath:              # use instead of emptyDir
+#       #   path: /var/lib/polytope/cache
+#       #   type: DirectoryOrCreate
+#     # cacheDir: /tmp/cache     # deprecated legacy hostPath (one release)
 #     config:
 #       type: remote
 #       host: svc001.alpsb.cscs.ch
 #       port: 9000
+# Override-only fragments must opt in so an absent base pool is not an error:
+#   optional-tuning:
+#     overrideOnly: true
 workerPools: {}
 
 # ── NATS JetStream (persistence backend) ──────────────────────────────────────

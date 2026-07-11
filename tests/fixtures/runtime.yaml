@@ -1,0 +1,50 @@
+polytope:
+  site: tst
+  env: dev
+
+nats:
+  enabled: false
+bobs:
+  enabled: false
+auth-o-tron:
+  enabled: false
+
+frontend:
+  rustLog: debug
+worker:
+  rustLog: warn
+
+workerPools:
+  empty-cache:
+    image:
+      repository: example/worker
+      tag: "1.2.3"
+    pool: worker_pool
+    config:
+      delivery:
+        delivery_type: inline
+    marsConfig:
+      databases:
+        - name: first
+    cache:
+      mountPath: /cache/empty
+      emptyDir: {}
+  host-cache:
+    image:
+      repository: example/worker
+      tag: "1.2.3"
+    pool: worker_pool
+    rustLog: trace
+    cache:
+      mountPath: /cache/host
+      hostPath:
+        path: /var/lib/polytope/cache
+        type: Directory
+  legacy-cache:
+    image:
+      repository: example/worker
+      tag: "1.2.3"
+    pool: worker_pool
+    cacheDir: /var/lib/polytope/legacy-cache
+  optional-tuning:
+    overrideOnly: true

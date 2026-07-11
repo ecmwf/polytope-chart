@@ -1,0 +1,6 @@
+schedule:
+  enabled: true
+  repo: git@github.com:example/schedules.git
+  branch: main
+  path: schedule.xml
+  sshSecretName: schedule-test-key

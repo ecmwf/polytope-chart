@@ -1,5 +1,7 @@
 {{- range $name, $pool := .Values.workerPools }}
-{{- if $pool.pool }}
+{{- $poolEnabled := eq (include "polytope-server.workerPoolEnabled" (dict "name" $name "pool" $pool)) "true" }}
+{{- if $poolEnabled }}
+{{- $cache := include "polytope-server.workerCache" (dict "name" $name "pool" $pool) | fromYaml }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -18,8 +20,8 @@ spec:
     metadata:
       {{- $podAnnotations := mergeOverwrite (deepCopy ($.Values.podAnnotations | default dict)) ($pool.podAnnotations | default dict) }}
       annotations:
-        {{- if $pool.config }}
-        checksum/worker-config: {{ toYaml $pool.config | sha256sum }}
+        {{- if or $pool.config $pool.marsConfig }}
+        checksum/worker-config: {{ toYaml (dict "config" ($pool.config | default dict) "marsConfig" ($pool.marsConfig | default dict)) | sha256sum }}
         {{- end }}
         {{- with $podAnnotations }}
         {{- toYaml . | nindent 8 }}
@@ -35,7 +37,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ $name }}
-          image: {{ include "polytope-server.image" (dict "imageRoot" $pool.image "global" $.Values.global "chart" $.Chart) | quote }}
+          image: {{ include "polytope-server.image" (dict "imageRoot" $pool.image "global" $.Values.global) | quote }}
           imagePullPolicy: {{ $pool.image.pullPolicy | default "Always" }}
           {{- if $.Values.telemetry.workers.enabled }}
           ports:
@@ -45,7 +47,7 @@ spec:
           {{- end }}
           args:
             - --broker-url
-            - {{ include "polytope-server.workerBrokerUrl" (dict "root" $ "pool" ($pool.pool | default "worker_pool")) | quote }}
+            - {{ include "polytope-server.workerBrokerUrl" (dict "root" $ "pool" $pool.pool) | quote }}
             {{- $workerDefaults := $.Values.worker | default dict }}
             {{- $pollTimeoutMs := 3000 }}
             {{- if hasKey $workerDefaults "pollTimeoutMs" }}
@@ -60,8 +62,12 @@ spec:
             - {{ . | quote }}
             {{- end }}
           env:
+            {{- $rustLog := $.Values.worker.rustLog | default "info" }}
+            {{- if hasKey $pool "rustLog" }}
+            {{- $rustLog = get $pool "rustLog" }}
+            {{- end }}
             - name: RUST_LOG
-              value: info
+              value: {{ $rustLog | quote }}
             - name: K8S_NAMESPACE_NAME
               valueFrom:
                 fieldRef:
@@ -101,7 +107,7 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if or $pool.config $pool.marsConfig $pool.cacheDir }}
+          {{- if or $pool.config $pool.marsConfig $cache.enabled }}
           volumeMounts:
             {{- if $pool.config }}
             - name: config
@@ -112,12 +118,12 @@ spec:
             - name: mars-config
               mountPath: /mars-home/etc/mars-client
             {{- end }}
-            {{- if $pool.cacheDir }}
+            {{- if $cache.enabled }}
             - name: cache
-              mountPath: /tmp/cache
+              mountPath: {{ $cache.mountPath | quote }}
             {{- end }}
           {{- end }}
-      {{- if or $pool.config $pool.marsConfig $pool.cacheDir }}
+      {{- if or $pool.config $pool.marsConfig $cache.enabled }}
       volumes:
         {{- if $pool.config }}
         - name: config
@@ -129,12 +135,17 @@ spec:
           configMap:
             name: {{ include "polytope-server.fullname" $ }}-worker-{{ $name }}-mars-config
         {{- end }}
-        {{- if $pool.cacheDir }}
+        {{- if $cache.enabled }}
         - name: cache
+          {{- if eq $cache.backend "hostPath" }}
           hostPath:
-            path: {{ $pool.cacheDir }}
-            type: DirectoryOrCreate
+            path: {{ $cache.path | quote }}
+            type: {{ $cache.type }}
+          {{- else }}
+          emptyDir:
+            sizeLimit: {{ $cache.sizeLimit | quote }}
+          {{- end }}
         {{- end }}
       {{- end }}
-{{- end }}{{/* if $pool.pool */}}
+{{- end }}{{/* if $poolEnabled */}}
 {{- end }}{{/* range workerPools */}}
