@@ -5,7 +5,7 @@ description: >
   Deploys the polytope-server frontend (broker), dynamic worker pools,
   and NATS JetStream persistence.
 type: application
-version: 2.0.1
+version: 2.1.0
 appVersion: "2.0.0"
 
 dependencies:
@@ -17,11 +17,10 @@ dependencies:
     version: 0.1.1
     repository: file://../bobs/chart
     condition: bobs.enabled
-  # Auth-o-tron 0.4.0 is the target RS256 dependency. Keep the reproducible
-  #  0.3.0 lock until eccr.ecmwf.int/auth-o-tron/auth-o-tron-chart:0.4.0 is
-  #  published, then update this version and regenerate Chart.lock together.
+  # Auth-o-tron 0.4.0 provides the token-free RS256 chart contract.
+  # Regenerate Chart.lock once the OCI release is published.
   - name: auth-o-tron-chart
-    version: 0.3.0
+    version: 0.4.0
     repository: oci://eccr.ecmwf.int/auth-o-tron
     condition: auth-o-tron.enabled
     alias: auth-o-tron

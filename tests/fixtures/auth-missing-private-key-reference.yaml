@@ -9,4 +9,6 @@ bobs:
   enabled: false
 
 auth-o-tron:
-  extraEnv: []
+  jwt:
+    privateKeySecret:
+      name: ""

@@ -204,28 +204,22 @@ authentication:
   allow_anonymous: false
 
 # ── auth-o-tron subchart ──────────────────────────────────────────────────────
-# The 0.3 chart's generic config and extraEnv interfaces can render the 0.4
-# application contract without putting private key material in a ConfigMap.
-# Advance the dependency and regenerate Chart.lock only after the 0.4.0 OCI chart
-# exists at eccr.ecmwf.int/auth-o-tron/auth-o-tron-chart:0.4.0.
+# Requires auth-o-tron-chart 0.4.0. The chart owns private-key injection through
+# jwt.privateKeySecret; private key material never enters values or ConfigMaps.
 auth-o-tron:
   enabled: true
   image:
     tag: "0.4.0"
-  extraEnv:
-    - name: AOT_JWT__PRIVATE_KEY
-      valueFrom:
-        secretKeyRef:
-          name: auth-o-tron-jwt
-          key: private-key.pem
+  jwt:
+    privateKeySecret:
+      name: auth-o-tron-jwt
+      key: private-key.pem
   config:
     jwt:
       exp: 3600
       iss: auth-o-tron
       aud: polytope-server
       kid: primary
-      # Delete the 0.3 subchart's HS256 default; the private key is injected above.
-      secret: null
 # ── Ingress ───────────────────────────────────────────────────────────────────
 # Host is constructed as {{ hostPrefix }}.{{ domain }}.
 ingress:

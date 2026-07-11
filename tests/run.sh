@@ -174,13 +174,13 @@ expect_failure \
 	"authentication.additionalPublicKeys[0].secretKey is required"
 expect_failure \
 	"$ROOT/tests/fixtures/auth-missing-private-key-reference.yaml" \
-	"auth-o-tron.extraEnv must reference Secret auth-o-tron-jwt key private-key.pem"
+	"jwt.privateKeySecret.name is required"
 expect_failure \
 	"$ROOT/tests/fixtures/auth-configmap-private-key.yaml" \
-	"auth-o-tron.config.jwt.private_key is forbidden"
+	"config.jwt.private_key must not be stored in chart values"
 expect_failure \
 	"$ROOT/tests/fixtures/auth-configmap-shared-secret.yaml" \
-	"auth-o-tron.config.jwt.secret is forbidden"
+	"config.jwt.secret was removed in Auth-O-Tron 0.4.0"
 
 helm template no-auth "$ROOT" \
 	--set polytope.site=bol \

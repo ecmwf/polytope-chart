@@ -147,7 +147,7 @@ Usage:
 {{- end -}}
 {{- if $authotron.enabled -}}
 {{- if hasKey $jwt "secret" -}}
-{{- fail "auth-o-tron.config.jwt.secret is forbidden; use the auth-o-tron-jwt private-key.pem Secret reference" -}}
+{{- fail "auth-o-tron.config.jwt.secret is forbidden; use auth-o-tron.jwt.privateKeySecret" -}}
 {{- end -}}
 {{- if hasKey $jwt "private_key" -}}
 {{- fail "auth-o-tron.config.jwt.private_key is forbidden; private key material must not enter a ConfigMap" -}}
@@ -161,16 +161,9 @@ Usage:
 {{- if and (.Values.authentication).keyId (ne (.Values.authentication).keyId $jwt.kid) -}}
 {{- fail "authentication.keyId must match auth-o-tron.config.jwt.kid" -}}
 {{- end -}}
-{{- $hasPrivateKeyReference := false -}}
-{{- range $env := $authotron.extraEnv -}}
-{{- $privateKeyReference := dig "valueFrom" "secretKeyRef" dict $env -}}
-{{- if and (eq ($env.name | default "") "AOT_JWT__PRIVATE_KEY") (eq ($privateKeyReference.name | default "") "auth-o-tron-jwt") (eq ($privateKeyReference.key | default "") "private-key.pem") -}}
-{{- $hasPrivateKeyReference = true -}}
-{{- end -}}
-{{- end -}}
-{{- if not $hasPrivateKeyReference -}}
-{{- fail "auth-o-tron.extraEnv must reference Secret auth-o-tron-jwt key private-key.pem as AOT_JWT__PRIVATE_KEY" -}}
-{{- end -}}
+{{- $privateKeySecret := ($authotron.jwt).privateKeySecret | default dict -}}
+{{- $_ := required "auth-o-tron.jwt.privateKeySecret.name is required" $privateKeySecret.name -}}
+{{- $_ := required "auth-o-tron.jwt.privateKeySecret.key is required" $privateKeySecret.key -}}
 {{- else -}}
 {{- $_ := required "authentication.url is required when auth-o-tron is disabled" (.Values.authentication).url -}}
 {{- end -}}
