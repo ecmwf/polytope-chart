@@ -136,3 +136,75 @@ Usage:
   {{- printf "%s:%s" $repositoryName $tag -}}
 {{- end }}
 {{- end -}}
+
+{{/* Validate the coordinated Auth-o-tron RS256 signing contract. */}}
+{{- define "polytope-server.validateAuthRs256" -}}
+{{- $authotron := index .Values "auth-o-tron" -}}
+{{- $jwt := ($authotron.config).jwt | default dict -}}
+{{- $audience := (.Values.authentication).audience | default $jwt.aud -}}
+{{- if ne $audience "polytope-server" -}}
+{{- fail "authentication audience and auth-o-tron.config.jwt.aud must be polytope-server" -}}
+{{- end -}}
+{{- if $authotron.enabled -}}
+{{- if hasKey $jwt "secret" -}}
+{{- fail "auth-o-tron.config.jwt.secret is forbidden; use auth-o-tron.jwt.privateKeySecret" -}}
+{{- end -}}
+{{- if hasKey $jwt "private_key" -}}
+{{- fail "auth-o-tron.config.jwt.private_key is forbidden; private key material must not enter a ConfigMap" -}}
+{{- end -}}
+{{- if and (.Values.authentication).issuer (ne (.Values.authentication).issuer $jwt.iss) -}}
+{{- fail "authentication.issuer must match auth-o-tron.config.jwt.iss" -}}
+{{- end -}}
+{{- if and (.Values.authentication).audience (ne (.Values.authentication).audience $jwt.aud) -}}
+{{- fail "authentication.audience must match auth-o-tron.config.jwt.aud" -}}
+{{- end -}}
+{{- if and (.Values.authentication).keyId (ne (.Values.authentication).keyId $jwt.kid) -}}
+{{- fail "authentication.keyId must match auth-o-tron.config.jwt.kid" -}}
+{{- end -}}
+{{- $privateKeySecret := ($authotron.jwt).privateKeySecret | default dict -}}
+{{- $_ := required "auth-o-tron.jwt.privateKeySecret.name is required" $privateKeySecret.name -}}
+{{- $_ := required "auth-o-tron.jwt.privateKeySecret.key is required" $privateKeySecret.key -}}
+{{- else -}}
+{{- $_ := required "authentication.url is required when auth-o-tron is disabled" (.Values.authentication).url -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Build the shell script which combines public Secret data with base config. */}}
+{{- define "polytope-server.authRuntimeConfigScript" -}}
+{{- $authotron := index .Values "auth-o-tron" -}}
+{{- $jwt := ($authotron.config).jwt | default dict -}}
+{{- $issuer := (.Values.authentication).issuer | default $jwt.iss -}}
+{{- $audience := (.Values.authentication).audience | default $jwt.aud -}}
+{{- $keyId := (.Values.authentication).keyId | default $jwt.kid -}}
+set -eu
+cp /config/config.yaml /runtime/config.yaml
+cat >> /runtime/config.yaml <<'AUTH_CONFIG'
+authentication:
+  url: {{ (.Values.authentication).url | default (printf "http://%s-auth-o-tron:%v" .Release.Name ($authotron.service.port | default 8080)) | quote }}
+  issuer: {{ $issuer | quote }}
+  audience: {{ $audience | quote }}
+  public_keys:
+    - kid: {{ $keyId | quote }}
+      public_key: |
+AUTH_CONFIG
+sed 's/^/        /' /keys/public-key.pem >> /runtime/config.yaml
+printf '\n' >> /runtime/config.yaml
+{{- range $index, $key := (.Values.authentication).additionalPublicKeys }}
+cat >> /runtime/config.yaml <<'AUTH_CONFIG'
+    - kid: {{ $key.kid | quote }}
+      public_key: |
+AUTH_CONFIG
+sed 's/^/        /' {{ printf "/keys/public-key-%d.pem" $index }} >> /runtime/config.yaml
+printf '\n' >> /runtime/config.yaml
+{{- end }}
+cat >> /runtime/config.yaml <<'AUTH_CONFIG'
+  timeout_ms: {{ (.Values.authentication).timeout_ms | default 3000 }}
+{{- with (.Values.authentication).cache_ttl_secs }}
+  cache_ttl_secs: {{ . }}
+{{- end }}
+{{- with (.Values.authentication).cache_capacity }}
+  cache_capacity: {{ . }}
+{{- end }}
+  allow_anonymous: {{ (.Values.authentication).allow_anonymous | default false }}
+AUTH_CONFIG
+{{- end -}}

@@ -1,0 +1,15 @@
+polytope:
+  site: bol
+  env: tst
+
+nats:
+  enabled: false
+
+bobs:
+  enabled: false
+
+authentication:
+  additionalPublicKeys:
+    - kid: previous
+      secretName: auth-o-tron-jwt-previous
+      secretKey: ""

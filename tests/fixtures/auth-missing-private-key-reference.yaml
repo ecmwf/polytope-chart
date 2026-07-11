@@ -1,0 +1,14 @@
+polytope:
+  site: bol
+  env: tst
+
+nats:
+  enabled: false
+
+bobs:
+  enabled: false
+
+auth-o-tron:
+  jwt:
+    privateKeySecret:
+      name: ""
