@@ -116,19 +116,6 @@ data:
     admin_bypass_roles:
       {{- toYaml . | nindent 6 }}
     {{- end }}
-    {{- if or .Values.authentication (index .Values "auth-o-tron" "enabled") }}
-    authentication:
-      url: {{ (.Values.authentication).url | default (printf "http://%s-auth-o-tron:%v" .Release.Name ((index .Values "auth-o-tron" "service" "port") | default 8080)) | quote }}
-      {{- if not ((.Values.authentication).secretName) }}
-      secret: {{ ((.Values.authentication).secret) | default (index .Values "auth-o-tron" "config" "jwt" "secret") | quote }}
-      {{- end }}
-      {{- with ((.Values.authentication).timeout_ms) | default 3000 }}
-      timeout_ms: {{ . }}
-      {{- end }}
-      {{- with ((.Values.authentication).allow_anonymous) }}
-      allow_anonymous: {{ . }}
-      {{- end }}
-    {{- end }}
     {{- if .Values.telemetry.enabled }}
     metrics:
       enabled: true

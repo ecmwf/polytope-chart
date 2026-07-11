@@ -1,0 +1,22 @@
+polytope:
+  site: bol
+  env: tst
+
+nats:
+  enabled: false
+
+bobs:
+  enabled: false
+
+authentication:
+  additionalPublicKeys:
+    - kid: previous
+      secretName: auth-o-tron-jwt-previous
+      secretKey: public-key.pem
+
+auth-o-tron:
+  config:
+    jwt:
+      iss: authotron-test
+      aud: polytope-server
+      kid: next

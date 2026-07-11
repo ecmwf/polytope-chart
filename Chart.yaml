@@ -17,6 +17,9 @@ dependencies:
     version: 0.1.1
     repository: file://../bobs/chart
     condition: bobs.enabled
+  # Auth-o-tron 0.4.0 is the target RS256 dependency. Keep the reproducible
+  #  0.3.0 lock until eccr.ecmwf.int/auth-o-tron/auth-o-tron-chart:0.4.0 is
+  #  published, then update this version and regenerate Chart.lock together.
   - name: auth-o-tron-chart
     version: 0.3.0
     repository: oci://eccr.ecmwf.int/auth-o-tron

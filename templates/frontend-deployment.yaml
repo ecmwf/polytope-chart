@@ -1,3 +1,28 @@
+{{- $authotron := index .Values "auth-o-tron" -}}
+{{- $authEnabled := or ((.Values.authentication).enabled | default false) ($authotron.enabled | default false) -}}
+{{- $publicKeySecret := (.Values.authentication).publicKeySecret | default dict -}}
+{{- $jwt := ($authotron.config).jwt | default dict -}}
+{{- $issuer := (.Values.authentication).issuer | default $jwt.iss -}}
+{{- $audience := (.Values.authentication).audience | default $jwt.aud -}}
+{{- $keyId := (.Values.authentication).keyId | default $jwt.kid -}}
+{{- $podAnnotations := mergeOverwrite (deepCopy (.Values.podAnnotations | default dict)) (.Values.frontend.podAnnotations | default dict) -}}
+{{- if $authEnabled -}}
+{{- $issuer = required "authentication issuer is required (authentication.issuer or auth-o-tron.config.jwt.iss)" $issuer -}}
+{{- $audience = required "authentication audience is required (authentication.audience or auth-o-tron.config.jwt.aud)" $audience -}}
+{{- $keyId = required "authentication key id is required (authentication.keyId or auth-o-tron.config.jwt.kid)" $keyId -}}
+{{- $_ := required "authentication.publicKeySecret.name is required" $publicKeySecret.name -}}
+{{- $_ := required "authentication.publicKeySecret.key is required" $publicKeySecret.key -}}
+{{- include "polytope-server.validateAuthRs256" . -}}
+{{- $keyIds := dict -}}
+{{- $_ = set $keyIds $keyId true -}}
+{{- range $index, $key := (.Values.authentication).additionalPublicKeys -}}
+{{- $additionalKeyId := required (printf "authentication.additionalPublicKeys[%d].kid is required" $index) $key.kid -}}
+{{- if hasKey $keyIds $additionalKeyId -}}
+{{- fail (printf "authentication public key id %q is duplicated" $additionalKeyId) -}}
+{{- end -}}
+{{- $_ = set $keyIds $additionalKeyId true -}}
+{{- end -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,7 +38,6 @@ spec:
       app.kubernetes.io/component: frontend
   template:
     metadata:
-      {{- $podAnnotations := mergeOverwrite (deepCopy (.Values.podAnnotations | default dict)) (.Values.frontend.podAnnotations | default dict) }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- with $podAnnotations }}
@@ -25,7 +49,7 @@ spec:
         app: frontend
     spec:
       {{- include "polytope-server.imagePullSecrets" . | nindent 6 }}
-      {{- if or .Values.nats.enabled .Values.schedule }}
+      {{- if or .Values.nats.enabled .Values.schedule $authEnabled }}
       initContainers:
         {{- if .Values.nats.enabled }}
         # Block until NATS JetStream is actually serving (meta-group leader
@@ -48,6 +72,26 @@ spec:
                 echo "waiting for nats jetstream to report healthy..."
                 sleep 2
               done
+        {{- end }}
+        {{- if $authEnabled }}
+        # Build the runtime-only authentication block from Secret-backed public
+        # keys. The source ConfigMap never contains key material.
+        - name: build-auth-config
+          image: busybox:1.37
+          command:
+            - sh
+            - -c
+            - |
+              {{ include "polytope-server.authRuntimeConfigScript" . | nindent 14 }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: config-runtime
+              mountPath: /runtime
+            - name: auth-public-keys
+              mountPath: /keys
+              readOnly: true
         {{- end }}
         {{- if .Values.schedule }}
         - name: fetch-schedule
@@ -127,23 +171,20 @@ spec:
                   fieldPath: status.podIP
             - name: POLYTOPE_ENV
               value: {{ .Values.polytope.env | quote }}
-            {{- with .Values.authentication }}
-            {{- if .secretName }}
-            - name: AUTH_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .secretName }}
-                  key: {{ .secretKey | default "auth-secret" }}
-            {{- end }}
-            {{- end }}
           {{- with .Values.frontend.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
+            {{- if $authEnabled }}
+            - name: config-runtime
+              mountPath: /etc/polytope/config.yaml
+              subPath: config.yaml
+            {{- else }}
             - name: config
               mountPath: /etc/polytope/config.yaml
               subPath: config.yaml
+            {{- end }}
             {{- if .Values.schedule }}
             - name: schedule
               mountPath: /etc/polytope/schedule.xml
@@ -153,6 +194,27 @@ spec:
         - name: config
           configMap:
             name: {{ include "polytope-server.fullname" . }}-config
+        {{- if $authEnabled }}
+        - name: config-runtime
+          emptyDir: {}
+        {{- end }}
+        {{- if $authEnabled }}
+        - name: auth-public-keys
+          projected:
+            sources:
+              - secret:
+                  name: {{ $publicKeySecret.name }}
+                  items:
+                    - key: {{ $publicKeySecret.key }}
+                      path: public-key.pem
+              {{- range $index, $key := (.Values.authentication).additionalPublicKeys }}
+              - secret:
+                  name: {{ required (printf "authentication.additionalPublicKeys[%d].secretName is required" $index) $key.secretName }}
+                  items:
+                    - key: {{ required (printf "authentication.additionalPublicKeys[%d].secretKey is required" $index) $key.secretKey }}
+                      path: {{ printf "public-key-%d.pem" $index }}
+              {{- end }}
+        {{- end }}
         {{- if .Values.schedule }}
         - name: schedule
           emptyDir: {}
