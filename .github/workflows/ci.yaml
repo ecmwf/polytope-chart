@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           repository: ecmwf/bobs
-          ref: 03583b8e9b9a0eea81d25f39437870f2765e2a5d
+          ref: 466cc488f1445c964b1566c6349ba1a89ba1f018
           path: bobs
           persist-credentials: false
       - name: Install Helm
