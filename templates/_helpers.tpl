@@ -117,18 +117,26 @@ imagePullSecrets:
 {{- end }}
 
 {{/*
-Return the image reference for a component. Every rendered image must provide
-an explicit tag; Chart.AppVersion is informational only.
+Return the image reference for a component. A digest takes precedence over a
+tag so production can consume an immutable release while Chart.AppVersion remains
+informational only.
 */}}
 {{- define "polytope-server.image" -}}
 {{- $registryName := default .imageRoot.registry ((.global).imageRegistry) -}}
 {{- $repositoryName := required "image.repository is required" .imageRoot.repository -}}
-{{- $tag := required "image.tag is required; Chart.AppVersion is not an image tag fallback" .imageRoot.tag | toString -}}
-{{- if $registryName }}
-  {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
-{{- else }}
-  {{- printf "%s:%s" $repositoryName $tag -}}
-{{- end }}
+{{- $image := $repositoryName -}}
+{{- if $registryName -}}
+  {{- $image = printf "%s/%s" $registryName $repositoryName -}}
+{{- end -}}
+{{- $digest := .imageRoot.digest | default "" -}}
+{{- $tag := .imageRoot.tag | default "" | toString -}}
+{{- if $digest -}}
+  {{- printf "%s@%s" $image $digest -}}
+{{- else if $tag -}}
+  {{- printf "%s:%s" $image $tag -}}
+{{- else -}}
+  {{- fail "image.tag or image.digest is required; Chart.AppVersion is not an image fallback" -}}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -192,8 +200,8 @@ false
   {{- end -}}
 {{- else -}}
   {{- $image := get $pool "image" | default dict -}}
-  {{- if empty (get $image "tag") -}}
-    {{- fail (printf "workerPools.%s.image.tag is required for a rendered worker" $name) -}}
+  {{- if and (empty (get $image "tag")) (empty (get $image "digest")) -}}
+    {{- fail (printf "workerPools.%s.image.tag or image.digest is required for a rendered worker" $name) -}}
   {{- end -}}
 true
 {{- end -}}

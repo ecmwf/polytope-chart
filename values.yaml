@@ -182,6 +182,7 @@ bobs:
   image:
     repository: bobs
     tag: "0.1.0"
+    digest: ""
     pullPolicy: Always
   persistence:
     enabled: true

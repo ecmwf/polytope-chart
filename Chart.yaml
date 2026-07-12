@@ -14,7 +14,7 @@ dependencies:
     repository: https://nats-io.github.io/k8s/helm/charts/
     condition: nats.enabled
   - name: bobs
-    version: 0.1.1
+    version: 0.1.2
     repository: file://../bobs/chart
     condition: bobs.enabled
   - name: auth-o-tron-chart
