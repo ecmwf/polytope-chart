@@ -4,11 +4,12 @@ Deploys the Polytope frontend, worker pools, NATS, BOBS, and Auth-o-tron.
 
 ## Validate
 
-The BOBS chart is resolved from a sibling checkout. Build dependencies before
-validation when `charts/` is empty:
+Dependencies are committed under `charts/`, so validation does not need registry
+or cross-repository access:
 
 ```bash
-helm dependency update .
+sha256sum --check .bobs-chart-package.sha256
+helm dependency list .
 helm lint . --strict
 helm template polytope . \
   --set polytope.site=tst \
@@ -45,7 +46,12 @@ requires `schedule.repo`, `schedule.path`, and an SSH key secret named by
 
 ## BOBS dependency source
 
-`ecmwf/bobs` `chart/` is the sole source of truth. This chart consumes it through
-`file://../bobs/chart`; no second editable chart copy is maintained here.
-`.bobs-chart-revision` pins the release source used by CI and config render
-validation. Update the pin and BOBS dependency version together.
+`ecmwf/bobs` `chart/` is the sole editable source. `charts/bobs-*.tgz` is a
+generated Helm dependency, not a second source tree. The revision and package
+checksum are recorded for CI. Refresh all three together from sibling checkouts:
+
+```bash
+./scripts/update-bobs-dependency.sh ../bobs
+```
+
+Update `Chart.yaml` and `Chart.lock` when the BOBS chart version changes.
