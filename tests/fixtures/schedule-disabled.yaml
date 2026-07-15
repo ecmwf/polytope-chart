@@ -1,0 +1,3 @@
+schedule:
+  enabled: false
+  repo: git@github.com:example/ignored.git

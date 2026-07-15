@@ -117,22 +117,144 @@ imagePullSecrets:
 {{- end }}
 
 {{/*
-Return the image reference for a component.
-Usage:
-  {{ include "polytope-server.image" (dict "imageRoot" .Values.frontend.image "global" .Values.global "chart" .Chart) }}
+Return the image reference for a component. A digest takes precedence over a
+tag so production can consume an immutable release while Chart.AppVersion remains
+informational only.
 */}}
 {{- define "polytope-server.image" -}}
 {{- $registryName := default .imageRoot.registry ((.global).imageRegistry) -}}
-{{- $repositoryName := .imageRoot.repository -}}
-{{- $tag := .imageRoot.tag | toString -}}
-{{- if not .imageRoot.tag }}
-  {{- if .chart }}
-    {{- $tag = .chart.AppVersion | toString -}}
+{{- $repositoryName := required "image.repository is required" .imageRoot.repository -}}
+{{- $image := $repositoryName -}}
+{{- if $registryName -}}
+  {{- $image = printf "%s/%s" $registryName $repositoryName -}}
+{{- end -}}
+{{- $digest := .imageRoot.digest | default "" -}}
+{{- $tag := .imageRoot.tag | default "" | toString -}}
+{{- if $digest -}}
+  {{- printf "%s@%s" $image $digest -}}
+{{- else if $tag -}}
+  {{- printf "%s:%s" $image $tag -}}
+{{- else -}}
+  {{- fail "image.tag or image.digest is required; Chart.AppVersion is not an image fallback" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Resolve schedule.enabled. Explicit booleans are authoritative. An omitted or null
+value preserves the legacy behaviour in which a non-empty schedule map is enabled.
+Required source fields are checked only when the integration is enabled.
+*/}}
+{{- define "polytope-server.scheduleEnabled" -}}
+{{- $schedule := .Values.schedule -}}
+{{- if empty $schedule -}}
+false
+{{- else if not (kindIs "map" $schedule) -}}
+{{- fail "schedule must be a map or null" -}}
+{{- else -}}
+  {{- $enabled := true -}}
+  {{- if hasKey $schedule "enabled" -}}
+    {{- $configured := get $schedule "enabled" -}}
+    {{- if ne $configured nil -}}
+      {{- if not (kindIs "bool" $configured) -}}
+        {{- fail "schedule.enabled must be true, false, or null" -}}
+      {{- end -}}
+      {{- $enabled = $configured -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if $enabled -}}
+    {{- $_ := required "schedule.repo is required when schedule is enabled" (get $schedule "repo") -}}
+    {{- $_ := required "schedule.path is required when schedule is enabled" (get $schedule "path") -}}
+    {{- $_ := required "schedule.sshSecretName is required when schedule is enabled" (get $schedule "sshSecretName") -}}
+true
+  {{- else -}}
+false
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Validate one worker-pool entry and return true when it should render. A fragment
+without a pool is accepted only when explicitly marked overrideOnly: true.
+Image tags are mandatory for all rendered workers.
+*/}}
+{{- define "polytope-server.workerPoolEnabled" -}}
+{{- $name := .name -}}
+{{- $pool := .pool -}}
+{{- if not (kindIs "map" $pool) -}}
+  {{- fail (printf "workerPools.%s must be a map" $name) -}}
+{{- end -}}
+{{- $hasPool := and (hasKey $pool "pool") (not (empty (get $pool "pool"))) -}}
+{{- if not $hasPool -}}
+  {{- if hasKey $pool "overrideOnly" -}}
+    {{- $overrideOnly := get $pool "overrideOnly" -}}
+    {{- if not (kindIs "bool" $overrideOnly) -}}
+      {{- fail (printf "workerPools.%s.overrideOnly must be a boolean" $name) -}}
+    {{- end -}}
+    {{- if $overrideOnly -}}
+false
+    {{- else -}}
+      {{- fail (printf "workerPools.%s.pool is required unless overrideOnly is true" $name) -}}
+    {{- end -}}
+  {{- else -}}
+    {{- fail (printf "workerPools.%s.pool is required unless overrideOnly is true" $name) -}}
+  {{- end -}}
+{{- else -}}
+  {{- $image := get $pool "image" | default dict -}}
+  {{- if and (empty (get $image "tag")) (empty (get $image "digest")) -}}
+    {{- fail (printf "workerPools.%s.image.tag or image.digest is required for a rendered worker" $name) -}}
+  {{- end -}}
+true
+{{- end -}}
+{{- end -}}
+
+{{/*
+Resolve and validate a worker cache. `cache` defaults to a bounded 10Gi emptyDir;
+cache.hostPath and cache.emptyDir are mutually exclusive. Legacy cacheDir maps to
+a hostPath mounted at /tmp/cache for one release.
+*/}}
+{{- define "polytope-server.workerCache" -}}
+{{- $name := .name -}}
+{{- $pool := .pool -}}
+{{- $hasCache := hasKey $pool "cache" -}}
+{{- $hasLegacy := and (hasKey $pool "cacheDir") (not (empty (get $pool "cacheDir"))) -}}
+{{- if and $hasCache $hasLegacy -}}
+  {{- fail (printf "workerPools.%s.cache and deprecated cacheDir cannot both be set" $name) -}}
+{{- end -}}
+{{- if $hasLegacy -}}
+enabled: true
+mountPath: /tmp/cache
+backend: hostPath
+path: {{ get $pool "cacheDir" | quote }}
+type: DirectoryOrCreate
+{{- else if $hasCache -}}
+  {{- $cache := get $pool "cache" -}}
+  {{- if not (kindIs "map" $cache) -}}
+    {{- fail (printf "workerPools.%s.cache must be a map" $name) -}}
+  {{- end -}}
+  {{- $hasHostPath := hasKey $cache "hostPath" -}}
+  {{- $hasEmptyDir := hasKey $cache "emptyDir" -}}
+  {{- if and $hasHostPath $hasEmptyDir -}}
+    {{- fail (printf "workerPools.%s.cache must configure exactly one of hostPath or emptyDir" $name) -}}
+  {{- end -}}
+enabled: true
+mountPath: {{ get $cache "mountPath" | default "/tmp/cache" | quote }}
+{{ if $hasHostPath }}
+  {{- $hostPath := get $cache "hostPath" -}}
+  {{- if not (kindIs "map" $hostPath) -}}
+    {{- fail (printf "workerPools.%s.cache.hostPath must be a map" $name) -}}
   {{- end }}
-{{- end }}
-{{- if $registryName }}
-  {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
-{{- else }}
-  {{- printf "%s:%s" $repositoryName $tag -}}
-{{- end }}
+backend: hostPath
+path: {{ required (printf "workerPools.%s.cache.hostPath.path is required" $name) (get $hostPath "path") | quote }}
+type: {{ get $hostPath "type" | default "DirectoryOrCreate" }}
+{{ else }}
+  {{- $emptyDir := get $cache "emptyDir" | default dict -}}
+  {{- if not (kindIs "map" $emptyDir) -}}
+    {{- fail (printf "workerPools.%s.cache.emptyDir must be a map" $name) -}}
+  {{- end }}
+backend: emptyDir
+sizeLimit: {{ get $emptyDir "sizeLimit" | default "10Gi" | quote }}
+{{ end }}
+{{- else -}}
+enabled: false
+{{- end -}}
 {{- end -}}

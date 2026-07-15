@@ -1,0 +1,4 @@
+schedule:
+  enabled: true
+  path: schedule.xml
+  sshSecretName: schedule-test-key

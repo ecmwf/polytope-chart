@@ -1,0 +1,7 @@
+workerPools:
+  malformed:
+    image:
+      repository: example/worker
+      tag: "1.2.3"
+    config:
+      type: remote

@@ -1,3 +1,4 @@
+{{- $scheduleEnabled := eq (include "polytope-server.scheduleEnabled" .) "true" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,7 +26,7 @@ spec:
         app: frontend
     spec:
       {{- include "polytope-server.imagePullSecrets" . | nindent 6 }}
-      {{- if or .Values.nats.enabled .Values.schedule }}
+      {{- if or .Values.nats.enabled $scheduleEnabled }}
       initContainers:
         {{- if .Values.nats.enabled }}
         # Block until NATS JetStream is actually serving (meta-group leader
@@ -49,7 +50,7 @@ spec:
                 sleep 2
               done
         {{- end }}
-        {{- if .Values.schedule }}
+        {{- if $scheduleEnabled }}
         - name: fetch-schedule
           image: alpine/git:2.47.2
           command:
@@ -73,7 +74,7 @@ spec:
       {{- end }}
       containers:
         - name: polytope-server
-          image: {{ include "polytope-server.image" (dict "imageRoot" .Values.frontend.image "global" .Values.global "chart" .Chart) | quote }}
+          image: {{ include "polytope-server.image" (dict "imageRoot" .Values.frontend.image "global" .Values.global) | quote }}
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy | default "Always" }}
           args:
             - /etc/polytope/config.yaml
@@ -112,7 +113,7 @@ spec:
             failureThreshold: 5
           env:
             - name: RUST_LOG
-              value: info
+              value: {{ .Values.frontend.rustLog | default "info" | quote }}
             - name: K8S_NAMESPACE_NAME
               valueFrom:
                 fieldRef:
@@ -144,7 +145,7 @@ spec:
             - name: config
               mountPath: /etc/polytope/config.yaml
               subPath: config.yaml
-            {{- if .Values.schedule }}
+            {{- if $scheduleEnabled }}
             - name: schedule
               mountPath: /etc/polytope/schedule.xml
               subPath: schedule.xml
@@ -153,7 +154,7 @@ spec:
         - name: config
           configMap:
             name: {{ include "polytope-server.fullname" . }}-config
-        {{- if .Values.schedule }}
+        {{- if $scheduleEnabled }}
         - name: schedule
           emptyDir: {}
         - name: schedule-ssh
