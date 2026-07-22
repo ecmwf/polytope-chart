@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.1
+
+- Update the chart application version for the Polytope server 2.1.0 release.
+
 ## 2.1.0
 
 - Add explicit schedule enablement, validated worker-pool overrides, configurable Rust logging, and bounded or host-backed worker caches.
