@@ -64,6 +64,8 @@ frontend:
   replicas: 1
   rustLog: info
   persist_after_secs: 10
+  # Retain consumed v1 redirect metadata for repeat status polls.
+  completedRedirectTtlSecs: 600
   # max_jobs: 500000              # Broker-wide job limit (OOM protection, default 500000)
   # retry_after_secs: 5           # Retry-After header on 529 overload responses
   # nats_connect_timeout_secs: 10 # NATS persistence connection timeout per attempt

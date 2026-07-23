@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.4
+
+- Add a configurable completed-redirect cache TTL and update for Polytope server 2.1.3.
+
 ## 2.1.3
 
 - Update the chart application version for the Polytope server 2.1.2 patch release.

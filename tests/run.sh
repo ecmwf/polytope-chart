@@ -46,15 +46,16 @@ helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" >"$ru
 
 # Frontend default and configurable frontend/worker/pool Rust logging.
 assert_contains "$runtime" 'image: "polytope-server:2.0.0"'
+assert_contains "$runtime" 'completed_redirect_ttl_secs: 600'
 assert_contains "$runtime" 'value: "debug"'
 assert_contains "$runtime" 'value: "warn"'
 assert_contains "$runtime" 'value: "trace"'
 
 digest="$TMP_DIR/digest.yaml"
 helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
-  --set-string frontend.image.digest=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
-  --set-string workerPools.empty-cache.image.digest=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb \
-  >"$digest"
+	--set-string frontend.image.digest=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+	--set-string workerPools.empty-cache.image.digest=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb \
+	>"$digest"
 assert_contains "$digest" 'image: "polytope-server@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"'
 assert_contains "$digest" 'image: "example/worker@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"'
 
@@ -81,13 +82,13 @@ expect_failure 'workerPools.malformed.pool is required unless overrideOnly is tr
 expect_failure 'workerPools.malformed.pool is required unless overrideOnly is true' \
 	-f "$FIXTURES/missing-pool.yaml" --show-only templates/worker-configmaps.yaml
 expect_failure 'workerPools.untagged.image.tag or image.digest is required for a rendered worker' \
-  -f "$FIXTURES/missing-tag.yaml"
+	-f "$FIXTURES/missing-tag.yaml"
 expect_failure 'workerPools.conflict.cache must configure exactly one of hostPath or emptyDir' \
 	-f "$FIXTURES/cache-conflict.yaml"
 expect_failure 'workerPools.host-cache.cache and deprecated cacheDir cannot both be set' \
 	-f "$FIXTURES/runtime.yaml" --set-string workerPools.host-cache.cacheDir=/legacy
 expect_failure 'image.tag or image.digest is required; Chart.AppVersion is not an image fallback' \
-  -f "$FIXTURES/frontend-missing-tag.yaml"
+	-f "$FIXTURES/frontend-missing-tag.yaml"
 
 # Explicit schedule state is authoritative; null/omitted retains legacy truthy maps.
 schedule_enabled="$TMP_DIR/schedule-enabled.yaml"

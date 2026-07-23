@@ -22,6 +22,7 @@ data:
       host: {{ .Values.frontend.host | default "0.0.0.0" | quote }}
       port: {{ .Values.frontend.port | default 3000 }}
       internal_poll_port: {{ .Values.frontend.internalPollPort | default 9002 }}
+      completed_redirect_ttl_secs: {{ .Values.frontend.completedRedirectTtlSecs | default 600 }}
       {{- with .Values.frontend.retry_after_secs }}
       retry_after_secs: {{ . }}
       {{- end }}
