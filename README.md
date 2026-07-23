@@ -27,6 +27,14 @@ accept either `tag` or `digest`; `digest` takes precedence and should be used fo
 production releases. `Chart.appVersion` is informational and is never an image
 fallback.
 
+## Ingress affinity
+
+NGINX Inc uses `ingress.stickyHashBy`. Community ingress-nginx uses
+`ingress.communityStickyHashBy`, which defaults to `$polytope_frontend_hash_key`.
+Define that variable in the ingress controller's `http-snippet` with an NGINX
+`map` that selects User-Agent for EODAG and Authorization for other clients; see
+the documented example in `values.yaml`.
+
 ## Worker pools
 
 Every rendered `workerPools` entry needs a `pool` and a tagged or digest-pinned

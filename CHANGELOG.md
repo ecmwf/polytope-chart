@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.5
+
+- Route community-ingress EODAG requests by User-Agent and other clients by Authorization, using a controller-defined NGINX map variable.
+- Keep the Polytope server application version and image defaults unchanged.
+
 ## 2.1.4
 
 - Add a configurable completed-redirect cache TTL and update for Polytope server 2.1.3.

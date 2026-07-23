@@ -51,6 +51,21 @@ assert_contains "$runtime" 'value: "debug"'
 assert_contains "$runtime" 'value: "warn"'
 assert_contains "$runtime" 'value: "trace"'
 
+# Community ingress uses the controller-defined EODAG-aware map; NGINX Inc keeps
+# the portable Authorization/client-address hash key.
+community_ingress="$TMP_DIR/community-ingress.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" \
+  --set global.ingress.controller=nginx-community \
+  --set ingress.enabled=true --set ingress.domain=example.test >"$community_ingress"
+assert_contains "$community_ingress" 'nginx.ingress.kubernetes.io/upstream-hash-by: $polytope_frontend_hash_key'
+
+inc_ingress="$TMP_DIR/inc-ingress.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" \
+  --set global.ingress.controller=nginx-inc \
+  --set ingress.enabled=true --set ingress.domain=example.test >"$inc_ingress"
+assert_contains "$inc_ingress" 'nginx.org/lb-method: "hash $http_authorization$proxy_protocol_addr consistent"'
+assert_not_contains "$inc_ingress" '$polytope_frontend_hash_key'
+
 digest="$TMP_DIR/digest.yaml"
 helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
 	--set-string frontend.image.digest=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \

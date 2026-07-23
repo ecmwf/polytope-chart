@@ -6,6 +6,7 @@
 {{- $hasCertManager := or (hasKey $userAnnotations "cert-manager.io/cluster-issuer") (hasKey $userAnnotations "cert-manager.io/issuer") }}
 {{- $controller := include "polytope-server.ingressController" . }}
 {{- $stickyHashBy := .Values.ingress.stickyHashBy | default "" }}
+{{- $communityStickyHashBy := .Values.ingress.communityStickyHashBy | default $stickyHashBy }}
 {{- if eq $controller "nginx-inc" }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -89,8 +90,8 @@ misinterpreted.
        with ketama consistent hashing over pod endpoints, so it is resilient to
        broker autoscaling/restarts. Placed in defaults so an operator annotation
        can still override it. */}}
-{{- if $stickyHashBy }}
-{{-   $_ := set $secureDefaults "nginx.ingress.kubernetes.io/upstream-hash-by" $stickyHashBy }}
+{{- if $communityStickyHashBy }}
+{{-   $_ := set $secureDefaults "nginx.ingress.kubernetes.io/upstream-hash-by" $communityStickyHashBy }}
 {{- end }}
 {{- $annotations := mergeOverwrite (deepCopy $secureDefaults) $filtered }}
 apiVersion: networking.k8s.io/v1
