@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.3
+
+- Update the chart application version for the Polytope server 2.1.2 patch release.
+
 ## 2.1.2
 
 - Update the chart application version for the Polytope server 2.1.1 patch release.
