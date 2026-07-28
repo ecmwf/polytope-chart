@@ -13,12 +13,13 @@ dependencies:
     version: 2.12.4
     repository: https://nats-io.github.io/k8s/helm/charts/
     condition: nats.enabled
-  - name: bobs
-    version: 0.1.2
-    repository: file://../bobs/chart
+  - name: bobs-chart
+    version: 0.1.3
+    repository: oci://eccr.ecmwf.int/polytope
     condition: bobs.enabled
+    alias: bobs
   - name: auth-o-tron-chart
-    version: 0.3.0
+    version: 0.3.4
     repository: oci://eccr.ecmwf.int/auth-o-tron
     condition: auth-o-tron.enabled
     alias: auth-o-tron
