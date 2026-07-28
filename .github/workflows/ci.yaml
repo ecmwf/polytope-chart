@@ -8,21 +8,114 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  # ── Lint & test ───────────────────────────────────────────────────────────
   lint-template:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out polytope-chart
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
       - name: Install Helm
-        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
         with:
           version: v3.20.1
-      - name: Verify dependencies, lint, and render
+
+      - name: Fetch dependencies
+        run: helm dependency update .
+
+      - name: Lint and render
         run: |
-          sha256sum --check .bobs-chart-package.sha256
-          helm dependency list .
           helm lint . --strict
           ./tests/run.sh
+
+  # ── Publish gate ──────────────────────────────────────────────────────────
+  # On push to main, check whether the Chart.yaml version has already been
+  # released (marked by a {version}.dev0 git tag).  If not, publish.
+  gate:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.gate.outputs.publish }}
+      version: ${{ steps.gate.outputs.version }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Decide whether to publish
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(awk '/^version:/{print $2; exit}' Chart.yaml | tr -d "'\"")
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+
+          already_released=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/${VERSION}.dev0" \
+            --jq 'length')
+
+          if [ "${already_released}" -gt 0 ]; then
+            echo "Version ${VERSION} already released — skipping."
+            echo "publish=false" >> "${GITHUB_OUTPUT}"
+          else
+            echo "New version ${VERSION} — will publish."
+            echo "publish=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+  # ── Publish chart ─────────────────────────────────────────────────────────
+  publish-chart:
+    needs: [lint-template, gate]
+    if: needs.gate.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v3.20.1
+
+      - name: Fetch dependencies
+        run: helm dependency update .
+
+      - name: Package chart
+        env:
+          VERSION: ${{ needs.gate.outputs.version }}
+        run: helm package . --version "${VERSION}"
+
+      - name: Login to registry
+        env:
+          HELM_REGISTRY_USERNAME: ${{ secrets.ECMWF_DOCKER_REGISTRY_USERNAME }}
+          HELM_REGISTRY_PASSWORD: ${{ secrets.ECMWF_DOCKER_REGISTRY_ACCESS_TOKEN }}
+        run: |
+          printf '%s' "${HELM_REGISTRY_PASSWORD}" | \
+          helm registry login eccr.ecmwf.int \
+            --username "${HELM_REGISTRY_USERNAME}" \
+            --password-stdin
+
+      - name: Push chart
+        env:
+          VERSION: ${{ needs.gate.outputs.version }}
+        run: helm push "polytope-server-${VERSION}.tgz" oci://eccr.ecmwf.int/polytope
+
+      - name: Create release tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.gate.outputs.version }}
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
+            -f ref="refs/tags/${VERSION}.dev0" \
+            -f sha="${GITHUB_SHA}"
