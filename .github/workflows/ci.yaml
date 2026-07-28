@@ -32,7 +32,9 @@ jobs:
 
       - name: Lint and render
         run: |
-          helm lint . --strict
+          helm lint . --strict \
+            --set bobs.config.host_prefix=lint \
+            --set bobs.config.domain=lint.example.com
           ./tests/run.sh
 
   # ── Publish gate ──────────────────────────────────────────────────────────
