@@ -182,8 +182,8 @@ bobs:
     deploymentEnvConfigMapName: "" # name of the ConfigMap carrying BOBS_DEPLOYMENT_ENV
     deploymentEnvConfigMapKey: BOBS_DEPLOYMENT_ENV
   image:
-    repository: bobs
-    tag: "0.1.0"
+    repository: eccr.ecmwf.int/bobs/bobs
+    tag: "0.1.3"
     digest: ""
     pullPolicy: Always
   persistence:
