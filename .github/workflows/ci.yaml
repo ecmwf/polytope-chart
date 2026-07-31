@@ -27,6 +27,16 @@ jobs:
         with:
           version: v3.20.1
 
+      - name: Login to registry
+        env:
+          HELM_REGISTRY_USERNAME: ${{ secrets.ECMWF_DOCKER_REGISTRY_USERNAME }}
+          HELM_REGISTRY_PASSWORD: ${{ secrets.ECMWF_DOCKER_REGISTRY_ACCESS_TOKEN }}
+        run: |
+          printf '%s' "${HELM_REGISTRY_PASSWORD}" | \
+          helm registry login eccr.ecmwf.int \
+            --username "${HELM_REGISTRY_USERNAME}" \
+            --password-stdin
+
       - name: Fetch dependencies
         run: helm dependency update .
 
@@ -90,14 +100,6 @@ jobs:
         with:
           version: v3.20.1
 
-      - name: Fetch dependencies
-        run: helm dependency update .
-
-      - name: Package chart
-        env:
-          VERSION: ${{ needs.gate.outputs.version }}
-        run: helm package . --version "${VERSION}"
-
       - name: Login to registry
         env:
           HELM_REGISTRY_USERNAME: ${{ secrets.ECMWF_DOCKER_REGISTRY_USERNAME }}
@@ -107,6 +109,14 @@ jobs:
           helm registry login eccr.ecmwf.int \
             --username "${HELM_REGISTRY_USERNAME}" \
             --password-stdin
+
+      - name: Fetch dependencies
+        run: helm dependency update .
+
+      - name: Package chart
+        env:
+          VERSION: ${{ needs.gate.outputs.version }}
+        run: helm package . --version "${VERSION}"
 
       - name: Push chart
         env:
