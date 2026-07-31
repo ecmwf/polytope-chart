@@ -181,11 +181,11 @@ bobs:
     deploymentEnv: "" # standalone override; if empty, inherits from parent
     deploymentEnvConfigMapName: "" # name of the ConfigMap carrying BOBS_DEPLOYMENT_ENV
     deploymentEnvConfigMapKey: BOBS_DEPLOYMENT_ENV
-  image:
-    repository: eccr.ecmwf.int/bobs/bobs
-    tag: "0.1.3"
-    digest: ""
-    pullPolicy: Always
+  # image: # Bobs chart comes with a default image
+  #   repository: eccr.ecmwf.int/bobs/bobs
+  #   tag: "0.1.3"
+  #   digest: ""
+  #   pullPolicy: Always
   persistence:
     enabled: true
     size: 10Gi
