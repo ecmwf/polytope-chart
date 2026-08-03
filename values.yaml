@@ -54,7 +54,7 @@ podAnnotations:
 # ── Frontend (broker) ─────────────────────────────────────────────────────────
 frontend:
   image:
-    repository: polytope-server
+    repository: frontend
     tag: "2.0.0"
     pullPolicy: Always
   host: "0.0.0.0"
