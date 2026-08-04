@@ -190,6 +190,13 @@ bobs:
     enabled: true
     size: 10Gi
   config:
+    # Required: set per deployment to the bobs ingress host components so that
+    # redirect URLs are routable. Override in your values file:
+    #   bobs.config.host_prefix: bobs
+    #   bobs.config.domain: example.com
+    # The redirect URL becomes https://{host_prefix}.{domain}/{route_name}-{N}/...
+    host_prefix: bobs
+    domain: chart.example.local
     page_size: 16777216
     max_cache_bytes: 268435456
     metrics:
