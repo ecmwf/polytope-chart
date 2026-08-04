@@ -1,5 +1,5 @@
 {{- range $name, $pool := .Values.workerPools }}
-{{- $poolEnabled := eq (include "polytope-server.workerPoolEnabled" (dict "name" $name "pool" $pool)) "true" }}
+{{- $poolEnabled := eq (include "polytope-server.workerPoolEnabled" (dict "name" $name "pool" $pool "root" $)) "true" }}
 {{- if $poolEnabled }}
 {{- $cache := include "polytope-server.workerCache" (dict "name" $name "pool" $pool) | fromYaml }}
 ---
@@ -37,7 +37,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ $name }}
-          image: {{ include "polytope-server.image" (dict "imageRoot" $pool.image "global" $.Values.global) | quote }}
+          image: {{ include "polytope-server.image" (dict "imageRoot" $pool.image "root" $) | quote }}
           imagePullPolicy: {{ $pool.image.pullPolicy | default "Always" }}
           {{- if $.Values.telemetry.workers.enabled }}
           ports:

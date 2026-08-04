@@ -1,3 +1,6 @@
+releaseBundle:
+  enabled: false
+
 workerPools:
   conflict:
     image:

@@ -45,7 +45,7 @@ runtime="$TMP_DIR/runtime.yaml"
 helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" >"$runtime"
 
 # Frontend default and configurable frontend/worker/pool Rust logging.
-assert_contains "$runtime" 'image: "polytope-server:2.0.0"'
+assert_contains "$runtime" 'image: "example/frontend:2.0.0"'
 assert_contains "$runtime" 'completed_redirect_ttl_secs: 600'
 assert_contains "$runtime" 'value: "debug"'
 assert_contains "$runtime" 'value: "warn"'
@@ -71,8 +71,33 @@ helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
 	--set-string frontend.image.digest=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
 	--set-string workerPools.empty-cache.image.digest=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb \
 	>"$digest"
-assert_contains "$digest" 'image: "polytope-server@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"'
+assert_contains "$digest" 'image: "example/frontend@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"'
 assert_contains "$digest" 'image: "example/worker@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"'
+
+# A release bundle resolves default application images by digest and must have
+# the same product version as Chart.AppVersion. An explicit dev tag overrides
+# the matching bundle entry for a single image.
+bundle="$TMP_DIR/release-bundle.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/release-bundle.yaml" >"$bundle"
+assert_contains "$bundle" 'image: "registry.example/polytope/frontend@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"'
+assert_contains "$bundle" 'image: "registry.example/polytope/mars-worker@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"'
+
+bundle_mirror="$TMP_DIR/release-bundle-mirror.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/release-bundle.yaml" \
+	--set-string global.imageRegistry=mirror.example/polytope >"$bundle_mirror"
+assert_contains "$bundle_mirror" 'image: "mirror.example/polytope/frontend@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"'
+
+bundle_override="$TMP_DIR/release-bundle-override.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/release-bundle-override.yaml" >"$bundle_override"
+assert_contains "$bundle_override" 'image: "frontend:git-47c44cfd66119ace6b8d55fc85cf7c497638f283"'
+assert_not_contains "$bundle_override" 'registry.example/polytope/frontend@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
+expect_failure 'releaseBundle.version "2.1.9" must match Chart.AppVersion "2.2.0"' \
+	-f "$FIXTURES/release-bundle-override.yaml" --set-string releaseBundle.version=2.1.9
+expect_failure 'releaseBundle.enabled must be a boolean' \
+	-f "$FIXTURES/runtime.yaml" --set-string releaseBundle.enabled=not-a-boolean
+expect_failure 'releaseBundle.images.mars-worker.digest is required' \
+	-f "$FIXTURES/release-bundle.yaml" --set-string workerPools.mars.image.component=mars-worker --set-string releaseBundle.images.mars-worker.digest=
 
 # Bounded emptyDir, explicit hostPath, and the one-release cacheDir bridge.
 assert_contains "$runtime" 'mountPath: "/cache/empty"'
@@ -96,13 +121,13 @@ expect_failure 'workerPools.malformed.pool is required unless overrideOnly is tr
 	-f "$FIXTURES/missing-pool.yaml" --show-only templates/worker-pool.yaml
 expect_failure 'workerPools.malformed.pool is required unless overrideOnly is true' \
 	-f "$FIXTURES/missing-pool.yaml" --show-only templates/worker-configmaps.yaml
-expect_failure 'workerPools.untagged.image.tag or image.digest is required for a rendered worker' \
+expect_failure 'image.tag or image.digest is required when releaseBundle is disabled' \
 	-f "$FIXTURES/missing-tag.yaml"
 expect_failure 'workerPools.conflict.cache must configure exactly one of hostPath or emptyDir' \
 	-f "$FIXTURES/cache-conflict.yaml"
 expect_failure 'workerPools.host-cache.cache and deprecated cacheDir cannot both be set' \
 	-f "$FIXTURES/runtime.yaml" --set-string workerPools.host-cache.cacheDir=/legacy
-expect_failure 'image.tag or image.digest is required; Chart.AppVersion is not an image fallback' \
+expect_failure 'image.tag or image.digest is required when releaseBundle is disabled' \
 	-f "$FIXTURES/frontend-missing-tag.yaml"
 
 # Explicit schedule state is authoritative; null/omitted retains legacy truthy maps.

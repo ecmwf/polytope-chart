@@ -9,7 +9,15 @@ bobs:
 auth-o-tron:
   enabled: false
 
+# This fixture exercises direct image settings, independent of the chart's
+# released default bundle.
+releaseBundle:
+  enabled: false
+
 frontend:
+  image:
+    repository: example/frontend
+    tag: "2.0.0"
   rustLog: debug
 worker:
   rustLog: warn

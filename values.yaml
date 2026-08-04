@@ -51,11 +51,38 @@ podAnnotations:
   opensearch.org/include: "true"
   opensearch.org/service.name: polytope
 
+# ── Product release bundle ────────────────────────────────────────────────────
+# The selected product bundle is the default identity for all Polytope
+# application images. Its version must match Chart.yaml appVersion. An explicit
+# image tag or digest overrides the bundle, which is useful for a developer
+# overlay that supplies a git-<sha> tag.
+releaseBundle:
+  enabled: true
+  version: "2.2.0"
+  images:
+    frontend:
+      repository: eccr.ecmwf.int/polytope/frontend
+      digest: sha256:a401fc1b54191e8ad9bbceb89aa3331421d712ced7b1f590c747715e6c24926c
+    polytope-fe-worker:
+      repository: eccr.ecmwf.int/polytope/polytope-fe-worker
+      digest: sha256:4f6b401674d0f324c4b44802cdc2efbad123ebfbd36433b2d063e4a2bd7936d2
+    fdb-worker:
+      repository: eccr.ecmwf.int/polytope/fdb-worker
+      digest: sha256:86f27352a92ae76f082c59a0c4b6df6a1f33b2286f95cc44108a9099c2d084fd
+    mars-worker:
+      repository: eccr.ecmwf.int/polytope/mars-worker
+      digest: sha256:9d913f68407583e3b8730b2bd3dc62dd1ad834d869c679de1f381203b8385046
+    test-worker:
+      repository: eccr.ecmwf.int/polytope/test-worker
+      digest: sha256:deca5f8aa36214cf4572db020b5fa7401c99410317880223de63180279c96f19
+    polytope-loadgen:
+      repository: eccr.ecmwf.int/polytope/polytope-loadgen
+      digest: sha256:0a6828feef808a68b3070674c874a40abdd8ddd4d171ae3d9fccd8f63997f6aa
+
 # ── Frontend (broker) ─────────────────────────────────────────────────────────
 frontend:
   image:
     repository: frontend
-    tag: "2.0.0"
     pullPolicy: Always
   host: "0.0.0.0"
   port: 3000
@@ -132,8 +159,8 @@ worker:
 # workerPools:
 #   fdb-alps:
 #     image:
-#       repository: fdb-worker
-#       tag: "2.0.0"
+#       repository: fdb-worker # resolves from releaseBundle by default
+#       # tag: "git-<full-sha>" # optional explicit developer override
 #     pool: worker_pool
 #     replicas: 5
 #     rustLog: debug             # optional; overrides worker.rustLog

@@ -117,25 +117,63 @@ imagePullSecrets:
 {{- end }}
 
 {{/*
-Return the image reference for a component. A digest takes precedence over a
-tag so production can consume an immutable release while Chart.AppVersion remains
-informational only.
+Validate the chart-level release bundle independently of any individual image
+override. A development override must never hide a product-version mismatch.
+*/}}
+{{- define "polytope-server.validateReleaseBundle" -}}
+{{- $bundle := .Values.releaseBundle | default dict -}}
+{{- if hasKey $bundle "enabled" -}}
+  {{- if not (kindIs "bool" (get $bundle "enabled")) -}}
+    {{- fail "releaseBundle.enabled must be a boolean" -}}
+  {{- end -}}
+  {{- if get $bundle "enabled" -}}
+    {{- $bundleVersion := required "releaseBundle.version is required when releaseBundle is enabled" (get $bundle "version") | toString -}}
+    {{- if ne $bundleVersion (.Chart.AppVersion | toString) -}}
+      {{- fail (printf "releaseBundle.version %q must match Chart.AppVersion %q" $bundleVersion .Chart.AppVersion) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the image reference for a Polytope Server component. An explicit image
+digest or tag remains an override; otherwise the selected product bundle
+supplies the deployment digest.
 */}}
 {{- define "polytope-server.image" -}}
-{{- $registryName := default .imageRoot.registry ((.global).imageRegistry) -}}
-{{- $repositoryName := required "image.repository is required" .imageRoot.repository -}}
+{{- $root := .root -}}
+{{- $_ := include "polytope-server.validateReleaseBundle" $root -}}
+{{- $imageRoot := .imageRoot | default dict -}}
+{{- $global := $root.Values.global | default dict -}}
+{{- $repositoryName := required "image.repository is required" $imageRoot.repository -}}
+{{- $registryName := default $imageRoot.registry $global.imageRegistry -}}
 {{- $image := $repositoryName -}}
 {{- if $registryName -}}
   {{- $image = printf "%s/%s" $registryName $repositoryName -}}
 {{- end -}}
-{{- $digest := .imageRoot.digest | default "" -}}
-{{- $tag := .imageRoot.tag | default "" | toString -}}
+{{- $digest := $imageRoot.digest | default "" -}}
+{{- $tag := $imageRoot.tag | default "" | toString -}}
 {{- if $digest -}}
   {{- printf "%s@%s" $image $digest -}}
 {{- else if $tag -}}
   {{- printf "%s:%s" $image $tag -}}
 {{- else -}}
-  {{- fail "image.tag or image.digest is required; Chart.AppVersion is not an image fallback" -}}
+  {{- $bundle := $root.Values.releaseBundle | default dict -}}
+  {{- if not (get $bundle "enabled" | default false) -}}
+    {{- fail "image.tag or image.digest is required when releaseBundle is disabled" -}}
+  {{- end -}}
+  {{- $component := $repositoryName -}}
+  {{- if hasKey $imageRoot "component" -}}
+    {{- $component = get $imageRoot "component" | toString -}}
+  {{- end -}}
+  {{- $images := get $bundle "images" | default dict -}}
+  {{- $bundleImage := get $images $component | default dict -}}
+  {{- $bundleRepository := required (printf "releaseBundle.images.%s.repository is required" $component) (get $bundleImage "repository") -}}
+  {{- $bundleDigest := required (printf "releaseBundle.images.%s.digest is required" $component) (get $bundleImage "digest") -}}
+  {{- if $global.imageRegistry -}}
+    {{- $bundleRepository = printf "%s/%s" $global.imageRegistry (base $bundleRepository) -}}
+  {{- end -}}
+  {{- printf "%s@%s" $bundleRepository $bundleDigest -}}
 {{- end -}}
 {{- end -}}
 
@@ -180,6 +218,7 @@ Image tags are mandatory for all rendered workers.
 {{- define "polytope-server.workerPoolEnabled" -}}
 {{- $name := .name -}}
 {{- $pool := .pool -}}
+{{- $root := .root -}}
 {{- if not (kindIs "map" $pool) -}}
   {{- fail (printf "workerPools.%s must be a map" $name) -}}
 {{- end -}}
@@ -200,9 +239,7 @@ false
   {{- end -}}
 {{- else -}}
   {{- $image := get $pool "image" | default dict -}}
-  {{- if and (empty (get $image "tag")) (empty (get $image "digest")) -}}
-    {{- fail (printf "workerPools.%s.image.tag or image.digest is required for a rendered worker" $name) -}}
-  {{- end -}}
+  {{- $_ := include "polytope-server.image" (dict "imageRoot" $image "root" $root) -}}
 true
 {{- end -}}
 {{- end -}}

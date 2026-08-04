@@ -1,0 +1,12 @@
+releaseBundle:
+  enabled: true
+  version: "2.2.0"
+  images:
+    frontend:
+      repository: registry.example/polytope/frontend
+      digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+frontend:
+  image:
+    repository: frontend
+    tag: "git-47c44cfd66119ace6b8d55fc85cf7c497638f283"

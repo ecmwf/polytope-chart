@@ -22,10 +22,17 @@ helm template polytope . \
 
 ## Images
 
-Set `global.imageRegistry` once and use unqualified component repositories. Images
-accept either `tag` or `digest`; `digest` takes precedence and should be used for
-production releases. `Chart.appVersion` is informational and is never an image
-fallback.
+The chart's `releaseBundle` is the normal application-image identity. It maps
+`Chart.appVersion` to repository/digest pairs from the Polytope release manifest;
+rendering fails if the bundle version differs from `Chart.appVersion`. The
+release bundle is therefore digest-pinned by default.
+
+Set `global.imageRegistry` once to mirror all bundle images to another registry.
+An explicit component `image.tag` or `image.digest` overrides the bundle;
+`digest` takes precedence. This preserves the existing developer one-image
+`git-<sha>` loop and supports explicit mixed-component deployments. The
+workspace-level `POLYTOPE_RELEASE_BUNDLE_PLAN.md` records the coordinated
+server/chart/config release process.
 
 ## Ingress affinity
 
@@ -37,8 +44,9 @@ the documented example in `values.yaml`.
 
 ## Worker pools
 
-Every rendered `workerPools` entry needs a `pool` and a tagged or digest-pinned
-image. A location-specific overlay may deliberately target a pool absent from
+Every rendered `workerPools` entry needs a `pool` and resolves from the release
+bundle when it has no explicit tag or digest. A location-specific overlay may
+deliberately target a pool absent from
 another location by setting `overrideOnly: true`; missing pools without that
 explicit marker fail rendering.
 

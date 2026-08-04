@@ -5,8 +5,8 @@ description: >
   Deploys the polytope-server frontend (broker), dynamic worker pools,
   and NATS JetStream persistence.
 type: application
-version: 2.1.6
-appVersion: "2.1.3"
+version: 2.1.7
+appVersion: "2.2.0"
 
 dependencies:
   - name: nats

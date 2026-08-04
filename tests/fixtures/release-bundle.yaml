@@ -1,0 +1,31 @@
+polytope:
+  site: tst
+  env: dev
+
+nats:
+  enabled: false
+bobs:
+  enabled: false
+auth-o-tron:
+  enabled: false
+
+releaseBundle:
+  enabled: true
+  version: "2.2.0"
+  images:
+    frontend:
+      repository: registry.example/polytope/frontend
+      digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    mars-worker:
+      repository: registry.example/polytope/mars-worker
+      digest: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+
+frontend:
+  image:
+    repository: frontend
+
+workerPools:
+  mars:
+    image:
+      repository: mars-worker
+    pool: mars_pool

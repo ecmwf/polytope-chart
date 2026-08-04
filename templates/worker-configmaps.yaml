@@ -1,5 +1,5 @@
 {{- range $name, $pool := .Values.workerPools }}
-{{- $poolEnabled := eq (include "polytope-server.workerPoolEnabled" (dict "name" $name "pool" $pool)) "true" }}
+{{- $poolEnabled := eq (include "polytope-server.workerPoolEnabled" (dict "name" $name "pool" $pool "root" $)) "true" }}
 {{- if $poolEnabled }}
 {{- if $pool.config }}
 ---
