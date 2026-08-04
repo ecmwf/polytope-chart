@@ -45,7 +45,7 @@ runtime="$TMP_DIR/runtime.yaml"
 helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" >"$runtime"
 
 # Frontend default and configurable frontend/worker/pool Rust logging.
-assert_contains "$runtime" 'image: "polytope-server:2.0.0"'
+assert_contains "$runtime" 'image: "frontend:2.0.0"'
 assert_contains "$runtime" 'completed_redirect_ttl_secs: 600'
 assert_contains "$runtime" 'value: "debug"'
 assert_contains "$runtime" 'value: "warn"'
@@ -71,7 +71,7 @@ helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
 	--set-string frontend.image.digest=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
 	--set-string workerPools.empty-cache.image.digest=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb \
 	>"$digest"
-assert_contains "$digest" 'image: "polytope-server@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"'
+assert_contains "$digest" 'image: "frontend@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"'
 assert_contains "$digest" 'image: "example/worker@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"'
 
 # Bounded emptyDir, explicit hostPath, and the one-release cacheDir bridge.
