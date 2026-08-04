@@ -51,6 +51,15 @@ data:
         {{- end }}
         internal_poll_endpoint: {{ include "polytope-server.pollBaseUrl" . | quote }}
         persist_after_secs: {{ .Values.frontend.persist_after_secs | default 10 }}
+        {{- with .Values.frontend.v1_poll_timeout_ms }}
+        # How long the v1 submit/poll handlers hold the connection before
+        # returning 202. Must stay below the ingress proxy read timeout, or the
+        # connection is cut and the client loses the id of a running job.
+        v1_poll_timeout_ms: {{ . }}
+        {{- end }}
+        {{- with .Values.frontend.v2_poll_timeout_ms }}
+        v2_poll_timeout_ms: {{ . }}
+        {{- end }}
         worker_server:
           host: "0.0.0.0"
           port: {{ .Values.frontend.brokerPort | default 9001 }}
