@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.11
+
+- Allow MARS workers to reconcile existing per-Pod callback Services.
+
 ## 2.1.5
 
 - Route community-ingress EODAG requests by User-Agent and other clients by Authorization, using a controller-defined NGINX map variable.

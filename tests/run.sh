@@ -90,6 +90,7 @@ helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
 	--set-string 'workerPools.empty-cache.marsConfig.databases[0].name=second' >"$changed"
 checksum_after=$(grep -F 'checksum/worker-config:' "$changed")
 [[ "$checksum_before" != "$checksum_after" ]] || fail 'marsConfig did not change the worker checksum'
+assert_contains "$runtime" 'verbs: ["create", "get", "delete", "patch"]'
 
 # Missing pools fail consistently in both worker resource templates; override-only skips.
 expect_failure 'workerPools.malformed.pool is required unless overrideOnly is true' \
