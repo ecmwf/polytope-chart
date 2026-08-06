@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.12
+
+- Use the Authorization header plus proxy-protocol client address as the consistent-hash key for both supported NGINX ingress controllers.
+
 ## 2.1.11
 
 - Allow MARS workers to reconcile existing per-Pod callback Services.

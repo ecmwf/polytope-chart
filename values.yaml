@@ -237,21 +237,13 @@ ingress:
   hostPrefix: polytope
   domain: ""
   annotations: {}
-  # Broker stickiness. `stickyHashBy` is the portable Authorization-based key
-  # used by NGINX Inc and as the community-controller fallback/override.
-  # Consistent (ketama) hashing keeps routing stable across broker scaling.
+  # Broker stickiness. Both supported NGINX controllers consistently hash the
+  # Authorization header plus the proxy-protocol client address. Keeping the
+  # same key on both controllers avoids controller-specific routing behaviour.
   stickyHashBy: "$http_authorization$proxy_protocol_addr"
-  # Community ingress-nginx uses this key by default. Its controller ConfigMap
-  # must define `$polytope_frontend_hash_key`, normally with:
-  #
-  #   map $http_user_agent $polytope_frontend_hash_key {
-  #       ~*^eodag  $http_user_agent;
-  #       default   $http_authorization;
-  #   }
-  #
-  # Set this to another NGINX complex value, or to "" to fall back to
-  # `stickyHashBy`. This setting does not affect NGINX Inc controllers.
-  communityStickyHashBy: "$polytope_frontend_hash_key"
+  # Community ingress-nginx annotation value. Override only when a deployment
+  # deliberately needs a different key; this does not affect NGINX Inc.
+  communityStickyHashBy: "$http_authorization$proxy_protocol_addr"
   # Set both hash values to "" to disable stickiness (round-robin).
   tls: []
 
