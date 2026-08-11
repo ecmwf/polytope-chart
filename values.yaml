@@ -246,6 +246,17 @@ ingress:
   communityStickyHashBy: "$http_authorization$proxy_protocol_addr"
   # Set both hash values to "" to disable stickiness (round-robin).
   tls: []
+  # NGINX Inc VirtualServer mode replaces mergeable master/minion Ingresses.
+  # A non-routing Ingress retains the existing DNS and cert-manager ownership.
+  virtualServer:
+    enabled: false
+    annotations: {}
+    buffering: false
+    redirect:
+      enable: true
+    dnsIngress:
+      # This class must not be watched by the NGINX routing controller.
+      className: dns-only
 
 # ── Telemetry (Prometheus metrics scrape) ─────────────────────────────────────
 # When enabled, the frontend exposes a /metrics endpoint for Prometheus.

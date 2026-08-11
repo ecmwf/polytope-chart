@@ -27,7 +27,13 @@ accept either `tag` or `digest`; `digest` takes precedence and should be used fo
 production releases. `Chart.appVersion` is informational and is never an image
 fallback.
 
-## Ingress affinity
+## Ingress routing
+
+NGINX Inc deployments can opt into `ingress.virtualServer.enabled`. One
+`VirtualServer` then owns the frontend and all per-pod BOBS routes; set
+`bobs.ingress.enabled: false` so the subchart does not render mergeable minions.
+The existing `{release}-ingress` becomes a `dns-only` shim that retains ECMWF DNS
+and cert-manager ownership without competing for NGINX host configuration.
 
 NGINX Inc uses `ingress.stickyHashBy`; community ingress-nginx uses
 `ingress.communityStickyHashBy`. Both default to consistent hashing over the

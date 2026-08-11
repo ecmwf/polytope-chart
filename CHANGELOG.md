@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.13
+
+- Add an opt-in NGINX Inc `VirtualServer` that owns frontend and per-pod BOBS
+  routing without mergeable Ingress registration races.
+- Retain the existing Ingress name as a non-routing DNS and cert-manager
+  ownership shim during the Bologna migration.
+
 ## 2.1.12
 
 - Use the Authorization header plus proxy-protocol client address as the consistent-hash key for both supported NGINX ingress controllers.

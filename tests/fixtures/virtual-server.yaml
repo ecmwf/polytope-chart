@@ -1,0 +1,27 @@
+global:
+  ingress:
+    controller: nginx-inc
+
+ingress:
+  enabled: true
+  className: nginx
+  hostPrefix: polytope-test
+  domain: example.test
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    nginx.org/proxy-buffering: "False"
+    nginx.org/redirect-to-https: "True"
+  virtualServer:
+    enabled: true
+
+bobs:
+  enabled: true
+  replicaCount: 2
+  config:
+    host_prefix: polytope-test
+    domain: example.test
+    route_name: download
+  ingress:
+    enabled: false
+    forwardedPrefix:
+      enabled: true

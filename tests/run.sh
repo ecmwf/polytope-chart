@@ -66,6 +66,27 @@ helm template test "$CHART_DIR" "${COMMON[@]}" \
 assert_contains "$inc_ingress" 'nginx.org/lb-method: "hash $http_authorization$proxy_protocol_addr consistent"'
 assert_not_contains "$inc_ingress" '$polytope_frontend_hash_key'
 
+virtual_server="$TMP_DIR/virtual-server.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" \
+  -f "$FIXTURES/virtual-server.yaml" --set bobs.enabled=true >"$virtual_server"
+assert_contains "$virtual_server" 'kind: VirtualServer'
+assert_contains "$virtual_server" 'ingressClassName: "dns-only"'
+assert_contains "$virtual_server" 'dns.operators.ecmwf.int/on-transport-server: vs-transport-https'
+assert_contains "$virtual_server" 'secret: "polytope-test-example-test-tls"'
+assert_contains "$virtual_server" 'lb-method: "hash $http_authorization$proxy_protocol_addr consistent"'
+assert_contains "$virtual_server" 'service: test-bobs-0'
+assert_contains "$virtual_server" 'service: test-bobs-1'
+assert_contains "$virtual_server" 'path: "/download-0"'
+assert_contains "$virtual_server" 'proxy_set_header X-Forwarded-Prefix /download-1;'
+assert_contains "$virtual_server" 'rewrite ^/download-1/api/v1/read/([^/]+)$ /api/v1/read/$1 break;'
+assert_not_contains "$virtual_server" 'nginx.org/mergeable-ingress-type'
+assert_not_contains "$virtual_server" 'name: test-ingress-frontend'
+
+expect_failure 'bobs.ingress.enabled must be false when ingress.virtualServer.enabled=true' \
+  -f "$FIXTURES/virtual-server.yaml" --set bobs.enabled=true --set bobs.ingress.enabled=true
+expect_failure 'ingress.virtualServer.enabled requires global.ingress.controller=nginx-inc' \
+  -f "$FIXTURES/virtual-server.yaml" --set global.ingress.controller=nginx-community
+
 digest="$TMP_DIR/digest.yaml"
 helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
 	--set-string frontend.image.digest=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \

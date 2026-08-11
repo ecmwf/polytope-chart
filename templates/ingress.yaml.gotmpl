@@ -8,6 +8,40 @@
 {{- $stickyHashBy := .Values.ingress.stickyHashBy | default "" }}
 {{- $communityStickyHashBy := .Values.ingress.communityStickyHashBy | default $stickyHashBy }}
 {{- if eq $controller "nginx-inc" }}
+{{- if .Values.ingress.virtualServer.enabled }}
+{{- /* Keep the existing Ingress name as a DNS and certificate ownership shim.
+      The non-NGINX class prevents it competing with the VirtualServer for the host. */}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "polytope-server.fullname" . }}-ingress
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+  annotations:
+    dns.operators.ecmwf.int/on-transport-server: vs-transport-https
+    {{- range $key, $value := $userAnnotations }}
+    {{- if hasPrefix "cert-manager.io/" $key }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.virtualServer.dnsIngress.className | quote }}
+  rules:
+    - host: {{ $host | quote }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - secretName: {{ .secretName }}
+      hosts:
+        - {{ $host | quote }}
+    {{- end }}
+  {{- else if $hasCertManager }}
+  tls:
+    - secretName: {{ $host | replace "." "-" }}-tls
+      hosts:
+        - {{ $host | quote }}
+  {{- end }}
+{{- else }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -64,6 +98,7 @@ spec:
                 name: {{ include "polytope-server.fullname" . }}-frontend
                 port:
                   name: {{ $ingressBackendPortName }}
+{{- end }}
 {{- else if eq $controller "nginx-community" }}
 {{- /*
 Community ingress-nginx (kubernetes/ingress-nginx). Single Ingress per service

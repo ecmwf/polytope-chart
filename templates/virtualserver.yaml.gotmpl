@@ -1,0 +1,87 @@
+{{- if and .Values.ingress.enabled .Values.ingress.domain .Values.ingress.virtualServer.enabled }}
+{{- $controller := include "polytope-server.ingressController" . }}
+{{- if ne $controller "nginx-inc" }}
+{{- fail "ingress.virtualServer.enabled requires global.ingress.controller=nginx-inc" }}
+{{- end }}
+{{- if and .Values.bobs.enabled .Values.bobs.ingress.enabled }}
+{{- fail "bobs.ingress.enabled must be false when ingress.virtualServer.enabled=true; the VirtualServer owns the BOBS routes" }}
+{{- end }}
+{{- $host := include "polytope-server.ingressHost" . }}
+{{- $userAnnotations := .Values.ingress.annotations | default dict }}
+{{- $hasCertManager := or (hasKey $userAnnotations "cert-manager.io/cluster-issuer") (hasKey $userAnnotations "cert-manager.io/issuer") }}
+{{- $tlsSecret := "" }}
+{{- if .Values.ingress.tls }}
+{{- $tlsSecret = (index .Values.ingress.tls 0).secretName }}
+{{- else if $hasCertManager }}
+{{- $tlsSecret = printf "%s-tls" ($host | replace "." "-") }}
+{{- end }}
+{{- $stickyHashBy := .Values.ingress.stickyHashBy | default "" }}
+{{- $bobsRoot := dict "Values" .Values.bobs "Chart" (dict "Name" "bobs-chart") "Release" .Release }}
+{{- if .Values.bobs.enabled }}
+{{- $bobsHost := printf "%s.%s" .Values.bobs.config.host_prefix .Values.bobs.config.domain }}
+{{- if ne $bobsHost $host }}
+{{- fail (printf "BOBS external host %q must match VirtualServer host %q" $bobsHost $host) }}
+{{- end }}
+{{- if not .Values.bobs.ingress.forwardedPrefix.enabled }}
+{{- fail "bobs.ingress.forwardedPrefix.enabled must be true when ingress.virtualServer.enabled=true" }}
+{{- end }}
+{{- end }}
+apiVersion: k8s.nginx.org/v1
+kind: VirtualServer
+metadata:
+  name: {{ include "polytope-server.fullname" . }}
+  labels:
+    {{- include "polytope-server.labels" . | nindent 4 }}
+  {{- with .Values.ingress.virtualServer.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  host: {{ $host | quote }}
+  ingressClassName: {{ .Values.ingress.className | quote }}
+  {{- if $tlsSecret }}
+  tls:
+    secret: {{ $tlsSecret | quote }}
+    redirect:
+      enable: {{ .Values.ingress.virtualServer.redirect.enable }}
+  {{- end }}
+  upstreams:
+    - name: frontend
+      service: {{ include "polytope-server.fullname" . }}-frontend
+      port: {{ .Values.frontend.port }}
+      buffering: {{ .Values.ingress.virtualServer.buffering }}
+      {{- if $stickyHashBy }}
+      lb-method: {{ printf "hash %s consistent" $stickyHashBy | quote }}
+      {{- end }}
+    {{- if .Values.bobs.enabled }}
+    {{- range $ordinal := until (int .Values.bobs.replicaCount) }}
+    - name: {{ printf "bobs-%d" $ordinal }}
+      service: {{ include "bobs.podName" (dict "root" $bobsRoot "ordinal" $ordinal) }}
+      port: {{ $.Values.bobs.service.port }}
+      buffering: {{ $.Values.ingress.virtualServer.buffering }}
+    {{- end }}
+    {{- end }}
+  routes:
+    {{- if .Values.bobs.enabled }}
+    {{- $routeName := .Values.bobs.config.route_name }}
+    {{- $routePattern := regexQuoteMeta $routeName }}
+    {{- range $ordinal := until (int .Values.bobs.replicaCount) }}
+    {{- $routePrefix := printf "/%s-%d" $routeName $ordinal }}
+    - path: {{ $routePrefix | quote }}
+      location-snippets: |
+        proxy_set_header X-Forwarded-Prefix {{ $routePrefix }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        rewrite ^/{{ $routePattern }}-{{ $ordinal }}/([0-9a-zA-Z-]+)$ /api/v1/read/$1 break;
+        rewrite ^/{{ $routePattern }}-{{ $ordinal }}/api/v1/read/([^/]+)$ /api/v1/read/$1 break;
+        rewrite ^/{{ $routePattern }}-{{ $ordinal }}/api/v1/([0-9a-zA-Z-]+)$ /api/v1/read/$1 break;
+      action:
+        pass: {{ printf "bobs-%d" $ordinal }}
+    {{- end }}
+    {{- end }}
+    - path: /
+      action:
+        pass: frontend
+{{- end }}
