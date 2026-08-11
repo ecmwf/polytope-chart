@@ -54,21 +54,21 @@ assert_contains "$runtime" 'value: "trace"'
 # Both ingress controllers use the same Authorization/client-address hash key.
 community_ingress="$TMP_DIR/community-ingress.yaml"
 helm template test "$CHART_DIR" "${COMMON[@]}" \
-  --set global.ingress.controller=nginx-community \
-  --set ingress.enabled=true --set ingress.domain=example.test >"$community_ingress"
+	--set global.ingress.controller=nginx-community \
+	--set ingress.enabled=true --set ingress.domain=example.test >"$community_ingress"
 assert_contains "$community_ingress" 'nginx.ingress.kubernetes.io/upstream-hash-by: $http_authorization$proxy_protocol_addr'
 assert_not_contains "$community_ingress" '$polytope_frontend_hash_key'
 
 inc_ingress="$TMP_DIR/inc-ingress.yaml"
 helm template test "$CHART_DIR" "${COMMON[@]}" \
-  --set global.ingress.controller=nginx-inc \
-  --set ingress.enabled=true --set ingress.domain=example.test >"$inc_ingress"
+	--set global.ingress.controller=nginx-inc \
+	--set ingress.enabled=true --set ingress.domain=example.test >"$inc_ingress"
 assert_contains "$inc_ingress" 'nginx.org/lb-method: "hash $http_authorization$proxy_protocol_addr consistent"'
 assert_not_contains "$inc_ingress" '$polytope_frontend_hash_key'
 
 virtual_server="$TMP_DIR/virtual-server.yaml"
 helm template test "$CHART_DIR" "${COMMON[@]}" \
-  -f "$FIXTURES/virtual-server.yaml" --set bobs.enabled=true >"$virtual_server"
+	-f "$FIXTURES/virtual-server.yaml" --set bobs.enabled=true >"$virtual_server"
 assert_contains "$virtual_server" 'kind: VirtualServer'
 assert_contains "$virtual_server" 'ingressClassName: "dns-only"'
 assert_contains "$virtual_server" 'dns.operators.ecmwf.int/on-transport-server: vs-transport-https'
@@ -83,9 +83,9 @@ assert_not_contains "$virtual_server" 'nginx.org/mergeable-ingress-type'
 assert_not_contains "$virtual_server" 'name: test-ingress-frontend'
 
 expect_failure 'bobs.ingress.enabled must be false when ingress.virtualServer.enabled=true' \
-  -f "$FIXTURES/virtual-server.yaml" --set bobs.enabled=true --set bobs.ingress.enabled=true
+	-f "$FIXTURES/virtual-server.yaml" --set bobs.enabled=true --set bobs.ingress.enabled=true
 expect_failure 'ingress.virtualServer.enabled requires global.ingress.controller=nginx-inc' \
-  -f "$FIXTURES/virtual-server.yaml" --set global.ingress.controller=nginx-community
+	-f "$FIXTURES/virtual-server.yaml" --set global.ingress.controller=nginx-community
 
 digest="$TMP_DIR/digest.yaml"
 helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
