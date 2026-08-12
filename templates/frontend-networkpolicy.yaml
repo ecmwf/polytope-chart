@@ -36,12 +36,8 @@ spec:
         - port: internal-poll
           protocol: TCP
     {{- if .Values.telemetry.enabled }}
-    # Prometheus scrape from monitoring namespace.
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: monitoring
-      ports:
+    # Metrics remain internal to the cluster, but are reachable from any namespace.
+    - ports:
         - port: metrics
           protocol: TCP
     {{- end }}
