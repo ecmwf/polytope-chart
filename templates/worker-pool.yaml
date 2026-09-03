@@ -12,6 +12,19 @@ metadata:
     app.kubernetes.io/component: {{ $name }}
 spec:
   replicas: {{ $pool.replicas | default 1 }}
+  {{- with $pool.strategy }}
+  strategy:
+    type: {{ .type }}
+    {{- if eq .type "Recreate" }}
+    {{/* Recreate and rollingUpdate are mutually exclusive server-side; explicit
+         null clears any rollingUpdate previously applied (e.g. switching an
+         existing Deployment from RollingUpdate to Recreate). */}}
+    rollingUpdate: null
+    {{- else if .rollingUpdate }}
+    rollingUpdate:
+      {{- toYaml .rollingUpdate | nindent 6 }}
+    {{- end }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "polytope-server.selectorLabels" $ | nindent 6 }}

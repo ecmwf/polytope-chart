@@ -138,6 +138,8 @@ worker:
 #     replicas: 5
 #     rustLog: debug             # optional; overrides worker.rustLog
 #     pollTimeoutMs: 3000        # optional per-pool override
+#     strategy:                  # optional; passed through verbatim to the
+#       type: Recreate           # Deployment's spec.strategy (default: RollingUpdate)
 #     cache:
 #       mountPath: /tmp/cache
 #       emptyDir:
