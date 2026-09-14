@@ -121,7 +121,7 @@ jobs:
       - name: Push chart
         env:
           VERSION: ${{ needs.gate.outputs.version }}
-        run: helm push "polytope-server-${VERSION}.tgz" oci://eccr.ecmwf.int/polytope
+        run: helm push "polytope-server-${VERSION}.tgz" oci://eccr.ecmwf.int/polytope-pub
 
       - name: Create release tag
         env:
