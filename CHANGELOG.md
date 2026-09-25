@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.15
+
+- Separate internal-poll NetworkPolicy permission from frontend Service membership.
+
 ## 2.1.12
 
 - Allow frontend metrics scraping from any cluster namespace while retaining restrictions on broker and internal-poll traffic.

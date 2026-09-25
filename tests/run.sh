@@ -51,6 +51,22 @@ assert_contains "$runtime" 'value: "debug"'
 assert_contains "$runtime" 'value: "warn"'
 assert_contains "$runtime" 'value: "trace"'
 
+# Internal-poll permission is separate from frontend Service membership.
+frontend_deployment="$TMP_DIR/frontend-deployment.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
+  --show-only templates/frontend-deployment.yaml >"$frontend_deployment"
+assert_contains "$frontend_deployment" 'polytope.ecmwf.int/internal-poll-client: "true"'
+
+frontend_networkpolicy="$TMP_DIR/frontend-networkpolicy.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
+  --show-only templates/frontend-networkpolicy.yaml >"$frontend_networkpolicy"
+assert_contains "$frontend_networkpolicy" 'polytope.ecmwf.int/internal-poll-client: "true"'
+
+frontend_service="$TMP_DIR/frontend-service.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
+  --show-only templates/frontend-service.yaml >"$frontend_service"
+assert_not_contains "$frontend_service" 'polytope.ecmwf.int/internal-poll-client'
+
 # Community ingress uses the controller-defined EODAG-aware map; NGINX Inc keeps
 # the portable Authorization/client-address hash key.
 community_ingress="$TMP_DIR/community-ingress.yaml"
