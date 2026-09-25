@@ -23,6 +23,7 @@ spec:
       labels:
         {{- include "polytope-server.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: frontend
+        polytope.ecmwf.int/internal-poll-client: "true"
         app: frontend
     spec:
       {{- include "polytope-server.imagePullSecrets" . | nindent 6 }}

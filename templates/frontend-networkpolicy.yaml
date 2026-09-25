@@ -26,12 +26,12 @@ spec:
       ports:
         - port: broker
           protocol: TCP
-    # Internal poll is restricted to frontend pods in this release and namespace.
+    # Internal poll is restricted to explicitly authorised clients in this release.
     - from:
         - podSelector:
             matchLabels:
               {{- include "polytope-server.selectorLabels" . | nindent 14 }}
-              app.kubernetes.io/component: frontend
+              polytope.ecmwf.int/internal-poll-client: "true"
       ports:
         - port: internal-poll
           protocol: TCP
