@@ -70,6 +70,7 @@ frontend:
   # retry_after_secs: 5           # Retry-After header on 529 overload responses
   # nats_connect_timeout_secs: 10 # NATS persistence connection timeout per attempt
   # nats_init_max_attempts: 6     # NATS init retry attempts (exponential backoff)
+  # reconnect_buffer_secs: 5      # Grace period after client disconnect before sweep eligibility
   resources: {}
   podAnnotations: {}
 
