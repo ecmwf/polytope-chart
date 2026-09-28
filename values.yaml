@@ -102,6 +102,20 @@ mcp:
   allowedHosts: []
   allowedOrigins: []
 
+# ── /chunks/v1 (polytope-zarr) ────────────────────────────────────────────────
+# Optional chunk API. Rendered verbatim as the frontend config `chunks:` section;
+# leave empty to keep the API unmounted. Requires a frontend built with the
+# metkit feature. Schema (polytope-server config.example.yaml):
+#   chunks:
+#     enabled: true
+#     max_chunk_cost: 20000000
+#     grids:
+#       - collection: destination-earth
+#         match: { class: d1, dataset: climate-dt, resolution: high }
+#         count_values: 12582912
+#         md5_grid_section: null
+chunks: {}
+
 # ── Schedule ──────────────────────────────────────────────────────────────────
 # Schedule XML for the schedule_released check. `enabled` is tri-state during
 # migration: true/false are authoritative; omitted or null preserves the legacy

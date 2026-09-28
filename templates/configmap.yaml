@@ -105,6 +105,11 @@ data:
     edr:
       {{- toYaml . | nindent 6 }}
     {{- end }}
+    {{- with .Values.chunks }}
+    # /chunks/v1 (polytope-zarr) API + grid registry; mounted only when present.
+    chunks:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     {{- if (.Values.mcp).enabled }}
     mcp:
       {{- with .Values.mcp.catalogueUrl }}
