@@ -213,7 +213,7 @@ bobs:
     # The redirect URL becomes https://{host_prefix}.{domain}/{route_name}-{N}/...
     host_prefix: bobs
     domain: chart.example.local
-    page_size: 16777216
+    page_size: 4194304
     max_cache_bytes: 268435456
     metrics:
       enabled: false
