@@ -15,7 +15,7 @@ dependencies:
     condition: nats.enabled
   - name: bobs-chart
     version: 0.1.12
-    repository: oci://eccr.ecmwf.int/bobs
+    repository: oci://eccr.ecmwf.int/polytope
     condition: bobs.enabled
     alias: bobs
   - name: auth-o-tron-chart
