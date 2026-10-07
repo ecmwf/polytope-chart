@@ -4,9 +4,9 @@ dependencies:
   version: 2.12.4
 - name: bobs-chart
   repository: oci://eccr.ecmwf.int/polytope
-  version: 0.1.13
+  version: 0.1.14
 - name: auth-o-tron-chart
   repository: oci://eccr.ecmwf.int/auth-o-tron
   version: 0.3.4
-digest: sha256:ce89ce8b1b3d4c4db46903a3955d164cbf981e29d5657d288e6196662a913a94
-generated: "2026-10-07T18:33:01.515117114+01:00"
+digest: sha256:269046134a5ec3615be68db837335c690f49521404f35cad2800f218b3372d18
+generated: "2026-10-07T19:27:31.654693626+01:00"
