@@ -125,6 +125,14 @@ worker:
   pollTimeoutMs: 3000
   rustLog: info
 
+# Fraction of a feature-extraction pool's memory limit given to polytope-mars as
+# its extraction memory budget. For every pool whose config has a `polytope:`
+# block and whose resources.limits.memory is set, the chart writes
+# polytope.limits.memory_budget_bytes = floor(limit bytes x fraction) into the
+# worker config, unless the pool config sets it explicitly. The remainder covers
+# the interpreter, libraries and encoder buffers. Must be in (0, 1].
+feMemoryBudgetFraction: 0.5
+
 # ── Worker pools ──────────────────────────────────────────────────────────────
 # Each key produces a Deployment (+ optional ConfigMap when config is set).
 # The chart handles mounting and CLI args internally.

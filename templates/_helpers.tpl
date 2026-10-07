@@ -258,3 +258,43 @@ sizeLimit: {{ get $emptyDir "sizeLimit" | default "10Gi" | quote }}
 enabled: false
 {{- end -}}
 {{- end -}}
+
+{{/*
+Convert a Kubernetes memory quantity (e.g. 2Gi, 1536Mi, 2G, 500M, 1073741824)
+to an integer number of bytes. Binary (Ki, Mi, Gi, Ti) and decimal (k, K, M,
+G, T) suffixes are accepted; anything else fails the render.
+Usage: include "polytope-server.memoryBytes" (dict "name" "workerPools.fe.resources.limits.memory" "quantity" "2Gi")
+*/}}
+{{- define "polytope-server.memoryBytes" -}}
+{{- $q := toString .quantity | trim -}}
+{{- $m := regexFindAll "^([0-9]+(?:\\.[0-9]+)?)([A-Za-z]*)$" $q 1 -}}
+{{- if not $m -}}
+  {{- fail (printf "%s: cannot parse memory quantity %q" .name $q) -}}
+{{- end -}}
+{{- $number := regexReplaceAll "[A-Za-z]+$" $q "" -}}
+{{- $suffix := trimPrefix $number $q -}}
+{{- $units := dict "" 1 "k" 1000 "K" 1000 "M" 1000000 "G" 1000000000 "T" 1000000000000 "Ki" 1024 "Mi" 1048576 "Gi" 1073741824 "Ti" 1099511627776 -}}
+{{- if not (hasKey $units $suffix) -}}
+  {{- fail (printf "%s: unsupported memory unit %q in %q" .name $suffix $q) -}}
+{{- end -}}
+{{- mulf (float64 $number) (get $units $suffix) | floor | int64 -}}
+{{- end -}}
+
+{{/*
+Feature-extraction worker memory budget in bytes: floor(limit bytes x
+feMemoryBudgetFraction). Empty when the pool has no memory limit.
+*/}}
+{{- define "polytope-server.feMemoryBudgetBytes" -}}
+{{- $pool := .pool -}}
+{{- $resources := get $pool "resources" | default dict -}}
+{{- $resourceLimits := get $resources "limits" | default dict -}}
+{{- $limit := get $resourceLimits "memory" | default "" -}}
+{{- if $limit -}}
+{{- $bytes := include "polytope-server.memoryBytes" (dict "name" (printf "workerPools.%s.resources.limits.memory" .name) "quantity" $limit) -}}
+{{- $fraction := .fraction | default 0.5 | float64 -}}
+{{- if or (le $fraction 0.0) (gt $fraction 1.0) -}}
+  {{- fail (printf "feMemoryBudgetFraction must be in (0, 1], got %v" .fraction) -}}
+{{- end -}}
+{{- mulf (int64 $bytes) $fraction | floor | int64 -}}
+{{- end -}}
+{{- end -}}

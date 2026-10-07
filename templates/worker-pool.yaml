@@ -34,7 +34,12 @@ spec:
       {{- $podAnnotations := mergeOverwrite (deepCopy ($.Values.podAnnotations | default dict)) ($pool.podAnnotations | default dict) }}
       annotations:
         {{- if or $pool.config $pool.marsConfig }}
-        checksum/worker-config: {{ toYaml (dict "config" ($pool.config | default dict) "marsConfig" ($pool.marsConfig | default dict)) | sha256sum }}
+        {{- $checksumInput := dict "config" ($pool.config | default dict) "marsConfig" ($pool.marsConfig | default dict) }}
+        {{- if and $pool.config (hasKey $pool.config "polytope") }}
+        {{- /* the injected limits.memory_budget_bytes is part of the rendered config */}}
+        {{- $_ := set $checksumInput "feMemoryBudgetBytes" (include "polytope-server.feMemoryBudgetBytes" (dict "name" $name "pool" $pool "fraction" $.Values.feMemoryBudgetFraction)) }}
+        {{- end }}
+        checksum/worker-config: {{ toYaml $checksumInput | sha256sum }}
         {{- end }}
         {{- with $podAnnotations }}
         {{- toYaml . | nindent 8 }}

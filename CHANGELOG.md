@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Feature-extraction worker pools (a `polytope:` block in `config`) with `resources.limits.memory` get `polytope.limits.memory_budget_bytes = floor(limit x feMemoryBudgetFraction)` (new value, default 0.5) in their worker config unless it is set there; the budget is part of the pod config checksum. Other pools render unchanged.
+
 ## 2.1.16
 
 - Add `frontend.reconnect_buffer_secs` passthrough to the broker's `bits.reconnect_buffer_secs` config (grace period after a client disconnect before a job is eligible for sweep).
