@@ -130,6 +130,10 @@ data:
     admin_bypass_roles:
       {{- toYaml . | nindent 6 }}
     {{- end }}
+    {{- with .Values.frontend.result_encoding }}
+    result_encoding:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     {{- if or .Values.authentication (index .Values "auth-o-tron" "enabled") }}
     authentication:
       url: {{ (.Values.authentication).url | default (printf "http://%s-auth-o-tron:%v" .Release.Name ((index .Values "auth-o-tron" "service" "port") | default 8080)) | quote }}
