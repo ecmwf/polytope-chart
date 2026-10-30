@@ -224,13 +224,11 @@ bobs:
 #   timeout_ms: 6000        # default: auth-o-tron auth.timeout_in_ms + 1000
 
 # ── auth-o-tron subchart ──────────────────────────────────────────────────────
-# Bundled auth-o-tron gateway (subchart alias "auth-o-tron"). Pin the image tag
-# to the released auth-o-tron so enabling the subchart does not deploy the
-# subchart's stale default tag. Providers/JWT config are supplied per-deployment.
+# Bundled auth-o-tron gateway (subchart alias "auth-o-tron"). The image tag comes
+# from the subchart's own default; bump the `auth-o-tron-chart` dependency to
+# change it. Providers/JWT config are supplied per-deployment.
 auth-o-tron:
   enabled: true
-  image:
-    tag: "0.3.8"
 
 # ── Ingress ───────────────────────────────────────────────────────────────────
 # Host is constructed as {{ hostPrefix }}.{{ domain }}.
