@@ -136,9 +136,9 @@ data:
       {{- if not ((.Values.authentication).secretName) }}
       secret: {{ ((.Values.authentication).secret) | default (index .Values "auth-o-tron" "config" "jwt" "secret") | quote }}
       {{- end }}
-      {{- with ((.Values.authentication).timeout_ms) | default 3000 }}
-      timeout_ms: {{ . }}
-      {{- end }}
+      {{- /* Stay above auth-o-tron's provider timeout so its 401 wins over a client-side timeout. */}}
+      {{- $aotTimeout := int (dig "config" "auth" "timeout_in_ms" 5000 ((index .Values "auth-o-tron") | default dict)) }}
+      timeout_ms: {{ ((.Values.authentication).timeout_ms) | default (add $aotTimeout 1000) }}
       {{- with ((.Values.authentication).allow_anonymous) }}
       allow_anonymous: {{ . }}
       {{- end }}

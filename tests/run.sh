@@ -143,4 +143,15 @@ assert_contains "$schedule_legacy" 'name: fetch-schedule'
 expect_failure 'schedule.repo is required when schedule is enabled' \
 	-f "$FIXTURES/schedule-invalid.yaml"
 
+# Frontend auth timeout stays above auth-o-tron's provider timeout unless overridden.
+auth_timeout="$TMP_DIR/auth-timeout.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
+	--set auth-o-tron.enabled=true --set auth-o-tron.config.auth.timeout_in_ms=3000 >"$auth_timeout"
+assert_contains "$auth_timeout" 'timeout_ms: 4000'
+auth_timeout_override="$TMP_DIR/auth-timeout-override.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
+	--set auth-o-tron.enabled=true --set auth-o-tron.config.auth.timeout_in_ms=3000 \
+	--set authentication.timeout_ms=2500 >"$auth_timeout_override"
+assert_contains "$auth_timeout_override" 'timeout_ms: 2500'
+
 printf 'All polytope chart runtime tests passed.\n'

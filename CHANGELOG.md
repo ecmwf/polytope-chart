@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.18
+
+- Default the frontend's `authentication.timeout_ms` to auth-o-tron's `config.auth.timeout_in_ms` + 1000 ms (was a fixed 3000 ms, equal to auth-o-tron's), so a slow provider yields auth-o-tron's own response instead of a client-side timeout reported as service unavailable.
+
 ## 2.1.17
 
 - Bump `bobs-chart` dependency from 0.1.10 to 0.1.13.
