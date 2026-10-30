@@ -230,7 +230,7 @@ bobs:
 auth-o-tron:
   enabled: true
   image:
-    tag: "0.3.7"
+    tag: "0.3.8"
 
 # ── Ingress ───────────────────────────────────────────────────────────────────
 # Host is constructed as {{ hostPrefix }}.{{ domain }}.
