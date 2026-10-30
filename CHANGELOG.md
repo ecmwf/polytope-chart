@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.17
+
+- Bump `bobs-chart` dependency from 0.1.10 to 0.1.13.
+
 ## 2.1.16
 
 - Add `frontend.reconnect_buffer_secs` passthrough to the broker's `bits.reconnect_buffer_secs` config (grace period after a client disconnect before a job is eligible for sweep).
