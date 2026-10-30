@@ -19,7 +19,7 @@ dependencies:
     condition: bobs.enabled
     alias: bobs
   - name: auth-o-tron-chart
-    version: 0.3.4
+    version: 0.3.5
     repository: oci://eccr.ecmwf.int/auth-o-tron
     condition: auth-o-tron.enabled
     alias: auth-o-tron

@@ -2,6 +2,7 @@
 
 ## 2.1.18
 
+- Bump `auth-o-tron-chart` dependency from 0.3.4 to 0.3.5 and pin the bundled auth-o-tron image to 0.3.8 (drops the distrusted emSign roots; dependency security updates).
 - Default the frontend's `authentication.timeout_ms` to auth-o-tron's `config.auth.timeout_in_ms` + 1000 ms (was a fixed 3000 ms, equal to auth-o-tron's), so a slow provider yields auth-o-tron's own response instead of a client-side timeout reported as service unavailable.
 
 ## 2.1.17
