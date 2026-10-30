@@ -221,7 +221,7 @@ bobs:
 #   secret: ""              # plaintext fallback (prefer secretName)
 #   secretName: ""          # K8s Secret holding the JWT signing secret
 #   secretKey: auth-secret  # key inside the Secret
-#   timeout_ms: 3000
+#   timeout_ms: 6000        # default: auth-o-tron auth.timeout_in_ms + 1000
 
 # ── auth-o-tron subchart ──────────────────────────────────────────────────────
 # Bundled auth-o-tron gateway (subchart alias "auth-o-tron"). Pin the image tag
