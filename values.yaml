@@ -149,6 +149,9 @@ worker:
 #       #   path: /var/lib/polytope/cache
 #       #   type: DirectoryOrCreate
 #     # cacheDir: /tmp/cache     # deprecated legacy hostPath (one release)
+#     nodeSelector: {}         # optional pod scheduling passthroughs
+#     tolerations: []
+#     affinity: {}
 #     config:
 #       type: remote
 #       host: svc001.alpsb.cscs.ch

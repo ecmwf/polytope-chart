@@ -51,6 +51,10 @@ assert_contains "$runtime" 'value: "debug"'
 assert_contains "$runtime" 'value: "warn"'
 assert_contains "$runtime" 'value: "trace"'
 
+# Worker pools pass through nodeSelector and tolerations.
+assert_contains "$runtime" 'example.test/pool: dedicated'
+assert_contains "$runtime" 'key: dedicated'
+
 # Internal-poll permission is separate from frontend Service membership.
 frontend_deployment="$TMP_DIR/frontend-deployment.yaml"
 helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
