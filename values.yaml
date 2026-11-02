@@ -152,6 +152,7 @@ worker:
 #     nodeSelector: {}         # optional pod scheduling passthroughs
 #     tolerations: []
 #     affinity: {}
+#     dnsConfig: {}            # e.g. extra search domains
 #     config:
 #       type: remote
 #       host: svc001.alpsb.cscs.ch

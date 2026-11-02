@@ -60,6 +60,10 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with $pool.dnsConfig }}
+      dnsConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ $name }}
           image: {{ include "polytope-server.image" (dict "imageRoot" $pool.image "global" $.Values.global) | quote }}

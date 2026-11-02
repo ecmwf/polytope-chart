@@ -60,3 +60,6 @@ workerPools:
         operator: Equal
         value: "true"
         effect: NoSchedule
+    dnsConfig:
+      searches:
+        - example.test

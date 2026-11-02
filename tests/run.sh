@@ -54,6 +54,7 @@ assert_contains "$runtime" 'value: "trace"'
 # Worker pools pass through nodeSelector and tolerations.
 assert_contains "$runtime" 'example.test/pool: dedicated'
 assert_contains "$runtime" 'key: dedicated'
+assert_contains "$runtime" '- example.test'
 
 # Internal-poll permission is separate from frontend Service membership.
 frontend_deployment="$TMP_DIR/frontend-deployment.yaml"

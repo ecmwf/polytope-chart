@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add per-pool `nodeSelector`, `tolerations` and `affinity` passthroughs to worker pools so workers can be placed on tainted or dedicated nodes.
+- Add per-pool `nodeSelector`, `tolerations`, `affinity` and `dnsConfig` passthroughs to worker pools so workers can be placed on tainted or dedicated nodes and resolve site-local short host names.
 
 ## 2.1.18
 
