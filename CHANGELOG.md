@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 2.1.19
 
-- Add per-pool `nodeSelector`, `tolerations`, `affinity` and `dnsConfig` passthroughs to worker pools so workers can be placed on tainted or dedicated nodes and resolve site-local short host names.
+- Add per-pool `nodeSelector`, `tolerations`, `affinity`, `topologySpreadConstraints`, `priorityClassName` and `dnsConfig` passthroughs to worker pools so workers can be placed on tainted or dedicated nodes, spread across nodes, given a scheduling priority, and resolve site-local short host names. All are optional; pools that do not set them render unchanged.
 
 ## 2.1.18
 

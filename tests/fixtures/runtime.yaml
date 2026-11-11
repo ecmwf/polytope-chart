@@ -60,6 +60,23 @@ workerPools:
         operator: Equal
         value: "true"
         effect: NoSchedule
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 50
+            preference:
+              matchExpressions:
+                - key: example.test/fast
+                  operator: In
+                  values: ["true"]
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/component: scheduled
+    priorityClassName: example-workers
     dnsConfig:
       searches:
         - example.test

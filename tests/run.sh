@@ -51,10 +51,27 @@ assert_contains "$runtime" 'value: "debug"'
 assert_contains "$runtime" 'value: "warn"'
 assert_contains "$runtime" 'value: "trace"'
 
-# Worker pools pass through nodeSelector and tolerations.
+# Worker pools pass through pod scheduling and DNS settings.
 assert_contains "$runtime" 'example.test/pool: dedicated'
 assert_contains "$runtime" 'key: dedicated'
+assert_contains "$runtime" 'key: example.test/fast'
+assert_contains "$runtime" 'topologyKey: kubernetes.io/hostname'
+assert_contains "$runtime" 'whenUnsatisfiable: ScheduleAnyway'
+assert_contains "$runtime" 'priorityClassName: "example-workers"'
 assert_contains "$runtime" '- example.test'
+
+# Pools without them render no scheduling or DNS fields.
+unscheduled="$TMP_DIR/unscheduled.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
+	--show-only templates/worker-pool.yaml |
+	awk '/^---/ { if (doc !~ /worker-scheduled/) printf "%s", doc; doc = "" }
+		{ doc = doc $0 "\n" }
+		END { if (doc !~ /worker-scheduled/) printf "%s", doc }' >"$unscheduled"
+assert_contains "$unscheduled" 'name: test-worker-empty-cache'
+assert_not_contains "$unscheduled" 'name: test-worker-scheduled'
+for field in nodeSelector: tolerations: affinity: topologySpreadConstraints: priorityClassName: dnsConfig:; do
+	assert_not_contains "$unscheduled" "$field"
+done
 
 # Internal-poll permission is separate from frontend Service membership.
 frontend_deployment="$TMP_DIR/frontend-deployment.yaml"

@@ -60,6 +60,13 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with $pool.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $pool.priorityClassName }}
+      priorityClassName: {{ . | quote }}
+      {{- end }}
       {{- with $pool.dnsConfig }}
       dnsConfig:
         {{- toYaml . | nindent 8 }}
