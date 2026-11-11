@@ -48,3 +48,35 @@ workerPools:
     cacheDir: /var/lib/polytope/legacy-cache
   optional-tuning:
     overrideOnly: true
+  scheduled:
+    image:
+      repository: example/worker
+      tag: "1.2.3"
+    pool: worker_pool
+    nodeSelector:
+      example.test/pool: dedicated
+    tolerations:
+      - key: dedicated
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 50
+            preference:
+              matchExpressions:
+                - key: example.test/fast
+                  operator: In
+                  values: ["true"]
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/component: scheduled
+    priorityClassName: example-workers
+    dnsConfig:
+      searches:
+        - example.test

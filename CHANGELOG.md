@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.19
+
+- Add per-pool `nodeSelector`, `tolerations`, `affinity`, `topologySpreadConstraints`, `priorityClassName` and `dnsConfig` passthroughs to worker pools so workers can be placed on tainted or dedicated nodes, spread across nodes, given a scheduling priority, and resolve site-local short host names. All are optional; pools that do not set them render unchanged.
+
 ## 2.1.18
 
 - Bump `auth-o-tron-chart` dependency from 0.3.4 to 0.3.5, which defaults to auth-o-tron 0.3.8 (drops the distrusted emSign roots; dependency security updates), and remove the chart's own `auth-o-tron.image.tag` pin so the subchart default applies.

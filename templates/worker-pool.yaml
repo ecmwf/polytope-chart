@@ -48,6 +48,29 @@ spec:
       {{- if $pool.marsConfig }}
       serviceAccountName: {{ include "polytope-server.fullname" $ }}-mars-worker
       {{- end }}
+      {{- with $pool.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $pool.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $pool.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $pool.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $pool.priorityClassName }}
+      priorityClassName: {{ . | quote }}
+      {{- end }}
+      {{- with $pool.dnsConfig }}
+      dnsConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ $name }}
           image: {{ include "polytope-server.image" (dict "imageRoot" $pool.image "global" $.Values.global) | quote }}
