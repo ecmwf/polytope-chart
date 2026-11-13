@@ -155,9 +155,23 @@ assert_not_contains "$schedule_token" 'ssh-keyscan'
 assert_contains "$schedule_enabled" 'ssh-keyscan'
 assert_not_contains "$schedule_enabled" 'SCHEDULE_TOKEN'
 
-expect_failure 'schedule.sshSecretName and schedule.tokenSecretName are mutually exclusive' \
+expect_failure 'schedule.sshSecretName, schedule.tokenSecretName and schedule.content are mutually exclusive' \
 	-f "$FIXTURES/schedule-both.yaml"
-expect_failure 'schedule.sshSecretName or schedule.tokenSecretName is required when schedule is enabled' \
+expect_failure 'schedule.sshSecretName, schedule.tokenSecretName and schedule.content are mutually exclusive' \
+	-f "$FIXTURES/schedule-content-and-token.yaml"
+
+schedule_content="$TMP_DIR/schedule-content.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/schedule-content.yaml" >"$schedule_content"
+assert_contains "$schedule_content" 'name: test-schedule'
+assert_contains "$schedule_content" 'schedule.xml: "\u003cschedule\u003e\u003crelease id=\"demo\"/\u003e\u003c/schedule\u003e\n"'
+assert_contains "$schedule_content" 'checksum/schedule:'
+assert_contains "$schedule_content" 'path: /etc/polytope/schedule.xml'
+assert_not_contains "$schedule_content" 'name: fetch-schedule'
+assert_not_contains "$schedule_content" 'name: schedule-ssh'
+assert_not_contains "$schedule_content" 'SCHEDULE_TOKEN'
+assert_not_contains "$schedule_disabled" 'checksum/schedule:'
+assert_not_contains "$schedule_enabled" 'name: test-schedule'
+expect_failure 'one of schedule.sshSecretName, schedule.tokenSecretName or schedule.content is required when schedule is enabled' \
 	-f "$FIXTURES/schedule-no-credential.yaml"
 
 # Frontend auth timeout stays above auth-o-tron's provider timeout unless overridden.

@@ -1,0 +1,4 @@
+schedule:
+  enabled: true
+  content: |
+    <schedule><release id="demo"/></schedule>

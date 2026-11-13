@@ -2,7 +2,8 @@
 
 ## 2.1.20
 
-- Add `schedule.tokenSecretName` so the schedule repository can be cloned over HTTPS with a GitHub personal access token (secret key `token`) instead of an SSH key. Exactly one of `schedule.sshSecretName` or `schedule.tokenSecretName` must be set; existing SSH configurations render unchanged.
+- Add `schedule.tokenSecretName` so the schedule repository can be cloned over HTTPS with a GitHub personal access token (secret key `token`) instead of an SSH key. Exactly one of `schedule.sshSecretName`, `schedule.tokenSecretName` or `schedule.content` must be set; existing SSH configurations render unchanged.
+- Add `schedule.content` to supply the schedule file inline (rendered into a `<release>-schedule` ConfigMap, no clone). It is mutually exclusive with the SSH and token sources, and changing it rolls the frontend pods.
 
 ## 2.1.18
 
