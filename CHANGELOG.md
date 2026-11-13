@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.20
+
+- Add `schedule.tokenSecretName` so the schedule repository can be cloned over HTTPS with a GitHub personal access token (secret key `token`) instead of an SSH key. Exactly one of `schedule.sshSecretName` or `schedule.tokenSecretName` must be set; existing SSH configurations render unchanged.
+
 ## 2.1.18
 
 - Bump `auth-o-tron-chart` dependency from 0.3.4 to 0.3.5, which defaults to auth-o-tron 0.3.8 (drops the distrusted emSign roots; dependency security updates), and remove the chart's own `auth-o-tron.image.tag` pin so the subchart default applies.

@@ -112,7 +112,9 @@ mcp:
 #   repo: "git@github.com:org/repo.git"
 #   branch: develop
 #   path: share/project/schedule.xml
-#   sshSecretName: polytope-schedule-ssh
+#   # Exactly one of the following:
+#   sshSecretName: polytope-schedule-ssh     # SSH key (key `ssh-privatekey`); repo as git@github.com:org/repo.git
+#   tokenSecretName: polytope-schedule-token # GitHub PAT (key `token`); repo as https://github.com/org/repo.git
 schedule: {}
 
 # ── Worker defaults ───────────────────────────────────────────────────────────
