@@ -48,9 +48,15 @@ explicit `cache.hostPath` when node-local persistence is required.
 ## Schedule check
 
 The schedule init container is enabled only when `schedule.enabled: true`. It
-requires `schedule.repo`, `schedule.path`, and an SSH key secret named by
-`schedule.sshSecretName` (normally `polytope-schedule-ssh`). Set
-`schedule.enabled: false` in environments that do not use the schedule check.
+requires `schedule.repo`, `schedule.path`, and exactly one credential secret:
+
+- `schedule.sshSecretName` — SSH key secret (key `ssh-privatekey`, normally
+  `polytope-schedule-ssh`); `schedule.repo` is a `git@github.com:` URL.
+- `schedule.tokenSecretName` — GitHub personal access token secret (key
+  `token`); `schedule.repo` is an `https://github.com/` URL. A fine-grained
+  PAT limited to the schedule repository with `Contents: Read-only` is enough.
+
+Set `schedule.enabled: false` in environments that do not use the schedule check.
 
 ## BOBS dependency source
 

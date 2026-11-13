@@ -164,7 +164,14 @@ false
   {{- if $enabled -}}
     {{- $_ := required "schedule.repo is required when schedule is enabled" (get $schedule "repo") -}}
     {{- $_ := required "schedule.path is required when schedule is enabled" (get $schedule "path") -}}
-    {{- $_ := required "schedule.sshSecretName is required when schedule is enabled" (get $schedule "sshSecretName") -}}
+    {{- $ssh := get $schedule "sshSecretName" -}}
+    {{- $token := get $schedule "tokenSecretName" -}}
+    {{- if and $ssh $token -}}
+      {{- fail "schedule.sshSecretName and schedule.tokenSecretName are mutually exclusive" -}}
+    {{- end -}}
+    {{- if not (or $ssh $token) -}}
+      {{- fail "schedule.sshSecretName or schedule.tokenSecretName is required when schedule is enabled" -}}
+    {{- end -}}
 true
   {{- else -}}
 false

@@ -54,23 +54,39 @@ spec:
         {{- if $scheduleEnabled }}
         - name: fetch-schedule
           image: alpine/git:2.47.2
+          {{- if .Values.schedule.tokenSecretName }}
+          env:
+            - name: SCHEDULE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.schedule.tokenSecretName | quote }}
+                  key: token
+          {{- end }}
           command:
             - sh
             - -c
             - |
+              {{- if .Values.schedule.tokenSecretName }}
+              export GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=1
+              export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
+              export GIT_CONFIG_VALUE_0="Authorization: Basic $(printf 'x-access-token:%s' "$SCHEDULE_TOKEN" | base64 | tr -d '\n')"
+              {{- else }}
               mkdir -p ~/.ssh
               cp /ssh-key/ssh-privatekey ~/.ssh/id_ed25519
               chmod 600 ~/.ssh/id_ed25519
               printf 'Host github.com\n  HostName ssh.github.com\n  Port 443\n  User git\n' > ~/.ssh/config
               ssh-keyscan -p 443 ssh.github.com >> ~/.ssh/known_hosts 2>/dev/null
+              {{- end }}
               git clone --depth 1 --branch {{ .Values.schedule.branch | default "develop" }} {{ .Values.schedule.repo | quote }} /tmp/repo
               cp /tmp/repo/{{ .Values.schedule.path }} /schedule/schedule.xml
           volumeMounts:
             - name: schedule
               mountPath: /schedule
+            {{- if not .Values.schedule.tokenSecretName }}
             - name: schedule-ssh
               mountPath: /ssh-key
               readOnly: true
+            {{- end }}
         {{- end }}
       {{- end }}
       containers:
@@ -158,8 +174,10 @@ spec:
         {{- if $scheduleEnabled }}
         - name: schedule
           emptyDir: {}
+        {{- if not .Values.schedule.tokenSecretName }}
         - name: schedule-ssh
           secret:
             secretName: {{ .Values.schedule.sshSecretName }}
             defaultMode: 0400
+        {{- end }}
         {{- end }}

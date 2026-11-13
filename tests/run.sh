@@ -143,6 +143,23 @@ assert_contains "$schedule_legacy" 'name: fetch-schedule'
 expect_failure 'schedule.repo is required when schedule is enabled' \
 	-f "$FIXTURES/schedule-invalid.yaml"
 
+schedule_token="$TMP_DIR/schedule-token.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/schedule-token.yaml" >"$schedule_token"
+assert_contains "$schedule_token" 'name: fetch-schedule'
+assert_contains "$schedule_token" 'name: SCHEDULE_TOKEN'
+assert_contains "$schedule_token" 'name: "schedule-test-token"'
+assert_contains "$schedule_token" 'key: token'
+assert_contains "$schedule_token" 'http.https://github.com/.extraheader'
+assert_not_contains "$schedule_token" 'name: schedule-ssh'
+assert_not_contains "$schedule_token" 'ssh-keyscan'
+assert_contains "$schedule_enabled" 'ssh-keyscan'
+assert_not_contains "$schedule_enabled" 'SCHEDULE_TOKEN'
+
+expect_failure 'schedule.sshSecretName and schedule.tokenSecretName are mutually exclusive' \
+	-f "$FIXTURES/schedule-both.yaml"
+expect_failure 'schedule.sshSecretName or schedule.tokenSecretName is required when schedule is enabled' \
+	-f "$FIXTURES/schedule-no-credential.yaml"
+
 # Frontend auth timeout stays above auth-o-tron's provider timeout unless overridden.
 auth_timeout="$TMP_DIR/auth-timeout.yaml"
 helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
