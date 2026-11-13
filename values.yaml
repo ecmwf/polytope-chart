@@ -115,6 +115,7 @@ mcp:
 #   # Exactly one of the following:
 #   sshSecretName: polytope-schedule-ssh     # SSH key (key `ssh-privatekey`); repo as git@github.com:org/repo.git
 #   tokenSecretName: polytope-schedule-token # GitHub PAT (key `token`); repo as https://github.com/org/repo.git
+#   content: "<schedule.xml>"                # inline file, rendered into a ConfigMap (e.g. helmfile `set: file:`); no repo/path/clone
 schedule: {}
 
 # ── Worker defaults ───────────────────────────────────────────────────────────

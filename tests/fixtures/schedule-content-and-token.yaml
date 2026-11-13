@@ -1,0 +1,4 @@
+schedule:
+  enabled: true
+  content: "<schedule/>"
+  tokenSecretName: schedule-test-token

@@ -1,4 +1,6 @@
 {{- $scheduleEnabled := eq (include "polytope-server.scheduleEnabled" .) "true" }}
+{{- $scheduleContent := and $scheduleEnabled (get .Values.schedule "content") }}
+{{- $scheduleFetch := and $scheduleEnabled (not $scheduleContent) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,6 +19,9 @@ spec:
       {{- $podAnnotations := mergeOverwrite (deepCopy (.Values.podAnnotations | default dict)) (.Values.frontend.podAnnotations | default dict) }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if $scheduleContent }}
+        checksum/schedule: {{ $scheduleContent | sha256sum }}
+        {{- end }}
         {{- with $podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -27,7 +32,7 @@ spec:
         app: frontend
     spec:
       {{- include "polytope-server.imagePullSecrets" . | nindent 6 }}
-      {{- if or .Values.nats.enabled $scheduleEnabled }}
+      {{- if or .Values.nats.enabled $scheduleFetch }}
       initContainers:
         {{- if .Values.nats.enabled }}
         # Block until NATS JetStream is actually serving (meta-group leader
@@ -51,7 +56,7 @@ spec:
                 sleep 2
               done
         {{- end }}
-        {{- if $scheduleEnabled }}
+        {{- if $scheduleFetch }}
         - name: fetch-schedule
           image: alpine/git:2.47.2
           {{- if .Values.schedule.tokenSecretName }}
@@ -173,11 +178,18 @@ spec:
             name: {{ include "polytope-server.fullname" . }}-config
         {{- if $scheduleEnabled }}
         - name: schedule
+          {{- if $scheduleContent }}
+          configMap:
+            name: {{ include "polytope-server.fullname" . }}-schedule
+          {{- else }}
           emptyDir: {}
+          {{- end }}
+        {{- if $scheduleFetch }}
         {{- if not .Values.schedule.tokenSecretName }}
         - name: schedule-ssh
           secret:
             secretName: {{ .Values.schedule.sshSecretName }}
             defaultMode: 0400
+        {{- end }}
         {{- end }}
         {{- end }}
