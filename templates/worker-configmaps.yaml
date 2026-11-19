@@ -18,6 +18,16 @@ data:
     {{- $_ := set $management "port" $.Values.telemetry.workers.port }}
     {{- $_ := set $cfg "management" $management }}
     {{- end }}
+    {{- if and (hasKey $cfg "polytope") (kindIs "map" $cfg.polytope) }}
+    {{- $limits := get $cfg.polytope "limits" | default dict }}
+    {{- if not (hasKey $limits "memory_budget_bytes") }}
+    {{- $budget := include "polytope-server.feMemoryBudgetBytes" (dict "name" $name "pool" $pool "fraction" $.Values.feMemoryBudgetFraction) }}
+    {{- if $budget }}
+    {{- $_ := set $limits "memory_budget_bytes" (int64 $budget) }}
+    {{- $_ := set $cfg.polytope "limits" $limits }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
     {{- if and (hasKey $cfg "delivery") (hasKey $cfg.delivery "bobs_url") }}
     {{- $_ := set $cfg.delivery "bobs_url" (include "polytope-server.bobsUrl" $) }}
     {{- end }}

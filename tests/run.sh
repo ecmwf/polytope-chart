@@ -185,4 +185,48 @@ helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
 	--set authentication.timeout_ms=2500 >"$auth_timeout_override"
 assert_contains "$auth_timeout_override" 'timeout_ms: 2500'
 
+# Feature-extraction pools get limits.memory_budget_bytes from their memory limit.
+show_configmap() {
+	helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/fe-memory-budget.yaml" "$@" \
+		--show-only templates/worker-configmaps.yaml
+}
+fe_budget="$TMP_DIR/fe-budget.yaml"
+show_configmap >"$fe_budget"
+fe_config() {
+	awk -v name="test-worker-$1-config" '
+		/^  name: / { inside = ($2 == name) }
+		inside { print }
+	' "$fe_budget"
+}
+fe_config fe >"$TMP_DIR/fe.yaml"
+assert_contains "$TMP_DIR/fe.yaml" 'memory_budget_bytes: 1610612736'
+assert_contains "$TMP_DIR/fe.yaml" 'max_polygon_points: 3600'
+fe_config fe-mebibytes >"$TMP_DIR/fe-mebibytes.yaml"
+assert_contains "$TMP_DIR/fe-mebibytes.yaml" 'memory_budget_bytes: 805306368'
+fe_config fe-explicit >"$TMP_DIR/fe-explicit.yaml"
+assert_contains "$TMP_DIR/fe-explicit.yaml" 'memory_budget_bytes: 12345'
+fe_config fe-unlimited >"$TMP_DIR/fe-unlimited.yaml"
+assert_contains "$TMP_DIR/fe-unlimited.yaml" 'type: polytope'
+assert_not_contains "$TMP_DIR/fe-unlimited.yaml" 'memory_budget_bytes'
+fe_config mars >"$TMP_DIR/fe-mars.yaml"
+assert_contains "$TMP_DIR/fe-mars.yaml" 'delivery_type: inline'
+assert_not_contains "$TMP_DIR/fe-mars.yaml" 'memory_budget_bytes'
+
+fe_quarter="$TMP_DIR/fe-quarter.yaml"
+show_configmap --set feMemoryBudgetFraction=0.25 >"$fe_quarter"
+assert_contains "$fe_quarter" 'memory_budget_bytes: 805306368'
+
+# The injected budget rolls the pods: it is part of the worker checksum.
+fe_pool() {
+	helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/fe-memory-budget.yaml" "$@" \
+		--show-only templates/worker-pool.yaml | grep -F 'checksum/worker-config:'
+}
+[[ "$(fe_pool)" != "$(fe_pool --set feMemoryBudgetFraction=0.25)" ]] ||
+	fail 'feMemoryBudgetFraction did not change the worker checksum'
+
+expect_failure 'unsupported memory unit "Gb"' \
+	-f "$FIXTURES/fe-memory-budget.yaml" --set-string workerPools.fe.resources.limits.memory=3Gb
+expect_failure 'feMemoryBudgetFraction must be in (0, 1]' \
+	-f "$FIXTURES/fe-memory-budget.yaml" --set feMemoryBudgetFraction=1.5
+
 printf 'All polytope chart runtime tests passed.\n'

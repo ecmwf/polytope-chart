@@ -45,6 +45,11 @@ explicit marker fail rendering.
 Worker caches default to disabled. Configure a bounded `cache.emptyDir`, or an
 explicit `cache.hostPath` when node-local persistence is required.
 
+Feature-extraction pools (a `polytope:` block in `config`) with a
+`resources.limits.memory` get `polytope.limits.memory_budget_bytes =
+floor(limit x feMemoryBudgetFraction)` (default 0.5) in their worker config,
+unless the config sets it.
+
 ## Schedule check
 
 The schedule init container is enabled only when `schedule.enabled: true`. It

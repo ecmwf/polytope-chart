@@ -1,0 +1,63 @@
+polytope:
+  site: tst
+  env: dev
+
+workerPools:
+  fe:
+    image:
+      repository: example/fe-worker
+      tag: "1.2.3"
+    pool: fe_pool
+    config:
+      delivery:
+        delivery_type: inline
+      polytope:
+        type: polytope
+        limits:
+          max_polygon_points: 3600
+    resources:
+      limits:
+        memory: 3Gi
+  fe-mebibytes:
+    image:
+      repository: example/fe-worker
+      tag: "1.2.3"
+    pool: fe_mebibytes_pool
+    config:
+      polytope:
+        type: polytope
+    resources:
+      limits:
+        memory: 1536Mi
+  fe-explicit:
+    image:
+      repository: example/fe-worker
+      tag: "1.2.3"
+    pool: fe_explicit_pool
+    config:
+      polytope:
+        type: polytope
+        limits:
+          memory_budget_bytes: 12345
+    resources:
+      limits:
+        memory: 2Gi
+  fe-unlimited:
+    image:
+      repository: example/fe-worker
+      tag: "1.2.3"
+    pool: fe_unlimited_pool
+    config:
+      polytope:
+        type: polytope
+  mars:
+    image:
+      repository: example/mars-worker
+      tag: "1.2.3"
+    pool: mars_pool
+    config:
+      delivery:
+        delivery_type: inline
+    resources:
+      limits:
+        memory: 2Gi

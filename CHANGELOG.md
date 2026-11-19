@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Feature-extraction worker pools (a `polytope:` block in `config`) with `resources.limits.memory` get `polytope.limits.memory_budget_bytes = floor(limit x feMemoryBudgetFraction)` (new value, default 0.5) in their worker config unless it is set there; the budget is part of the pod config checksum. Other pools render unchanged.
+- Add `frontend.result_encoding` passthrough to the frontend config (`enabled`, `min_polytope_client_version`): which clients receive content-encoded results from the v1 API. Unset by default, which renders nothing.
+
 ## 2.1.19
 
 - Add `schedule.tokenSecretName` so the schedule repository can be cloned over HTTPS with a GitHub personal access token (secret key `token`) instead of an SSH key. Exactly one of `schedule.sshSecretName`, `schedule.tokenSecretName` or `schedule.content` must be set; existing SSH configurations render unchanged.
