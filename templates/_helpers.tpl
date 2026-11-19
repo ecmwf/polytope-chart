@@ -162,9 +162,19 @@ false
     {{- end -}}
   {{- end -}}
   {{- if $enabled -}}
-    {{- $_ := required "schedule.repo is required when schedule is enabled" (get $schedule "repo") -}}
-    {{- $_ := required "schedule.path is required when schedule is enabled" (get $schedule "path") -}}
-    {{- $_ := required "schedule.sshSecretName is required when schedule is enabled" (get $schedule "sshSecretName") -}}
+    {{- $ssh := get $schedule "sshSecretName" -}}
+    {{- $token := get $schedule "tokenSecretName" -}}
+    {{- $content := get $schedule "content" -}}
+    {{- if gt (len (without (list $ssh $token $content) nil "")) 1 -}}
+      {{- fail "schedule.sshSecretName, schedule.tokenSecretName and schedule.content are mutually exclusive" -}}
+    {{- end -}}
+    {{- if not (or $ssh $token $content) -}}
+      {{- fail "one of schedule.sshSecretName, schedule.tokenSecretName or schedule.content is required when schedule is enabled" -}}
+    {{- end -}}
+    {{- if not $content -}}
+      {{- $_ := required "schedule.repo is required when schedule is enabled" (get $schedule "repo") -}}
+      {{- $_ := required "schedule.path is required when schedule is enabled" (get $schedule "path") -}}
+    {{- end -}}
 true
   {{- else -}}
 false

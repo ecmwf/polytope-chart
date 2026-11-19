@@ -53,9 +53,22 @@ unless the config sets it.
 ## Schedule check
 
 The schedule init container is enabled only when `schedule.enabled: true`. It
-requires `schedule.repo`, `schedule.path`, and an SSH key secret named by
-`schedule.sshSecretName` (normally `polytope-schedule-ssh`). Set
-`schedule.enabled: false` in environments that do not use the schedule check.
+requires exactly one source (and `schedule.repo` and `schedule.path`, except for `content`):
+
+- `schedule.sshSecretName` — SSH key secret (key `ssh-privatekey`, normally
+  `polytope-schedule-ssh`); `schedule.repo` is a `git@github.com:` URL.
+- `schedule.tokenSecretName` — GitHub personal access token secret (key
+  `token`); `schedule.repo` is an `https://github.com/` URL. A fine-grained
+  PAT limited to the schedule repository with `Contents: Read-only` is enough.
+
+- `schedule.content` — the schedule file itself, rendered into a ConfigMap and
+  mounted at `/etc/polytope/schedule.xml`. No init container, `repo` or `path`
+  is needed; the frontend pods roll when the content changes. Pass it from a
+  file with helmfile `set: [{name: schedule.content, file: ...}]` or
+  `helm --set-file schedule.content=schedule.xml`. The file is not refreshed
+  automatically.
+
+Set `schedule.enabled: false` in environments that do not use the schedule check.
 
 ## BOBS dependency source
 

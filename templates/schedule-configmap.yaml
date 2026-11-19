@@ -1,0 +1,13 @@
+{{- if eq (include "polytope-server.scheduleEnabled" .) "true" }}
+{{- with get .Values.schedule "content" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "polytope-server.fullname" $ }}-schedule
+  labels:
+    {{- include "polytope-server.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: frontend
+data:
+  schedule.xml: {{ . | toJson }}
+{{- end }}
+{{- end }}

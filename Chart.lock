@@ -4,9 +4,9 @@ dependencies:
   version: 2.12.4
 - name: bobs-chart
   repository: oci://eccr.ecmwf.int/bobs
-  version: 0.1.10
+  version: 0.1.13
 - name: auth-o-tron-chart
   repository: oci://eccr.ecmwf.int/auth-o-tron
-  version: 0.3.4
-digest: sha256:0b1f0c700d414d4e913c9909c9115327d699fbe7dc6522f3570949e844c9fda2
-generated: "2026-08-04T05:01:41.196123552Z"
+  version: 0.3.5
+digest: sha256:2633d9914ebe876039b792215258b3b27e5bec446e23d18c8c05d9699a02874d
+generated: "2026-10-30T19:53:58.722885Z"

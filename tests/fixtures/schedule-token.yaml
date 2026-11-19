@@ -1,0 +1,6 @@
+schedule:
+  enabled: true
+  repo: https://github.com/example/schedules.git
+  branch: main
+  path: schedule.xml
+  tokenSecretName: schedule-test-token

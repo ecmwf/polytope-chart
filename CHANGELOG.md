@@ -3,6 +3,21 @@
 ## Unreleased
 
 - Feature-extraction worker pools (a `polytope:` block in `config`) with `resources.limits.memory` get `polytope.limits.memory_budget_bytes = floor(limit x feMemoryBudgetFraction)` (new value, default 0.5) in their worker config unless it is set there; the budget is part of the pod config checksum. Other pools render unchanged.
+- Add `frontend.result_encoding` passthrough to the frontend config (`enabled`, `min_polytope_client_version`): which clients receive content-encoded results from the v1 API. Unset by default, which renders nothing.
+
+## 2.1.19
+
+- Add `schedule.tokenSecretName` so the schedule repository can be cloned over HTTPS with a GitHub personal access token (secret key `token`) instead of an SSH key. Exactly one of `schedule.sshSecretName`, `schedule.tokenSecretName` or `schedule.content` must be set; existing SSH configurations render unchanged.
+- Add `schedule.content` to supply the schedule file inline (rendered into a `<release>-schedule` ConfigMap, no clone). It is mutually exclusive with the SSH and token sources, and changing it rolls the frontend pods.
+
+## 2.1.18
+
+- Bump `auth-o-tron-chart` dependency from 0.3.4 to 0.3.5, which defaults to auth-o-tron 0.3.8 (drops the distrusted emSign roots; dependency security updates), and remove the chart's own `auth-o-tron.image.tag` pin so the subchart default applies.
+- Default the frontend's `authentication.timeout_ms` to auth-o-tron's `config.auth.timeout_in_ms` + 1000 ms (was a fixed 3000 ms, equal to auth-o-tron's), so a slow provider yields auth-o-tron's own response instead of a client-side timeout reported as service unavailable.
+
+## 2.1.17
+
+- Bump `bobs-chart` dependency from 0.1.10 to 0.1.13.
 
 ## 2.1.16
 

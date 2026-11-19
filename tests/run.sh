@@ -143,6 +143,48 @@ assert_contains "$schedule_legacy" 'name: fetch-schedule'
 expect_failure 'schedule.repo is required when schedule is enabled' \
 	-f "$FIXTURES/schedule-invalid.yaml"
 
+schedule_token="$TMP_DIR/schedule-token.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/schedule-token.yaml" >"$schedule_token"
+assert_contains "$schedule_token" 'name: fetch-schedule'
+assert_contains "$schedule_token" 'name: SCHEDULE_TOKEN'
+assert_contains "$schedule_token" 'name: "schedule-test-token"'
+assert_contains "$schedule_token" 'key: token'
+assert_contains "$schedule_token" 'http.https://github.com/.extraheader'
+assert_not_contains "$schedule_token" 'name: schedule-ssh'
+assert_not_contains "$schedule_token" 'ssh-keyscan'
+assert_contains "$schedule_enabled" 'ssh-keyscan'
+assert_not_contains "$schedule_enabled" 'SCHEDULE_TOKEN'
+
+expect_failure 'schedule.sshSecretName, schedule.tokenSecretName and schedule.content are mutually exclusive' \
+	-f "$FIXTURES/schedule-both.yaml"
+expect_failure 'schedule.sshSecretName, schedule.tokenSecretName and schedule.content are mutually exclusive' \
+	-f "$FIXTURES/schedule-content-and-token.yaml"
+
+schedule_content="$TMP_DIR/schedule-content.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/schedule-content.yaml" >"$schedule_content"
+assert_contains "$schedule_content" 'name: test-schedule'
+assert_contains "$schedule_content" 'schedule.xml: "\u003cschedule\u003e\u003crelease id=\"demo\"/\u003e\u003c/schedule\u003e\n"'
+assert_contains "$schedule_content" 'checksum/schedule:'
+assert_contains "$schedule_content" 'path: /etc/polytope/schedule.xml'
+assert_not_contains "$schedule_content" 'name: fetch-schedule'
+assert_not_contains "$schedule_content" 'name: schedule-ssh'
+assert_not_contains "$schedule_content" 'SCHEDULE_TOKEN'
+assert_not_contains "$schedule_disabled" 'checksum/schedule:'
+assert_not_contains "$schedule_enabled" 'name: test-schedule'
+expect_failure 'one of schedule.sshSecretName, schedule.tokenSecretName or schedule.content is required when schedule is enabled' \
+	-f "$FIXTURES/schedule-no-credential.yaml"
+
+# Frontend auth timeout stays above auth-o-tron's provider timeout unless overridden.
+auth_timeout="$TMP_DIR/auth-timeout.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
+	--set auth-o-tron.enabled=true --set auth-o-tron.config.auth.timeout_in_ms=3000 >"$auth_timeout"
+assert_contains "$auth_timeout" 'timeout_ms: 4000'
+auth_timeout_override="$TMP_DIR/auth-timeout-override.yaml"
+helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/runtime.yaml" \
+	--set auth-o-tron.enabled=true --set auth-o-tron.config.auth.timeout_in_ms=3000 \
+	--set authentication.timeout_ms=2500 >"$auth_timeout_override"
+assert_contains "$auth_timeout_override" 'timeout_ms: 2500'
+
 # Feature-extraction pools get limits.memory_budget_bytes from their memory limit.
 show_configmap() {
 	helm template test "$CHART_DIR" "${COMMON[@]}" -f "$FIXTURES/fe-memory-budget.yaml" "$@" \
